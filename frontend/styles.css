@@ -928,7 +928,14 @@ body {
   padding: 12px; display: flex; flex-direction: column; gap: 8px;
 }
 .eg-header {
-  display: flex; justify-content: space-between; align-items: center;
+  display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.eg-header-right {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.eg-orient-tag {
+  font-family: var(--font); font-size: .44rem; letter-spacing: .1em;
+  color: var(--muted-2);
 }
 .eg-title {
   font-family: var(--font); font-size: .52rem; letter-spacing: .14em;

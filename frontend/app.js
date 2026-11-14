@@ -1099,8 +1099,8 @@ function renderDataModal() {
     $("mc-mk").textContent = `p = ${num(o.p, 3)} · Z = ${o.z > 0 ? "+" : ""}${num(o.z, 2)}`;
     $("mc-mk").style.color = o.significant ? (o.direction === "falling" ? C.fall : C.rise) : C.flat;
     $("mc-mk-sub").textContent = o.significant
-      ? (o.direction === "rising" ? "▲ STATISTICALLY SIGNIFICANT RISE" : "▼ STATISTICALLY SIGNIFICANT FALL")
-      : "◆ NO STATISTICALLY SIGNIFICANT TREND";
+      ? (o.direction === "rising" ? "STATISTICALLY SIGNIFICANT RISE" : "STATISTICALLY SIGNIFICANT FALL")
+      : "NO STATISTICALLY SIGNIFICANT TREND";
 
     if (o.seasonal_p !== undefined && o.seasonal_p !== null) {
       $("mc-seasonal").textContent = `p = ${num(o.seasonal_p, 3)} · Z = ${o.seasonal_z > 0 ? "+" : ""}${num(o.seasonal_z, 2)}`;
@@ -1124,11 +1124,22 @@ function renderDataModal() {
     const cells = s.cells || [];
     $("eg-cell-count").textContent = `${cells.length} OBSERVED CELLS`;
 
-    cells.forEach((c) => {
+    // Sort cells into geographic matrix order:
+    // Row 0 = North (highest lat) down to Row 4 = South (lowest lat)
+    // Col 0 = West (lowest lon) across to Col 4 = East (highest lon)
+    // This perfectly matches the 3D globe alignment (North at top, South at bottom)
+    const geoSortedCells = [...cells].sort((a, b) => {
+      if (Math.abs(b.lat - a.lat) > 0.0001) {
+        return b.lat - a.lat; // Latitude descending (North to South)
+      }
+      return a.lon - b.lon; // Longitude ascending (West to East)
+    });
+
+    geoSortedCells.forEach((c) => {
       const chip = document.createElement("div");
       chip.className = "eg-cell-chip";
       const cColor = c.significant
-        ? (c.direction === "rising" ? C.rise : C.fall)
+        ? (c.direction === "falling" ? C.fall : C.rise)
         : C.flat;
       const slopeStr = c.slope !== null && c.slope !== undefined
         ? `${c.slope > 0 ? "+" : ""}${num(c.slope * 10, 2)}`
@@ -1146,7 +1157,7 @@ function renderDataModal() {
           <strong>Cell [${c.lat.toFixed(2)}°, ${c.lon.toFixed(2)}°]:</strong>
           Slope: <span style="color:${cColor}">${slopeStr} ${v.unit}/decade</span> ·
           Mann-Kendall p-value: <strong>${c.p !== undefined ? num(c.p, 3) : "—"}</strong> ·
-          Status: <strong>${c.significant ? (c.direction === "rising" ? "▲ SIGNIFICANT RISE" : "▼ SIGNIFICANT FALL") : "◆ STABLE / NO TREND"}</strong>
+          Status: <strong>${c.significant ? (c.direction === "falling" ? "SIGNIFICANT FALL" : "SIGNIFICANT RISE") : "STABLE / NO TREND"}</strong>
         `;
       });
 
