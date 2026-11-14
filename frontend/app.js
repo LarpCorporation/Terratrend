@@ -357,12 +357,11 @@ function openDefs() {
     return `<div class="defs-group">${label}</div>${items}`;
   }).join("");
 
-  $("defs-modal").hidden = false;
+  showModal($("defs-modal"));
 }
 
 function closeDefs() {
-  const m = $("defs-modal");
-  if (m) m.hidden = true;
+  hideModal($("defs-modal"));
 }
 
 /* ============================================================
@@ -383,7 +382,7 @@ async function scanAll() {
   $("scan-sub").textContent = "SCANNING…";
   $("scan-table").innerHTML =
     `<div class="scan-note">Acquiring NASA POWER grid across ${total} Earth system variables…</div>`;
-  $("scan-modal").hidden = false;
+  showModal($("scan-modal"));
 
   try {
     for (let i = 0; i < total; i += CHUNK) {
@@ -474,8 +473,7 @@ function renderScan(rows, total) {
 }
 
 function closeScan() {
-  const m = $("scan-modal");
-  if (m) m.hidden = true;
+  hideModal($("scan-modal"));
 }
 
 function openFromScan(vid) {
