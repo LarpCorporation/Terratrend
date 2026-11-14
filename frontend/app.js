@@ -808,12 +808,17 @@ function renderCells(d) {
   $("cell-tag").textContent =
     `${sm.significant_cells}/${sm.total_cells} SIG · ${s.variable.name.split(" ")[0]}`;
 
+  // server returns rising_cells / falling_cells (older payloads used rising /
+  // falling) — tolerate both, and exclude no-data cells from "no trend"
+  const rising = sm.rising_cells ?? sm.rising ?? 0;
+  const falling = sm.falling_cells ?? sm.falling ?? 0;
+  const validCells = sm.valid_cells ?? sm.total_cells ?? 0;
   const rows = [
-    ["RISING", sm.rising, C.rise],
-    ["FALLING", sm.falling, C.fall],
-    ["NO TREND", sm.total_cells - sm.significant_cells, C.flat],
+    ["RISING", rising, C.rise],
+    ["FALLING", falling, C.fall],
+    ["NO TREND", Math.max(0, validCells - (sm.significant_cells || 0)), C.flat],
   ];
-  const max = Math.max(1, sm.total_cells);
+  const max = Math.max(1, validCells, sm.total_cells || 0);
   rows.forEach(([label, n, color]) => {
     const row = document.createElement("div");
     row.className = "cell-row";
