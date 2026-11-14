@@ -220,6 +220,123 @@ def run_analysis(variables, region, start, end, nx=5, ny=5):
     }
 
 
+def run_scan(variables, region, start, end, nx=5, ny=5):
+    """Score every requested variable for one region and rank them.
+
+    This is the "which variable is actually trending here?" question the
+    challenge opens with. It deliberately uses the *same* grid resolution as a
+    full analysis so the numbers agree when a user opens a row: a screen that
+    disagreed with the detail view would be worse than no screen at all.
+    POWER responses are cached, so a second scan is fast and opening any
+    individual variable afterwards is instant.
+    """
+    if end - start < 8:
+        raise ValueError("Need at least 9 years of data (end - start >= 8)")
+    if end > MAX_YEAR:
+        raise ValueError(f"Data available through {MAX_YEAR}")
+
+    reg = next((r for r in catalog.REGIONS if r["id"] == region), None)
+    if not reg:
+        raise KeyError(f"Unknown region {region}")
+
+    vars_ = []
+    for vid in variables:
+        v = next((x for x in catalog.CATALOG if x["id"] == vid), None)
+        if v:
+            vars_.append(v)
+    if not vars_:
+        raise ValueError("No known variables requested")
+
+    months = None
+    month_labels = None
+    rows_by_id = {}
+
+    # Two passes: a wide scan is 25 points x 16 variables, which can trip
+    # POWER's rate limiter partway through. Anything that failed is retried
+    # once after a pause rather than being reported as "no data".
+    pending = list(vars_)
+    for attempt in (0, 1):
+        if not pending:
+            break
+        still_failed = []
+        for var in pending:
+            try:
+                grid = power_client.fetch_grid(var["id"], reg["bbox"],
+                                               start, end, nx, ny)
+            except Exception as e:  # noqa: BLE001
+                still_failed.append(var)
+                if attempt == 1:
+                    rows_by_id[var["id"]] = {
+                        "id": var["id"], "name": var["name"],
+                        "unit": var["unit"], "color": var["color"],
+                        "group": var["group"], "ok": False,
+                        "error": str(e)[:120], "significant": False,
+                        "direction": "nodata", "tau": 0.0,
+                    }
+                continue
+
+            if months is None:
+                all_months = set()
+                for lo in grid:
+                    for la in grid[lo]:
+                        all_months.update(grid[lo][la].keys())
+                months = sorted(m for m in all_months
+                                if len(str(m)) == 6 and str(m)[4:] != "13")
+                month_labels = _month_labels(months)
+
+            block = analyze_variable(var, grid, months, month_labels)
+            o = block["overall"]
+            sm = block["summary"]
+            rows_by_id[var["id"]] = {
+                "id": var["id"], "name": var["name"], "unit": var["unit"],
+                "color": var["color"], "group": var["group"],
+                "ok": o.get("ok", False),
+                "slope_decade": o.get("per_decade"),
+                "p": o.get("p"),
+                "z": o.get("z"),
+                "tau": o.get("tau"),
+                "significant": bool(o.get("significant")),
+                "direction": o.get("direction", "nodata"),
+                "n": o.get("n"),
+                "change_pct": o.get("change_pct"),
+                "stars": o.get("stars", ""),
+                "cells_sig": sm["significant_cells"],
+                "cells_total": sm["total_cells"],
+            }
+            time.sleep(0.15)  # stay inside POWER's limiter
+
+        pending = still_failed
+        if pending:
+            time.sleep(8)
+
+    rows = [rows_by_id[v["id"]] for v in vars_ if v["id"] in rows_by_id]
+
+    # strongest first: significant before not, then by |tau| (trend coherence)
+    rows.sort(key=lambda r: (
+        0 if r.get("significant") else 1,
+        -abs(r.get("tau") or 0.0),
+    ))
+
+    ok_rows = [r for r in rows if r.get("ok")]
+    return {
+        "region": reg, "start": start, "end": end,
+        "grid": {"nx": nx, "ny": ny, "bbox": reg["bbox"]},
+        "window": {"last_month": None, "partial_years": []},
+        "scanned": rows,
+        "summary": {
+            "total": len(rows),
+            "analysable": len(ok_rows),
+            "significant": sum(1 for r in ok_rows if r["significant"]),
+            "rising": sum(1 for r in ok_rows
+                          if r["significant"] and r["direction"] == "rising"),
+            "falling": sum(1 for r in ok_rows
+                           if r["significant"] and r["direction"] == "falling"),
+            "strongest": ok_rows[0]["name"] if ok_rows else None,
+        },
+        "sources": ["NASA POWER (MERRA-2 / GPCP / CERES)"],
+    }
+
+
 class Handler(BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
 
@@ -289,6 +406,22 @@ class Handler(BaseHTTPRequestHandler):
                 date_md = q.get("date", [""])[0]
                 ev = gibs.get_satellite_evidence(region_obj, start_yr, end_yr, bbox=custom_bbox, layer_key=layer, custom_date=date_md)
                 return self._json(200, ev)
+            if path == "/api/scan":
+                region = q.get("region", [""])[0]
+                if not region:
+                    return self._json(400, {"error": "region required"})
+                raw = q.get("variables", [""])[0]
+                if raw.strip():
+                    variables = [v.strip() for v in raw.split(",") if v.strip()]
+                else:
+                    variables = [v["id"] for v in catalog.CATALOG]
+                result = run_scan(
+                    variables, region,
+                    _int(q, "start", 2000), _int(q, "end", MAX_YEAR),
+                    max(3, min(6, _int(q, "nx", 5))),
+                    max(3, min(6, _int(q, "ny", 5))),
+                )
+                return self._json(200, result)
             if path == "/api/analyze":
                 raw = q.get("variables", q.get("variable", [""]))[0]
                 variables = [v.strip() for v in raw.split(",") if v.strip()]

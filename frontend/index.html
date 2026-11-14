@@ -93,6 +93,7 @@
         <span class="btn-glitch"></span>
         RUN ANALYSIS
       </button>
+      <button id="scan" class="hud-btn ghost">SCAN ALL VARIABLES</button>
       <div id="status" class="hud-status" hidden></div>
     </section>
 
@@ -360,6 +361,27 @@
         <p><strong>Physical Corroboration:</strong> NASA GIBS imagery is orthorectified and surface-reflectance calibrated. Comparing identical calendar dates across decades isolates multiannual environmental trends (such as vegetation expansion, aridification, or ice margin retreat) from regular seasonal cycles.</p>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ============ TREND SCAN MODAL ============ -->
+<div id="scan-modal" class="modal-backdrop" hidden>
+  <div class="modal-window scan-window">
+    <div class="modal-header">
+      <div class="mh-left">
+        <span class="mh-tag">TREND SCAN · ALL VARIABLES</span>
+        <h2 id="scan-title">REGION</h2>
+        <span class="mh-sub" id="scan-sub">—</span>
+      </div>
+      <button id="scan-close" class="modal-close-btn" aria-label="Close">&times;</button>
+    </div>
+    <div class="scan-table" id="scan-table"></div>
+    <p class="scan-note">
+      Ranked by significance, then by trend coherence (|τ|). Uses the same 5×5
+      grid as the full analysis, so the p-values match when you open a row.
+      A cold scan takes ~45 s; results are cached, so repeat scans are fast.
+      Cells shown as significant / total.
+    </p>
   </div>
 </div>
 

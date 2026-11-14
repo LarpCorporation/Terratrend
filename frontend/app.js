@@ -77,6 +77,14 @@ async function boot() {
   if (+$("start").value > maxYear - 8) $("start").value = maxYear - 8;
 
   $("run").addEventListener("click", analyze);
+  $("scan").addEventListener("click", scanAll);
+  $("scan-close").addEventListener("click", closeScan);
+  $("scan-modal").addEventListener("click", (e) => {
+    if (e.target === $("scan-modal")) closeScan();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeScan();
+  });
   $("region").addEventListener("change", onRegionChange);
   $("start").addEventListener("change", clampRange);
   $("end").addEventListener("change", clampRange);
@@ -229,6 +237,132 @@ function setStatus(kind, html) {
 }
 
 /* ============================================================
+   TREND SCAN — the "data detective" pass
+   ============================================================ */
+async function scanAll() {
+  const btn = $("scan");
+  const ids = state.catalog.variables.map((v) => v.id);
+  const CHUNK = 4;
+  const total = ids.length;
+  const collected = [];
+  const reg = currentRegion();
+  const windowLbl = `${$("start").value}–${$("end").value}`;
+
+  btn.disabled = true;
+  $("scan-title").textContent =
+    `${reg ? reg.name.toUpperCase() : "—"} · ${windowLbl}`;
+  $("scan-sub").textContent = "SCANNING…";
+  $("scan-table").innerHTML =
+    `<div class="scan-note">Acquiring NASA POWER grid for ${total} variables…</div>`;
+  $("scan-modal").hidden = false;
+
+  try {
+    for (let i = 0; i < total; i += CHUNK) {
+      const batch = ids.slice(i, i + CHUNK);
+      setStatus("busy",
+        `<span class="spin"></span>SCANNING ${Math.min(i + CHUNK, total)}/${total}` +
+        ` · ${batch.map((b) => b).join(", ")}`);
+      const params = new URLSearchParams({
+        region: $("region").value,
+        start: $("start").value,
+        end: $("end").value,
+        variables: batch.join(","),
+      });
+      const r = await fetch(`/api/scan?${params}`);
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
+      collected.push(...d.scanned);
+      renderScan(collected, total);
+    }
+    setStatus("ok", "");
+  } catch (e) {
+    setStatus("err", `SCAN FAILED: ${esc(e.message)}`);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+/* server ranking rule, applied client-side so partial results sort correctly */
+function rankRows(rows) {
+  return [...rows].sort((a, b) => {
+    const sa = a.ok && a.significant ? 0 : 1;
+    const sb = b.ok && b.significant ? 0 : 1;
+    if (sa !== sb) return sa - sb;
+    return Math.abs(b.tau || 0) - Math.abs(a.tau || 0);
+  });
+}
+
+function renderScan(rows, total) {
+  const ranked = rankRows(rows);
+  const okRows = ranked.filter((r) => r.ok);
+  const sig = okRows.filter((r) => r.significant);
+  const rising = sig.filter((r) => r.direction === "rising").length;
+  const falling = sig.filter((r) => r.direction === "falling").length;
+  const done = rows.length;
+
+  $("scan-sub").textContent =
+    `${sig.length}/${okRows.length} variables significant · ` +
+    `${rising} rising · ${falling} falling` +
+    (done < total ? ` · scanning ${done}/${total}` : "");
+
+  const head = `<div class="scan-head">
+    <span>#</span><span></span><span>VARIABLE</span><span>SLOPE</span>
+    <span>p-VALUE</span><span>CELLS</span><span>VERDICT</span>
+  </div>`;
+
+  const body = ranked.map((r, i) => {
+    const rank = String(i + 1).padStart(2, "0");
+    if (!r.ok || r.p === undefined || r.p === null) {
+      return `<div class="scan-row nodata">
+        <span class="sr-rank">${rank}</span>
+        <i class="sr-dot" style="background:${r.color}"></i>
+        <span class="sr-name">${esc(r.name)}</span>
+        <span class="sr-slope">—</span>
+        <span class="sr-p">—</span>
+        <span class="sr-cells">—</span>
+        <span class="sr-dir nodata">NODATA</span>
+      </div>`;
+    }
+    const dir = r.significant ? r.direction : "flat";
+    const label = dir === "rising" ? "▲ RISING"
+      : dir === "falling" ? "▼ FALLING" : "◆ STABLE";
+    const sign = r.slope_decade > 0 ? "+" : "";
+    return `<div class="scan-row" data-var="${esc(r.id)}">
+      <span class="sr-rank">${rank}</span>
+      <i class="sr-dot" style="background:${r.color}"></i>
+      <span class="sr-name">${esc(r.name)}</span>
+      <span class="sr-slope">${sign}${num(r.slope_decade, 3)} ${esc(r.unit)}/dec</span>
+      <span class="sr-p">p=${r.p < 0.001 ? "<0.001" : num(r.p, 3)}</span>
+      <span class="sr-cells">${r.cells_sig}/${r.cells_total}</span>
+      <span class="sr-dir ${dir}">${label}</span>
+    </div>`;
+  }).join("");
+
+  const box = $("scan-table");
+  box.innerHTML = head + body;
+  box.querySelectorAll(".scan-row[data-var]").forEach((el) => {
+    el.addEventListener("click", () => openFromScan(el.dataset.var));
+  });
+}
+
+function closeScan() {
+  const m = $("scan-modal");
+  if (m) m.hidden = true;
+}
+
+function openFromScan(vid) {
+  if (!state.selected.includes(vid)) {
+    while (state.selected.length >= MAX_VARS) state.selected.pop();
+    state.selected.push(vid);
+  }
+  state.preferredVar = vid;
+  renderVarList();
+  updateGlobeOverlay();
+  closeScan();
+  analyze();
+}
+
+/* ============================================================
    ANALYSIS
    ============================================================ */
 async function analyze() {
@@ -249,10 +383,17 @@ async function analyze() {
     const data = await r.json();
     if (!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
     state.result = data;
-    // default the globe to the most newsworthy variable: first significant
+    // a variable chosen from the SCAN table wins; otherwise default to the
+    // most newsworthy one (first significant)
+    const pref = state.preferredVar;
+    state.preferredVar = null;
+    const prefIdx = pref
+      ? data.series.findIndex((s) => s.variable.id === pref)
+      : -1;
     const firstSig = data.series.findIndex(
       (s) => s.overall && s.overall.ok && s.overall.significant);
-    state.activeVarIdx = firstSig >= 0 ? firstSig : 0;
+    state.activeVarIdx = prefIdx >= 0 ? prefIdx
+      : (firstSig >= 0 ? firstSig : 0);
     render();
     setStatus("ok", "");
   } catch (e) {
@@ -927,6 +1068,13 @@ function drawChart() {
           .join(" · ")} — shown, excluded from trend</span>`
     : "";
 
+  const ciNote = o.ok && o.ci_low_per_decade !== null
+    && o.ci_low_per_decade !== undefined
+    ? `<br>95% CI <b>[${o.ci_low_per_decade > 0 ? "+" : ""}${num(o.ci_low_per_decade, 3)},
+        ${o.ci_high_per_decade > 0 ? "+" : ""}${num(o.ci_high_per_decade, 3)}]
+        ${esc(s.variable.unit)}/decade</b> — Sen slope confidence interval`
+    : "";
+
   $("trendline").innerHTML = (o.ok
     ? `<b>${s.variable.name}</b> ${o.direction === "rising" ? "rising" :
        o.direction === "falling" ? "falling" : "flat"} at
@@ -935,7 +1083,7 @@ function drawChart() {
        p=<b>${o.p < 0.001 ? "<0.001" : num(o.p, 3)}</b>
        ${o.significant ? "· SIGNIFICANT" : "· NOT SIGNIFICANT"}
        · n=<b>${o.n}</b> complete years`
-    : "Insufficient data for trend estimation.") + partialNote;
+    : "Insufficient data for trend estimation.") + ciNote + partialNote;
 }
 
 function fitLine(pts) {

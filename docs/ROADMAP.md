@@ -138,6 +138,12 @@ confidence intervals". We do MK but report **no CI**. Add Sen's slope **95% CI**
 (needs Kendall's τ variance, already computed) shown as
 `+0.21 mm/day/decade [0.06, 0.36]`. Effort: **S**.
 
+> **Status: DONE.** `theil_sen_ci()` implements the Gilbert (1987) normal
+> approximation; `analyze_series()` now returns `ci_low/high` and
+> `ci_low/high_per_decade`. Shown under every chart, e.g. Europe Min
+> Temperature **+1.100 °C/decade, 95% CI [+0.612, +1.560]**. 4 new tests,
+> including "CI must contain the true slope" and "noise widens the interval".
+
 **3.9 t-test as a second opinion** — the brief names it first. Adding a Welch/OLS
 t-test alongside MK lets us show *both* methods agreeing (or disagreeing when
 outliers matter) — a strong "we know the limits" talking point. Effort: **S**.
@@ -155,6 +161,21 @@ region+window and returns a ranked table:
 
 Cost: N variables × 25 points, but cached — a 6-variable scan on a warm region is
 ~1 s. Effort: **M**.
+
+> **Status: DONE.** `GET /api/scan` scores every variable on the same 5×5 grid
+> as the full analysis (so p-values agree when you open a row), ranks by
+> significance then |τ|, and retries any variable that POWER throttles.
+> The UI scans in **chunks of 4 with progressive rendering**, so results appear
+> as they arrive instead of one long hang. `warm_scan.py` pre-warms demo regions
+> (Sahel: 42 s cold, 0 failures; Europe: 6 s warm).
+>
+> **What it found on its first run** (Europe 2005–2026): minimum temperature is
+> warming fastest at **+1.10 °C/decade, p<0.001**, ahead of mean (+0.96) and max
+> (+0.94) — the well-documented asymmetric warming of cold extremes — plus
+> specific humidity rising (+0.23 g/kg/decade, p=0.001). On the Sahel the scan
+> ranked evapotranspiration (+0.09 mm/day/dec, p=0.002), root-zone moisture
+> (+0.013, p=0.024) and specific humidity (+0.26, p=0.034) above precipitation
+> (p=0.057) — a coherent water-cycle story the single-variable view would hide.
 
 **3.11 In-app variable definitions for a public audience** ⭐
 

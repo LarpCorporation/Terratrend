@@ -783,6 +783,56 @@ body {
 }
 .modal-notes strong { color: var(--text-bright); }
 
+/* ---------- trend scan ---------- */
+.hud-btn.ghost {
+  margin-top: 6px; padding: 8px;
+  background: transparent; color: var(--hi);
+  border: 1px solid var(--line-hot);
+  font-size: .6rem; letter-spacing: .18em; font-weight: 600;
+}
+.hud-btn.ghost:hover { background: #141618; border-color: var(--hi); }
+.hud-btn.ghost:disabled { opacity: .45; }
+
+.scan-window { max-width: 880px; }
+.scan-table { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; }
+.scan-head, .scan-row {
+  display: grid;
+  grid-template-columns: 26px 14px minmax(0, 1fr) 116px 84px 66px 96px;
+  gap: 10px; align-items: center;
+  font-family: var(--font); font-size: .58rem; letter-spacing: .05em;
+  padding: 6px 8px;
+}
+.scan-head {
+  font-size: .48rem; letter-spacing: .14em; color: var(--muted-2);
+  border-bottom: 1px solid var(--line); padding-bottom: 5px;
+}
+.scan-row {
+  background: var(--field); border-left: 2px solid transparent;
+  color: var(--text); cursor: pointer; transition: background .12s;
+}
+.scan-row:hover { background: #141618; border-left-color: var(--hi); }
+.scan-row.nodata { opacity: .45; }
+.sr-rank { color: var(--muted-2); }
+.sr-dot { width: 8px; height: 8px; }
+.sr-name {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: var(--text-bright);
+}
+.sr-slope, .sr-p, .sr-cells { color: var(--muted); text-align: right; }
+.sr-cells { text-align: center; }
+.sr-dir {
+  text-align: center; font-size: .5rem; letter-spacing: .1em;
+  padding: 2px 4px;
+}
+.sr-dir.rising { color: var(--rise); border: 1px solid #5a2c14; background: #170d06; }
+.sr-dir.falling { color: var(--fall); border: 1px solid #1e3358; background: #070c16; }
+.sr-dir.flat { color: var(--muted-2); border: 1px solid var(--line); }
+.sr-dir.nodata { color: var(--muted-2); border: 1px dashed var(--line); }
+.scan-note {
+  margin: 12px 0 0; font-family: var(--font); font-size: .5rem;
+  line-height: 1.6; color: var(--muted-2); letter-spacing: .03em;
+}
+
 /* ---------- responsive ---------- */
 @media (max-width: 1500px) {
   .hud-grid { grid-template-columns: 244px minmax(0, 1fr) 282px; }

@@ -1,5 +1,6 @@
 """Unit test for the trend analysis core."""
-from analysis import mk_test, theil_sen, analyze_series, seasonal_mk
+from analysis import (mk_test, theil_sen, analyze_series, seasonal_mk,
+                      theil_sen_ci)
 
 
 def approx(a, b, tol=0.01):
@@ -73,6 +74,37 @@ def test_seasonal_mk_detects_real_trend():
             vals.append(10 + 8 * math.sin(2 * math.pi * m / 12) + 0.5 * year)
     z, p, tau, h = seasonal_mk(vals)
     assert h and z > 2, f"should detect rising trend, got z={z}, p={p}"
+
+
+def test_ci_brackets_the_slope():
+    """A clean trend's CI must be tight and contain the true slope."""
+    ys = [0.5 * x for x in range(24)]
+    lo, hi = theil_sen_ci(ys)
+    assert lo is not None and hi is not None
+    assert lo <= 0.5 <= hi, f"CI [{lo}, {hi}] must contain 0.5"
+    assert (hi - lo) < 0.05, f"clean series should give a tight CI, got {hi-lo}"
+
+
+def test_ci_widens_with_noise():
+    import random
+    random.seed(7)
+    clean = [0.5 * x for x in range(24)]
+    noisy = [v + random.uniform(-8, 8) for v in clean]
+    lo_c, hi_c = theil_sen_ci(clean)
+    lo_n, hi_n = theil_sen_ci(noisy)
+    assert (hi_n - lo_n) > (hi_c - lo_c), "noise should widen the interval"
+
+
+def test_ci_none_for_short_series():
+    lo, hi = theil_sen_ci([1, 2, 3])
+    assert lo is None and hi is None
+
+
+def test_analysis_exposes_ci_per_decade():
+    ys = [0.5 * x for x in range(24)]
+    r = analyze_series(ys)
+    assert r["ci_low_per_decade"] is not None
+    assert r["ci_low_per_decade"] <= r["per_decade"] <= r["ci_high_per_decade"]
 
 
 if __name__ == "__main__":

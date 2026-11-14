@@ -123,6 +123,56 @@ def stars_for(p):
     return ""
 
 
+def theil_sen_ci(ys, xs=None, alpha=0.05):
+    """Confidence interval for the Theil-Sen slope.
+
+    Gilbert (1987) normal approximation: rank the pairwise slopes and take the
+    ranks bracketing the middle (N -/+ C)/2, where C = z * sqrt(Var(S)).
+    Returns (low, high) on the same scale as the slope, or (None, None).
+    """
+    n = len(ys)
+    if n < 8:
+        return None, None
+    if xs is None:
+        xs = list(range(n))
+
+    slopes = []
+    for i in range(n - 1):
+        for j in range(i + 1, n):
+            dx = xs[j] - xs[i]
+            if dx:
+                slopes.append((ys[j] - ys[i]) / dx)
+    if not slopes:
+        return None, None
+    slopes.sort()
+    m = len(slopes)
+
+    # z for the two-sided interval
+    z_alpha = 1.959963984540054 if abs(alpha - 0.05) < 1e-9 else _z_for(alpha)
+    c = z_alpha * math.sqrt(_var_s(ys))
+    total_pairs = n * (n - 1) / 2.0
+
+    lo_rank = math.ceil((total_pairs - c) / 2.0)
+    hi_rank = math.ceil((total_pairs + c) / 2.0)
+    lo_rank = max(1, min(m, lo_rank))
+    hi_rank = max(1, min(m, hi_rank))
+
+    return slopes[lo_rank - 1], slopes[hi_rank - 1]
+
+
+def _z_for(alpha):
+    """Two-sided critical z via bisection on the normal CDF."""
+    target = 1.0 - alpha / 2.0
+    lo, hi = 0.0, 10.0
+    for _ in range(200):
+        mid = (lo + hi) / 2.0
+        if _norm_cdf(mid) < target:
+            lo = mid
+        else:
+            hi = mid
+    return (lo + hi) / 2.0
+
+
 def analyze_series(values, dt_per_step=1.0, dt_label="year"):
     """Full trend analysis of one ordered series.
 
@@ -136,6 +186,7 @@ def analyze_series(values, dt_per_step=1.0, dt_label="year"):
 
     z, p, tau, h = mk_test(ys)
     slope, intercept = theil_sen(ys, xs)
+    ci_lo, ci_hi = theil_sen_ci(ys, xs)
 
     first, last = ys[0], ys[-1]
     total = last - first
@@ -164,6 +215,12 @@ def analyze_series(values, dt_per_step=1.0, dt_label="year"):
         "change_total": total,
         "change_pct": pct,
         "per_decade": slope * 10.0 / dt_per_step,
+        "ci_low": ci_lo,
+        "ci_high": ci_hi,
+        "ci_low_per_decade": (ci_lo * 10.0 / dt_per_step
+                              if ci_lo is not None else None),
+        "ci_high_per_decade": (ci_hi * 10.0 / dt_per_step
+                               if ci_hi is not None else None),
         "dt_label": dt_label,
         "first": first,
         "last": last,
