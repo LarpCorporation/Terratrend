@@ -52,20 +52,6 @@
   </div>
 </header>
 
-<nav class="view-nav" role="tablist" aria-label="Screens">
-  <button class="view-tab on" data-target="observe" role="tab" aria-selected="true">
-    <span class="vt-idx">01</span>OBSERVE
-  </button>
-  <button class="view-tab" data-target="analyse" role="tab" aria-selected="false">
-    <span class="vt-idx">02</span>ANALYSE
-  </button>
-  <button class="view-tab" data-target="evidence" role="tab" aria-selected="false">
-    <span class="vt-idx">03</span>EVIDENCE
-  </button>
-  <div class="vn-sep"></div>
-  <span class="vn-hint" id="view-hint">Pick variables and a region, then run an analysis</span>
-</nav>
-
 <main class="hud-grid">
 
   <!-- ============ LEFT COLUMN ============ -->
@@ -121,16 +107,13 @@
           <input id="end" type="number" min="1993" max="2024" value="2024" step="1">
         </label>
       </div>
-    </section>
-
-    <div class="left-actions">
       <button id="run" class="hud-btn">
         <span class="btn-glitch"></span>
         RUN ANALYSIS
       </button>
       <button id="scan" class="hud-btn ghost">SCAN ALL VARIABLES</button>
       <div id="status" class="hud-status" hidden></div>
-    </div>
+    </section>
 
     <section class="panel legend-panel">
       <div class="panel-head">
@@ -146,10 +129,6 @@
     </section>
 
   </aside>
-
-  <!-- ============ VIEW 1 · OBSERVE ============ -->
-  <div class="stage">
-  <section class="view active" data-view="observe">
 
   <!-- ============ CENTER GLOBE ============ -->
   <section class="col col-center">
@@ -223,13 +202,6 @@
       </div>
     </section>
 
-  </aside>
-  </section>
-
-  <!-- ============ VIEW 2 · ANALYSE ============ -->
-  <section class="view" data-view="analyse">
-  <div class="panel-grid">
-
     <section class="panel chart-panel">
       <div class="panel-head">
         <span class="ph-label">TREND SERIES</span>
@@ -272,20 +244,13 @@
       </div>
     </section>
 
-    <section class="panel" id="cells-panel">
+    <section class="panel">
       <div class="panel-head">
         <span class="ph-label">GRID CELLS</span>
         <span class="ph-count" id="cell-tag">—</span>
       </div>
       <div id="cell-summary" class="cell-summary"></div>
     </section>
-
-  </div>
-  </section>
-
-  <!-- ============ VIEW 3 · EVIDENCE ============ -->
-  <section class="view" data-view="evidence">
-  <div class="panel-grid">
 
     <section class="panel sat-panel">
       <div class="panel-head">
@@ -305,10 +270,7 @@
       <div id="lit-list" class="lit-list"></div>
     </section>
 
-  </div>
-  </section>
-
-  </div><!-- /.stage -->
+  </aside>
 </main>
 
 <footer class="hud-foot">

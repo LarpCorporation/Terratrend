@@ -83,7 +83,6 @@ async function boot() {
   if (+$("start").value > maxYear - 8) $("start").value = maxYear - 8;
 
   $("run").addEventListener("click", analyze);
-  initViewNav();
   $("scan").addEventListener("click", scanAll);
   $("scan-close").addEventListener("click", closeScan);
   $("defs-open").addEventListener("click", openDefs);
@@ -504,63 +503,6 @@ function setStatus(kind, html) {
   el.innerHTML = html;
   $("sys-status").textContent =
     kind === "err" ? "ERROR" : kind === "busy" ? "ANALYZING" : "READY";
-}
-
-/* ============================================================
-   SCREEN SWITCHER — OBSERVE / ANALYSE / EVIDENCE
-   ============================================================ */
-const VIEW_HINTS = {
-  observe: "Rotate the globe and tap a region · signal summary on the right",
-  analyse: "Full trend series, grid-cell consensus and Earth-system coupling",
-  evidence: "Orbital imagery for the same window, plus what the literature says",
-};
-
-function initViewNav() {
-  const tabs = document.querySelectorAll(".view-tab");
-  tabs.forEach((tab) => {
-    tab.addEventListener("click", () => setView(tab.dataset.target));
-  });
-  document.addEventListener("keydown", (e) => {
-    if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
-    if (e.altKey || e.ctrlKey || e.metaKey) return;
-    if (e.key === "1") setView("observe");
-    if (e.key === "2") setView("analyse");
-    if (e.key === "3") setView("evidence");
-  });
-  setView("observe", true);
-}
-
-function setView(name, silent) {
-  const views = document.querySelectorAll(".view");
-  if (![...views].some((v) => v.dataset.view === name)) return;
-
-  views.forEach((v) => v.classList.toggle("active", v.dataset.view === name));
-  document.querySelectorAll(".view-tab").forEach((t) => {
-    const on = t.dataset.target === name;
-    t.classList.toggle("on", on);
-    t.setAttribute("aria-selected", on ? "true" : "false");
-  });
-  document.body.dataset.view = name;
-
-  const hint = $("view-hint");
-  if (hint) hint.textContent = VIEW_HINTS[name] || "";
-
-  // the three.js renderer measures its container; a hidden container has zero
-  // size, so tell it to re-measure when the globe comes back on screen
-  if (name === "observe") {
-    setTimeout(() => {
-      window.dispatchEvent(new Event("resize"));
-      if (typeof map !== "undefined" && map && map.invalidateSize) {
-        map.invalidateSize();
-      }
-    }, 80);
-  }
-  if (!silent) {
-    // charts sized while hidden need a redraw when their screen appears
-    if (name === "analyse" && state.result && typeof drawChart === "function") {
-      setTimeout(() => { try { drawChart(); } catch (e) { /* noop */ } }, 60);
-    }
-  }
 }
 
 /* ============================================================
