@@ -1,28 +1,45 @@
-"""Curated catalog of NASA POWER Earth science variables."""
+"""Curated catalog of NASA POWER Earth science variables and Earth System Spheres."""
+
+SPHERES = [
+    {"id": "all", "code": "ALL", "name": "All Spheres", "desc": "Complete Earth system observation"},
+    {"id": "atmosphere", "code": "ATM", "name": "Atmosphere", "desc": "Gaseous envelope driving weather, thermodynamic gradients, and heat transport"},
+    {"id": "hydrosphere", "code": "HYD", "name": "Hydrosphere", "desc": "Water cycle, latent heat flux, moisture transport, and atmospheric saturation"},
+    {"id": "energy", "code": "ENG", "name": "Energy & Radiation", "desc": "Earth radiant energy balance: incoming solar shortwave vs. downwelling thermal infrared"},
+]
 
 CATALOG = [
     {"id": "T2M", "name": "Air Temperature", "unit": "°C", "color": "#ff7a33",
-     "mission": "MERRA-2", "desc": "Mean near-surface air temperature"},
+     "mission": "MERRA-2", "desc": "Mean near-surface air temperature",
+     "sphere": "atmosphere", "sphere_code": "ATM", "sphere_name": "Atmosphere"},
     {"id": "T2M_MAX", "name": "Max Temperature", "unit": "°C", "color": "#ffa564",
-     "mission": "MERRA-2", "desc": "Monthly mean of daily maximum temperature"},
+     "mission": "MERRA-2", "desc": "Monthly mean of daily maximum temperature",
+     "sphere": "atmosphere", "sphere_code": "ATM", "sphere_name": "Atmosphere"},
     {"id": "T2M_MIN", "name": "Min Temperature", "unit": "°C", "color": "#ffc899",
-     "mission": "MERRA-2", "desc": "Monthly mean of daily minimum temperature"},
+     "mission": "MERRA-2", "desc": "Monthly mean of daily minimum temperature",
+     "sphere": "atmosphere", "sphere_code": "ATM", "sphere_name": "Atmosphere"},
     {"id": "PRECTOTCORR", "name": "Precipitation", "unit": "mm/day", "color": "#5b9cf0",
-     "mission": "GPCP", "desc": "Corrected total precipitation"},
+     "mission": "GPCP", "desc": "Corrected total precipitation",
+     "sphere": "hydrosphere", "sphere_code": "HYD", "sphere_name": "Hydrosphere"},
     {"id": "RH2M", "name": "Relative Humidity", "unit": "%", "color": "#8fb8d8",
-     "mission": "MERRA-2", "desc": "Relative humidity at 2 m"},
+     "mission": "MERRA-2", "desc": "Relative humidity at 2 m",
+     "sphere": "hydrosphere", "sphere_code": "HYD", "sphere_name": "Hydrosphere"},
     {"id": "WS2M", "name": "Wind Speed", "unit": "m/s", "color": "#b09be8",
-     "mission": "MERRA-2", "desc": "Wind speed at 2 m height"},
+     "mission": "MERRA-2", "desc": "Wind speed at 2 m height",
+     "sphere": "atmosphere", "sphere_code": "ATM", "sphere_name": "Atmosphere"},
     {"id": "ALLSKY_SFC_SW_DNI", "name": "Solar Irradiance", "unit": "kWh/m²/day",
      "color": "#e3c265", "mission": "CERES",
-     "desc": "All sky surface direct normal irradiance"},
+     "desc": "All sky surface direct normal irradiance",
+     "sphere": "energy", "sphere_code": "ENG", "sphere_name": "Energy & Radiation"},
     {"id": "ALLSKY_SFC_LW_DWN", "name": "Longwave Flux", "unit": "W/m²",
      "color": "#e88bb0", "mission": "CERES",
-     "desc": "Downwelling thermal infrared radiative flux"},
+     "desc": "Downwelling thermal infrared radiative flux",
+     "sphere": "energy", "sphere_code": "ENG", "sphere_name": "Energy & Radiation"},
     {"id": "QV2M", "name": "Specific Humidity", "unit": "g/kg", "color": "#7fd3a0",
-     "mission": "MERRA-2", "desc": "Specific humidity at 2 m"},
+     "mission": "MERRA-2", "desc": "Specific humidity at 2 m",
+     "sphere": "hydrosphere", "sphere_code": "HYD", "sphere_name": "Hydrosphere"},
     {"id": "PS", "name": "Surface Pressure", "unit": "kPa", "color": "#9aa6b4",
-     "mission": "MERRA-2", "desc": "Surface air pressure"},
+     "mission": "MERRA-2", "desc": "Surface air pressure",
+     "sphere": "atmosphere", "sphere_code": "ATM", "sphere_name": "Atmosphere"},
 ]
 
 REGIONS = [

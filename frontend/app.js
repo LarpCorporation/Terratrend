@@ -25,6 +25,8 @@ const state = {
   result: null,
   mode: "yearly",
   activeVarIdx: 0,
+  activeSphere: "all",
+  compareMode: false,
   satellite: null,
   selectedCellBbox: null,
   activeSatBbox: null,
@@ -66,6 +68,15 @@ async function boot() {
 
   $("run").addEventListener("click", analyze);
   $("region").addEventListener("change", onRegionChange);
+  const compToggle = $("toggle-compare-mode");
+  if (compToggle) compToggle.addEventListener("click", toggleCompareMode);
+  const compRegSel = $("compare-region");
+  if (compRegSel) compRegSel.addEventListener("change", onCompareRegionChange);
+
+  document.querySelectorAll(".sphere-tab").forEach((tab) => {
+    tab.addEventListener("click", () => setSphereFilter(tab.dataset.sphere));
+  });
+
   $("start").addEventListener("change", clampRange);
   $("end").addEventListener("change", clampRange);
   document.querySelectorAll(".chart-panel .seg-btn").forEach((b) =>
@@ -99,12 +110,25 @@ function startClock() {
 }
 
 /* ============================================================
-   VARIABLE LIST
+   VARIABLE LIST & EARTH SYSTEM SPHERES
    ============================================================ */
+function setSphereFilter(sphere) {
+  state.activeSphere = sphere || "all";
+  document.querySelectorAll(".sphere-tab").forEach((tab) => {
+    tab.classList.toggle("active", tab.dataset.sphere === state.activeSphere);
+  });
+  renderVarList();
+}
+
 function renderVarList() {
   const box = $("var-list");
   box.innerHTML = "";
-  state.catalog.variables.forEach((v) => {
+  const varsToDisplay = state.catalog.variables.filter((v) => {
+    if (state.activeSphere === "all") return true;
+    return v.sphere === state.activeSphere;
+  });
+
+  varsToDisplay.forEach((v) => {
     const on = state.selected.includes(v.id);
     const el = document.createElement("div");
     el.className = "var-item" + (on ? " on" : "");
@@ -112,6 +136,7 @@ function renderVarList() {
     el.innerHTML = `
       <i class="var-dot"></i>
       <span class="var-name">${esc(v.name)}</span>
+      <span class="var-sphere-badge">${esc(v.sphere_code || "ATM")}</span>
       <span class="var-unit">${esc(v.unit)}</span>`;
     el.addEventListener("click", () => toggleVar(v.id));
     box.appendChild(el);
@@ -139,17 +164,66 @@ function toggleVar(id) {
   if (state.result) analyze();
 }
 
+/* ============================================================
+   REGION SELECTION & CONTRAST MODE
+   ============================================================ */
+function toggleCompareMode() {
+  state.compareMode = !state.compareMode;
+  const pill = $("toggle-compare-mode");
+  const grp = $("compare-region-group");
+  if (state.compareMode) {
+    if (pill) {
+      pill.classList.add("active");
+      pill.textContent = "MODE: CONTRAST (A vs B)";
+    }
+    if (grp) grp.style.display = "block";
+    const selA = $("region");
+    const selB = $("compare-region");
+    if (selA && selB && selA.value === selB.value) {
+      const alt = state.catalog.regions.find((r) => r.id !== selA.value);
+      if (alt) selB.value = alt.id;
+    }
+    onCompareRegionChange();
+  } else {
+    if (pill) {
+      pill.classList.remove("active");
+      pill.textContent = "MODE: SINGLE";
+    }
+    if (grp) grp.style.display = "none";
+    const contrastPanel = $("contrast-panel");
+    if (contrastPanel) contrastPanel.style.display = "none";
+    if (state.result && state.result.compare) {
+      delete state.result.compare;
+      render();
+    }
+  }
+  if (state.result) analyze();
+}
+
 function renderRegionSelect() {
   const sel = $("region");
+  const selB = $("compare-region");
   sel.innerHTML = "";
+  if (selB) selB.innerHTML = "";
+
   state.catalog.regions.forEach((r) => {
     const o = document.createElement("option");
     o.value = r.id;
     o.textContent = r.name;
     sel.appendChild(o);
+
+    if (selB) {
+      const oB = document.createElement("option");
+      oB.value = r.id;
+      oB.textContent = r.name;
+      selB.appendChild(oB);
+    }
   });
+
   sel.value = "sahel";
+  if (selB) selB.value = "amazon";
   onRegionChange();
+  if (selB) onCompareRegionChange();
 }
 
 function onRegionChange() {
@@ -160,10 +234,23 @@ function onRegionChange() {
     : "NO REGION SELECTED";
   updateGlobeOverlay();
   if (regionMesh) regionMesh.position.copy(bboxCenter(r.bbox, 1.005));
+  if (state.result) analyze();
+}
+
+function onCompareRegionChange() {
+  const r = currentCompareRegion();
+  const descEl = $("compare-region-desc");
+  if (descEl) descEl.textContent = r ? r.desc : "";
+  if (state.result && state.compareMode) analyze();
 }
 
 function currentRegion() {
   const id = $("region") ? $("region").value : null;
+  return state.catalog.regions.find((r) => r.id === id) || null;
+}
+
+function currentCompareRegion() {
+  const id = $("compare-region") ? $("compare-region").value : null;
   return state.catalog.regions.find((r) => r.id === id) || null;
 }
 
@@ -222,6 +309,13 @@ async function analyze() {
     end: $("end").value,
   });
 
+  if (state.compareMode && $("compare-region")) {
+    const compVal = $("compare-region").value;
+    if (compVal && compVal !== $("region").value) {
+      params.set("compare_region", compVal);
+    }
+  }
+
   try {
     const r = await fetch(`/api/analyze?${params}`);
     const data = await r.json();
@@ -247,6 +341,8 @@ function render() {
   const d = state.result;
   renderHeader(d);
   renderSignals(d);
+  renderCouplings(d);
+  renderRegionalContrast(d);
   renderCells(d);
   renderLegend(d);
   renderSatellite(d);
@@ -254,6 +350,88 @@ function render() {
   drawChart();
   renderGlobeRegions(d);
   updateGlobeOverlay();
+}
+
+function renderCouplings(d) {
+  const panel = $("coupling-panel");
+  const list = $("coupling-list");
+  if (!panel || !list) return;
+
+  const couplings = d.couplings || [];
+  if (!couplings.length) {
+    panel.style.display = "none";
+    return;
+  }
+
+  panel.style.display = "block";
+  $("coupling-tag").textContent = `${couplings.length} DETECTED`;
+
+  list.innerHTML = couplings.map((c) => {
+    const rSign = c.r > 0 ? "+" : "";
+    return `
+      <div class="coupling-card ${c.phase}">
+        <div class="coupling-top">
+          <span class="coupling-title">${esc(c.title)}</span>
+          <span class="coupling-r">r = ${rSign}${num(c.r, 2)}</span>
+        </div>
+        <div class="coupling-spheres">
+          <span>[${esc(c.sphere_a_code)}] ${esc(c.var_a_name)}</span>
+          <span>&harr;</span>
+          <span>[${esc(c.sphere_b_code)}] ${esc(c.var_b_name)}</span>
+        </div>
+        <div class="coupling-phase-tag ${c.phase}">${esc(c.phase_label)}</div>
+        <p class="coupling-desc">${esc(c.description)}</p>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderRegionalContrast(d) {
+  const panel = $("contrast-panel");
+  const list = $("contrast-list");
+  if (!panel || !list) return;
+
+  if (!d.compare || !d.compare.contrasts || !d.compare.contrasts.length) {
+    panel.style.display = "none";
+    return;
+  }
+
+  panel.style.display = "block";
+  const comp = d.compare;
+  $("contrast-tag").textContent = `${d.region.name.toUpperCase()} VS ${comp.region.name.toUpperCase()}`;
+
+  list.innerHTML = comp.contrasts.map((c) => {
+    const diffSign = c.diff_decade > 0 ? "+" : "";
+    const sASign = c.slope_a_decade > 0 ? "+" : "";
+    const sBSign = c.slope_b_decade > 0 ? "+" : "";
+    let verdictCls = "localized";
+    if (c.verdict.includes("DIVERGENT")) verdictCls = "divergent";
+    else if (c.verdict.includes("PARALLEL")) verdictCls = "parallel";
+
+    return `
+      <div class="contrast-card">
+        <div class="contrast-head">
+          <span class="contrast-var-name">${esc(c.var_name)}</span>
+          <span class="contrast-verdict-pill ${verdictCls}">${esc(c.verdict)}</span>
+        </div>
+        <div class="contrast-rows">
+          <div class="contrast-row reg-a">
+            <span>A: ${esc(c.region_a)}</span>
+            <b>${sASign}${num(c.slope_a_decade, 2)} ${esc(c.unit)}/dec (p=${num(c.p_a, 3)})</b>
+          </div>
+          <div class="contrast-row reg-b">
+            <span>B: ${esc(c.region_b)}</span>
+            <b>${sBSign}${num(c.slope_b_decade, 2)} ${esc(c.unit)}/dec (p=${num(c.p_b, 3)})</b>
+          </div>
+        </div>
+        <div class="contrast-delta">
+          <span>Slope Delta: <b>${diffSign}${num(c.diff_decade, 2)} ${esc(c.unit)}/dec</b></span>
+          <span>Co-trend: <b>r = ${c.r > 0 ? "+" : ""}${num(c.r, 2)}</b></span>
+        </div>
+        <p class="contrast-desc">${esc(c.explanation)}</p>
+      </div>
+    `;
+  }).join("");
 }
 
 function renderLiterature(d) {
@@ -312,6 +490,15 @@ function renderLegend(d) {
     });
     box.appendChild(li);
   });
+
+  if (d.compare && d.compare.region) {
+    const liComp = document.createElement("li");
+    liComp.innerHTML = `
+      <i class="sw" style="background:#00e5ff;box-shadow:0 0 7px #00e5ff;"></i>
+      <span class="legend-var-name active">[B] ${esc(d.compare.region.name)}</span>
+      <span class="legend-chip active">CONTRAST</span>`;
+    box.appendChild(liComp);
+  }
 }
 
 function renderHeader(d) {
@@ -1165,6 +1352,81 @@ function renderDataModal() {
     });
   }
 
+  // Render Earth System Couplings inside Expanded Modal
+  const coupSec = $("eg-coupling-section");
+  const coupGrid = $("eg-coupling-grid");
+  if (coupSec && coupGrid) {
+    const couplings = d.couplings || [];
+    if (couplings.length > 0) {
+      coupSec.style.display = "block";
+      $("eg-coupling-count").textContent = `${couplings.length} DETECTED`;
+      coupGrid.innerHTML = couplings.map((c) => {
+        const rSign = c.r > 0 ? "+" : "";
+        return `
+          <div class="coupling-card ${c.phase}">
+            <div class="coupling-top">
+              <span class="coupling-title">${esc(c.title)}</span>
+              <span class="coupling-r">r = ${rSign}${num(c.r, 2)}</span>
+            </div>
+            <div class="coupling-spheres">
+              <span>[${esc(c.sphere_a_code)}] ${esc(c.var_a_name)}</span>
+              <span>&harr;</span>
+              <span>[${esc(c.sphere_b_code)}] ${esc(c.var_b_name)}</span>
+            </div>
+            <div class="coupling-phase-tag ${c.phase}">${esc(c.phase_label)}</div>
+            <p class="coupling-desc">${esc(c.description)}</p>
+          </div>
+        `;
+      }).join("");
+    } else {
+      coupSec.style.display = "none";
+    }
+  }
+
+  // Render Regional Contrast inside Expanded Modal
+  const contSec = $("eg-contrast-section");
+  const contGrid = $("eg-contrast-grid");
+  if (contSec && contGrid) {
+    if (d.compare && d.compare.contrasts && d.compare.contrasts.length > 0) {
+      contSec.style.display = "block";
+      $("eg-contrast-badge").textContent = `${d.region.name.toUpperCase()} VS ${d.compare.region.name.toUpperCase()}`;
+      contGrid.innerHTML = d.compare.contrasts.map((c) => {
+        const diffSign = c.diff_decade > 0 ? "+" : "";
+        const sASign = c.slope_a_decade > 0 ? "+" : "";
+        const sBSign = c.slope_b_decade > 0 ? "+" : "";
+        let verdictCls = "localized";
+        if (c.verdict.includes("DIVERGENT")) verdictCls = "divergent";
+        else if (c.verdict.includes("PARALLEL")) verdictCls = "parallel";
+
+        return `
+          <div class="contrast-card">
+            <div class="contrast-head">
+              <span class="contrast-var-name">${esc(c.var_name)}</span>
+              <span class="contrast-verdict-pill ${verdictCls}">${esc(c.verdict)}</span>
+            </div>
+            <div class="contrast-rows">
+              <div class="contrast-row reg-a">
+                <span>A: ${esc(c.region_a)}</span>
+                <b>${sASign}${num(c.slope_a_decade, 2)} ${esc(c.unit)}/dec (p=${num(c.p_a, 3)})</b>
+              </div>
+              <div class="contrast-row reg-b">
+                <span>B: ${esc(c.region_b)}</span>
+                <b>${sBSign}${num(c.slope_b_decade, 2)} ${esc(c.unit)}/dec (p=${num(c.p_b, 3)})</b>
+              </div>
+            </div>
+            <div class="contrast-delta">
+              <span>Slope Delta: <b>${diffSign}${num(c.diff_decade, 2)} ${esc(c.unit)}/dec</b></span>
+              <span>Co-trend: <b>r = ${c.r > 0 ? "+" : ""}${num(c.r, 2)}</b></span>
+            </div>
+            <p class="contrast-desc">${esc(c.explanation)}</p>
+          </div>
+        `;
+      }).join("");
+    } else {
+      contSec.style.display = "none";
+    }
+  }
+
   requestAnimationFrame(() => {
     drawExpandedChart();
   });
@@ -1208,12 +1470,15 @@ function drawExpandedChart() {
   grad.addColorStop(0, hexA(accent, 0.38));
   grad.addColorStop(1, hexA(accent, 0.01));
 
+  const hasCompare = !!(d.compare && d.compare.series && d.compare.series[state.expandedVarIdx]);
+  const sB = hasCompare ? d.compare.series[state.expandedVarIdx] : null;
+
   const datasets = [{
-    label: s.variable.name,
+    label: hasCompare ? `${d.region.name}: ${s.variable.name}` : s.variable.name,
     data: chartPoints,
     borderColor: accent,
-    backgroundColor: grad,
-    fill: true,
+    backgroundColor: hasCompare ? "transparent" : grad,
+    fill: !hasCompare,
     tension: 0.25,
     pointRadius: isYear ? 3.5 : 1.2,
     pointHoverRadius: 6,
@@ -1235,7 +1500,7 @@ function drawExpandedChart() {
       lineFn = fitLine(ptPairs);
     }
     datasets.push({
-      label: "Theil–Sen Trend Line",
+      label: hasCompare ? `Trend (${d.region.name})` : "Theil–Sen Trend Line",
       data: chartPoints.map((p) => ({ x: p.x, y: lineFn(p.x) })),
       borderColor: "#ffffff",
       borderDash: [6, 4],
@@ -1244,6 +1509,61 @@ function drawExpandedChart() {
       fill: false,
       tension: 0,
     });
+  }
+
+  if (hasCompare && sB) {
+    let chartPointsB = [];
+    if (isYear) {
+      chartPointsB = sB.yearly_timeseries.map((p) => ({
+        x: Number(p.year),
+        y: p.value,
+      }));
+    } else {
+      chartPointsB = sB.region_timeseries.map((v, i) => ({
+        x: i,
+        y: v,
+      }));
+    }
+
+    datasets.push({
+      label: `${d.compare.region.name}: ${sB.variable.name}`,
+      data: chartPointsB,
+      borderColor: "#00e5ff",
+      borderDash: [5, 4],
+      backgroundColor: "transparent",
+      fill: false,
+      tension: 0.25,
+      pointRadius: isYear ? 3.5 : 1.2,
+      pointHoverRadius: 6,
+      pointBackgroundColor: "#00e5ff",
+      borderWidth: 2,
+      spanGaps: true,
+    });
+
+    const validPtsB = chartPointsB.filter((p) => p.y !== null && Number.isFinite(p.y));
+    if (validPtsB.length > 2) {
+      const oB = sB.overall || {};
+      let lineFnB;
+      if (oB.ok) {
+        const slopePerStepB = oB.slope * (isYear ? 1 : 1 / 12);
+        const midYB = validPtsB.reduce((a, p) => a + p.y, 0) / validPtsB.length;
+        const midXB = (minX + maxX) / 2;
+        lineFnB = (x) => midYB + slopePerStepB * (x - midXB);
+      } else {
+        const ptPairsB = validPtsB.map((p) => [p.x, p.y]);
+        lineFnB = fitLine(ptPairsB);
+      }
+      datasets.push({
+        label: `Trend (${d.compare.region.name})`,
+        data: chartPointsB.map((p) => ({ x: p.x, y: lineFnB(p.x) })),
+        borderColor: "rgba(0, 229, 255, 0.75)",
+        borderDash: [3, 3],
+        borderWidth: 1.5,
+        pointRadius: 0,
+        fill: false,
+        tension: 0,
+      });
+    }
   }
 
   expandedChart = new Chart(ctx, {
@@ -1433,17 +1753,40 @@ function drawChart() {
   grad.addColorStop(0, hexA(accent, 0.34));
   grad.addColorStop(1, hexA(accent, 0.01));
 
+  const hasCompare = !!(d.compare && d.compare.series && d.compare.series[state.activeVarIdx]);
+  const sB = hasCompare ? d.compare.series[state.activeVarIdx] : null;
+
   const datasets = [{
+    label: hasCompare ? `${d.region.name}: ${s.variable.name}` : s.variable.name,
     data: values,
     borderColor: accent,
-    backgroundColor: grad,
-    fill: true,
+    backgroundColor: hasCompare ? "transparent" : grad,
+    fill: !hasCompare,
     tension: 0.3,
     pointRadius: isYear ? 0 : 0,
     pointHoverRadius: 4,
-    borderWidth: 1.6,
+    borderWidth: 1.8,
     spanGaps: true,
   }];
+
+  if (hasCompare && sB) {
+    const valsB = isYear
+      ? sB.yearly_timeseries.map((p) => p.value)
+      : sB.region_timeseries;
+    datasets.push({
+      label: `${d.compare.region.name}: ${sB.variable.name}`,
+      data: valsB,
+      borderColor: "#00e5ff",
+      borderDash: [5, 4],
+      backgroundColor: "transparent",
+      fill: false,
+      tension: 0.3,
+      pointRadius: isYear ? 0 : 0,
+      pointHoverRadius: 4,
+      borderWidth: 1.8,
+      spanGaps: true,
+    });
+  }
 
   const pts = values.map((v, i) => [i, v]).filter((p) => p[1] !== null);
   if (pts.length > 2) {
@@ -1457,6 +1800,7 @@ function drawChart() {
       line = fitLine(pts);
     }
     datasets.push({
+      label: hasCompare ? `Trend (${d.region.name})` : "Trend Line",
       data: values.map((_, i) => line(i)),
       borderColor: "#e9ebed",
       borderDash: [5, 4],
@@ -1520,14 +1864,21 @@ function drawChart() {
     },
   });
 
-  $("trendline").innerHTML = o.ok
-    ? `<b>${s.variable.name}</b> ${o.direction === "rising" ? "rising" :
-       o.direction === "falling" ? "falling" : "flat"} at
-       <b>${o.per_decade > 0 ? "+" : ""}${num(o.per_decade, 3)}
-       ${esc(s.variable.unit)}/decade</b> · MK z=<b>${num(o.z, 2)}</b>
-       p=<b>${o.p < 0.001 ? "<0.001" : num(o.p, 3)}</b>
-       ${o.significant ? "· SIGNIFICANT" : "· NOT SIGNIFICANT"}`
-    : "Insufficient data for trend estimation.";
+  if (hasCompare && sB && sB.overall && sB.overall.ok) {
+    const oB = sB.overall;
+    $("trendline").innerHTML =
+      `<b>[A] ${d.region.name}:</b> ${o.per_decade > 0 ? "+" : ""}${num(o.per_decade, 2)} ${s.variable.unit}/dec (${o.direction.toUpperCase()}) · ` +
+      `<b>[B] ${d.compare.region.name}:</b> ${oB.per_decade > 0 ? "+" : ""}${num(oB.per_decade, 2)} ${sB.variable.unit}/dec (${oB.direction.toUpperCase()})`;
+  } else {
+    $("trendline").innerHTML = o.ok
+      ? `<b>${s.variable.name}</b> ${o.direction === "rising" ? "rising" :
+         o.direction === "falling" ? "falling" : "flat"} at
+         <b>${o.per_decade > 0 ? "+" : ""}${num(o.per_decade, 3)}
+         ${esc(s.variable.unit)}/decade</b> · MK z=<b>${num(o.z, 2)}</b>
+         p=<b>${o.p < 0.001 ? "<0.001" : num(o.p, 3)}</b>
+         ${o.significant ? "· SIGNIFICANT" : "· NOT SIGNIFICANT"}`
+      : "Insufficient data for trend estimation.";
+  }
 }
 
 function fitLine(pts) {
@@ -1833,6 +2184,51 @@ function renderGlobeRegions(d) {
   ring.userData = { pulsing: true };
   globeGroup.add(ring);
   regionMarkers.push(ring);
+
+  // If Regional Contrast Mode is active, render Region B markers and pulsing cyan ring
+  if (d.compare && d.compare.series && d.compare.region && d.compare.region.bbox) {
+    const sB = d.compare.series[state.activeVarIdx] || d.compare.series[0];
+    const bboxB = d.compare.region.bbox;
+    const cLatB = (Math.min(bboxB[1], bboxB[3]) + Math.max(bboxB[1], bboxB[3])) / 2;
+    const cLonB = (Math.min(bboxB[0], bboxB[2]) + Math.max(bboxB[0], bboxB[2])) / 2;
+
+    sB.cells.forEach((c) => {
+      if (c.slope === null) return;
+      const colour = !c.significant ? "#2a3d45" : (c.direction === "falling" ? "#29b6f6" : "#00e5ff");
+      const geo = new THREE.SphereGeometry(0.016, 8, 8);
+      const mat = new THREE.MeshBasicMaterial({
+        color: colour,
+        transparent: true,
+        opacity: c.significant ? 0.95 : 0.4,
+      });
+      const dot = new THREE.Mesh(geo, mat);
+      const pLat = cLatB + (c.lat - cLatB) * MAG;
+      const pLon = cLonB + (c.lon - cLonB) * MAG;
+      dot.position.copy(latLonToVec3(pLat, pLon, R * 1.055));
+      dot.userData = { cell: c, variable: sB.variable, compare: true };
+      dot.renderOrder = 8;
+      globeGroup.add(dot);
+      regionMarkers.push(dot);
+    });
+
+    const bwB = Math.abs(bboxB[2] - bboxB[0]) * MAG;
+    const bhB = Math.abs(bboxB[3] - bboxB[1]) * MAG;
+    const angRadB = (Math.max(bwB, bhB) / 2) * Math.PI / 180 * 1.15;
+    const ringGeoB = new THREE.RingGeometry(
+      Math.max(0.02, angRadB * 0.9), Math.max(0.024, angRadB), 64, 1);
+    const ringMatB = new THREE.MeshBasicMaterial({
+      color: 0x00e5ff, side: THREE.DoubleSide, transparent: true,
+      opacity: 0.85, depthWrite: false, depthTest: false,
+    });
+    const c0B = bboxCenter(bboxB, 1);
+    const ringB = new THREE.Mesh(ringGeoB, ringMatB);
+    ringB.position.copy(c0B.clone().multiplyScalar(1.014));
+    ringB.lookAt(c0B.clone().multiplyScalar(2));
+    ringB.renderOrder = 9;
+    ringB.userData = { pulsing: true };
+    globeGroup.add(ringB);
+    regionMarkers.push(ringB);
+  }
 }
 
 function updateGlobeOverlay() {

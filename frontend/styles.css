@@ -982,6 +982,154 @@ body {
   color: #fff; border-color: var(--hi); background: #1d2127;
 }
 
+/* ---------- Earth System Spheres & Filter Bar ---------- */
+.sphere-filter-bar {
+  display: flex; gap: 4px; margin-bottom: 8px;
+}
+.sphere-tab {
+  flex: 1; padding: 4px 2px; background: #0c0e11;
+  border: 1px solid var(--line); color: var(--muted);
+  font-family: var(--font); font-size: .46rem; letter-spacing: .08em;
+  text-align: center; cursor: pointer; transition: all .15s ease;
+}
+.sphere-tab:hover {
+  color: var(--text-bright); border-color: var(--line-hot);
+}
+.sphere-tab.active {
+  background: #191c22; color: #fff; border-color: var(--hi);
+  box-shadow: 0 0 6px rgba(255, 255, 255, .1);
+}
+.var-sphere-badge {
+  font-size: .42rem; letter-spacing: .06em; padding: 1px 4px;
+  border: 1px solid var(--line); color: var(--muted);
+  margin-left: auto; text-transform: uppercase;
+}
+
+/* ---------- Region Contrast Mode ---------- */
+.hud-mode-pill {
+  font-family: var(--font); font-size: .48rem; letter-spacing: .08em;
+  background: #111316; border: 1px solid var(--line); color: var(--muted);
+  padding: 2px 7px; cursor: pointer; transition: all .15s ease;
+}
+.hud-mode-pill:hover {
+  border-color: var(--line-hot); color: var(--text-bright);
+}
+.hud-mode-pill.active {
+  background: #1b2129; border-color: #00e5ff; color: #00e5ff;
+  box-shadow: 0 0 6px rgba(0, 229, 255, .25);
+}
+.hud-field-lbl {
+  display: block; font-family: var(--font); font-size: .46rem;
+  letter-spacing: .12em; color: var(--muted); margin-bottom: 4px;
+}
+.region-contrast-divider {
+  height: 1px; background: var(--line); margin: 8px 0;
+}
+.region-select-group {
+  margin-bottom: 6px;
+}
+
+/* ---------- Earth System Coupling Panel ---------- */
+.coupling-list {
+  display: flex; flex-direction: column; gap: 8px;
+}
+.coupling-card {
+  background: #0d0f12; border: 1px solid var(--line);
+  padding: 8px 10px; display: flex; flex-direction: column; gap: 5px;
+  font-family: var(--font);
+}
+.coupling-card.divergent {
+  border-left: 2px solid #ff7a33;
+}
+.coupling-card.in_phase {
+  border-left: 2px solid #00e5ff;
+}
+.coupling-card.moderate {
+  border-left: 2px solid #e3c265;
+}
+.coupling-card.decoupled {
+  border-left: 2px solid var(--line);
+}
+.coupling-top {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 6px;
+}
+.coupling-title {
+  font-size: .54rem; font-weight: 600; color: var(--text-bright);
+  letter-spacing: .08em;
+}
+.coupling-r {
+  font-size: .52rem; font-weight: 700; color: #fff;
+}
+.coupling-spheres {
+  display: flex; gap: 6px; font-size: .44rem; color: var(--muted);
+  letter-spacing: .06em;
+}
+.coupling-spheres span {
+  padding: 1px 4px; background: #121418; border: 1px solid var(--line);
+}
+.coupling-phase-tag {
+  font-size: .46rem; letter-spacing: .1em; font-weight: 600;
+  padding: 2px 5px; background: #15181d; width: fit-content;
+}
+.coupling-phase-tag.divergent { color: #ff7a33; border: 1px solid rgba(255, 122, 51, .3); }
+.coupling-phase-tag.in_phase { color: #00e5ff; border: 1px solid rgba(0, 229, 255, .3); }
+.coupling-phase-tag.moderate { color: #e3c265; border: 1px solid rgba(227, 194, 101, .3); }
+.coupling-phase-tag.decoupled { color: var(--muted); border: 1px solid var(--line); }
+.coupling-desc {
+  font-size: .48rem; line-height: 1.45; color: #b8bcc2; margin: 0;
+  letter-spacing: .02em;
+}
+
+/* ---------- Regional Contrast Panel ---------- */
+.contrast-list {
+  display: flex; flex-direction: column; gap: 8px;
+}
+.contrast-card {
+  background: #0d0f12; border: 1px solid var(--line);
+  padding: 8px 10px; display: flex; flex-direction: column; gap: 6px;
+  font-family: var(--font);
+}
+.contrast-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+}
+.contrast-var-name {
+  font-size: .54rem; font-weight: 600; color: var(--text-bright);
+}
+.contrast-verdict-pill {
+  font-size: .46rem; font-weight: 600; letter-spacing: .08em;
+  padding: 2px 5px; background: #14171c; border: 1px solid var(--line);
+}
+.contrast-verdict-pill.divergent { color: #ff7a33; border-color: rgba(255,122,51,.35); }
+.contrast-verdict-pill.parallel { color: #00e5ff; border-color: rgba(0,229,255,.35); }
+.contrast-verdict-pill.localized { color: #e3c265; border-color: rgba(227,194,101,.35); }
+
+.contrast-rows {
+  display: flex; flex-direction: column; gap: 3px; font-size: .48rem;
+}
+.contrast-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 2px 4px; background: #111317; border-left: 2px solid transparent;
+}
+.contrast-row.reg-a { border-color: #ff7a33; }
+.contrast-row.reg-b { border-color: #00e5ff; }
+.contrast-delta {
+  display: flex; justify-content: space-between; padding-top: 3px;
+  border-top: 1px solid var(--line); font-size: .46rem; color: var(--muted);
+}
+.contrast-desc {
+  font-size: .46rem; line-height: 1.4; color: #b8bcc2; margin: 0;
+}
+
+/* ---------- Expanded Modal Coupling & Contrast Sections ---------- */
+.expanded-coupling-section, .expanded-contrast-section {
+  margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line);
+  display: flex; flex-direction: column; gap: 10px;
+}
+.eg-coupling-grid, .eg-contrast-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 10px;
+}
+
 /* ---------- responsive ---------- */
 @media (max-width: 1500px) {
   .hud-grid { grid-template-columns: 244px minmax(0, 1fr) 282px; }

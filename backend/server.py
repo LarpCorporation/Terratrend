@@ -14,7 +14,10 @@ import catalog
 import gibs
 import literature
 import power_client
-from analysis import analyze_series, seasonal_mk
+from analysis import (
+    analyze_series, seasonal_mk,
+    analyze_cross_coupling, analyze_regional_contrast
+)
 
 BASE_DIR = Path(__file__).resolve().parent
 FRONTEND_DIR = BASE_DIR.parent / "frontend"
@@ -116,7 +119,7 @@ def _summarize(cells):
     }
 
 
-def run_analysis(variables, region, start, end, nx=5, ny=5):
+def run_analysis(variables, region, start, end, nx=5, ny=5, compare_region=None):
     """Core analysis pipeline across one or more variables."""
     if end - start < 8:
         raise ValueError("Need at least 9 years of data (end - start >= 8)")
@@ -160,20 +163,64 @@ def run_analysis(variables, region, start, end, nx=5, ny=5):
             block["literature"] = {"ok": False, "error": str(e), "papers": []}
         series.append(block)
 
+    couplings = []
+    if len(series) >= 2:
+        for i in range(len(series)):
+            for j in range(i + 1, len(series)):
+                block_a = series[i]
+                block_b = series[j]
+                ts_a = [p["value"] for p in block_a["yearly_timeseries"]]
+                ts_b = [p["value"] for p in block_b["yearly_timeseries"]]
+                c = analyze_cross_coupling(
+                    block_a["variable"], block_b["variable"],
+                    ts_a, ts_b,
+                    block_a["overall"], block_b["overall"]
+                )
+                couplings.append(c)
+
+    compare_data = None
+    if compare_region and compare_region != region:
+        reg_b = next((r for r in catalog.REGIONS if r["id"] == compare_region), None)
+        if reg_b:
+            compare_series = []
+            contrasts = []
+            for i, var in enumerate(vars_):
+                grid_b = power_client.fetch_grid(var["id"], reg_b["bbox"], start, end, nx, ny)
+                block_b = analyze_variable(var, grid_b, months, month_labels)
+                compare_series.append(block_b)
+                contrast = analyze_regional_contrast(
+                    var, reg, reg_b,
+                    series[i]["yearly_timeseries"],
+                    block_b["yearly_timeseries"],
+                    series[i]["overall"],
+                    block_b["overall"]
+                )
+                contrasts.append(contrast)
+
+            compare_data = {
+                "region": reg_b,
+                "series": compare_series,
+                "contrasts": contrasts,
+            }
+
     satellite_data = None
     try:
         satellite_data = gibs.get_satellite_evidence(reg, start, end)
     except Exception as e:  # noqa: BLE001
         satellite_data = {"error": str(e)}
 
-    return {
+    out = {
         "region": reg, "start": start, "end": end,
         "months": month_labels,
         "series": series,
         "grid": {"nx": nx, "ny": ny, "bbox": reg["bbox"]},
         "satellite": satellite_data,
+        "couplings": couplings,
         "sources": ["NASA POWER (MERRA-2 / GPCP / CERES)", "NASA GIBS (MODIS / VIIRS)", "OpenAlex"],
     }
+    if compare_data:
+        out["compare"] = compare_data
+    return out
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -215,6 +262,7 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/api/catalog":
                 return self._json(200, {
                     "variables": catalog.CATALOG,
+                    "spheres": catalog.SPHERES,
                     "regions": catalog.REGIONS,
                     "years": {"min": 1985, "max": 2024},
                     "max_variables": MAX_VARS,
@@ -246,6 +294,7 @@ class Handler(BaseHTTPRequestHandler):
                 raw = q.get("variables", q.get("variable", [""]))[0]
                 variables = [v.strip() for v in raw.split(",") if v.strip()]
                 region = q.get("region", [""])[0]
+                compare_region = q.get("compare_region", [""])[0] or None
                 if not variables or not region:
                     return self._json(
                         400, {"error": "variables and region required"})
@@ -255,6 +304,7 @@ class Handler(BaseHTTPRequestHandler):
                     _int(q, "start", 2000), _int(q, "end", 2024),
                     max(3, min(7, _int(q, "nx", 5))),
                     max(3, min(7, _int(q, "ny", 5))),
+                    compare_region=compare_region,
                 )
                 return self._json(200, result)
             return self._static(path)

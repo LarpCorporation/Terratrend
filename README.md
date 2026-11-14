@@ -34,11 +34,14 @@ TerraTrend does all four in one interactive observatory.
 |---|---|
 | **Tap anywhere on the 3D globe** | The nearest focus region is selected and analyzed automatically |
 | **Drag / scroll** | Rotate and zoom the dot-matrix Earth |
+| **Filter by Earth Sphere** | Toggle between ALL, ATM (Atmosphere), HYD (Hydrosphere), and ENG (Energy) |
 | **Select up to 3 variables** | Signals stack in the right rail, each with its own color |
+| **Earth System Coupling** | When 2+ variables are selected, automatically diagnoses cross-sphere physical interactions (VPD expansion, greenhouse radiative trapping, hydrological sensitivity) |
+| **Regional Contrast Mode** | Compare two distinct geographic regions (Region A vs Region B) simultaneously on the 3D globe and trend observatory |
 | **Click a signal or color key** | The globe swaps to that variable's grid analysis |
 | **Hover a grid cell** | Tooltip with lat/lon, slope/decade, p-value, trend verdict |
 | **Click a grid cell** | Cell detail readout in the coordinate bar + orbital zoom action |
-| **Click mini-chart or expand icon ⛶** | Opens high-resolution time series observatory modal with interactive 2-finger scroll/pinch zoom, trackpad swipe panning, horizontal/vertical axis toggles, 4-card statistics, 5×5 spatial consensus matrix, and CSV export |
+| **Click mini-chart or expand icon** | Opens high-resolution time series observatory modal with interactive 2-finger scroll/pinch zoom, trackpad swipe panning, horizontal/vertical axis toggles, 4-card statistics, 5x5 spatial consensus matrix, and CSV export |
 | **Click "Compare Orbital Pass"** | Opens NASA GIBS satellite evidence with interactive split-slider and multi-year comparisons |
 
 ---
@@ -47,12 +50,15 @@ TerraTrend does all four in one interactive observatory.
 
 | Requirement | Implementation |
 |---|---|
-| Select variables from Earth science missions/models | 10 curated NASA POWER variables (MERRA-2, GPCP, CERES) with units and mission attribution |
-| Visualize change over time | Interactive yearly/monthly series with a Theil–Sen trend line |
-| What is changing | Plain-language verdict per variable (▲ rising / ▼ falling / ◆ stable) |
-| Where it is changing | 5×5 gridded trend analysis rendered as colored cells on the globe |
-| How much it is changing | Slope/decade, total change, percent change — per region **and** per cell |
-| Is it significant | **Mann–Kendall** (p < 0.05), **Hirsch–Slack seasonal MK** cross-check, significance stars |
+| Select variables from Earth science missions/models | 10 curated NASA POWER variables (MERRA-2, GPCP, CERES) across 3 Earth System Spheres (Atmosphere, Hydrosphere, Energy) |
+| Multi-Sphere System Framework | Filter variables by Atmosphere (ATM), Hydrosphere (HYD), and Energy (ENG) |
+| Cross-Variable Physical Coupling | Automated thermodynamic coupling detection (VPD expansion, greenhouse radiative trapping, hydrological sensitivity, moisture convergence) with Pearson r |
+| Regional Contrast (A vs B) | Simultaneous dual-region comparison on the 3D globe and trend observatory with differential slope, co-trend correlation, and divergence verdicts |
+| Visualize change over time | Interactive yearly/monthly series with Theil-Sen trend lines and multi-region comparisons |
+| What is changing | Plain-language verdict per variable (rising / falling / stable) |
+| Where it is changing | 5x5 gridded trend analysis rendered as North-aligned colored cells on the globe and consensus matrix |
+| How much it is changing | Slope/decade, total change, percent change — per region and per cell |
+| Is it significant | **Mann-Kendall** (p < 0.05), **Hirsch-Slack seasonal MK** cross-check, significance stars |
 | Visual ground truth | **NASA GIBS & Worldview** orbital imagery comparison (MODIS / VIIRS) via side-by-side & interactive split-slider |
 | Does the science agree? | Live **OpenAlex** literature lookup, relevance-ranked per variable + region |
 
@@ -73,7 +79,7 @@ Then, before judging, warm the cache so every demo click is instant:
 python warm_cache.py
 ```
 
-📘 **Presenting this?** Read [`docs/GUIDE.md`](docs/GUIDE.md) — a plain-English
+**Presenting this?** Read [`docs/GUIDE.md`](docs/GUIDE.md) — a plain-English
 explainer of every statistic (p-values, Mann–Kendall, Theil–Sen, significance,
 multiple comparisons), a number cheat-sheet, a 3-minute demo script, and a bank
 of judge Q&A.
