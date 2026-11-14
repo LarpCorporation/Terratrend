@@ -126,6 +126,13 @@ def analyze_variable(var, grid, months, month_labels):
 
     overall = analyze_series(annual_values)
     seasonal = seasonal_mk(region_ts, period=12)
+    # The observatory modal reads these three straight off `overall`; keep them
+    # there as well as in the `seasonal` tuple so the seasonal MK cross-check is
+    # actually visible instead of rendering "N/A".
+    sz, sp, _stau, ssig = seasonal[0], seasonal[1], seasonal[2], seasonal[3]
+    overall["seasonal_z"] = sz
+    overall["seasonal_p"] = sp
+    overall["seasonal_significant"] = ssig
 
     return {
         "variable": var,
