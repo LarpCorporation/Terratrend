@@ -30,6 +30,17 @@ TerraTrend does all four in one interactive observatory.
 
 ## The experience
 
+Three screens (keys `1` / `2` / `3`) so each surface can breathe:
+
+| Screen | Contains |
+|---|---|
+| **01 · OBSERVE** | 3D globe + regional signal + variable signals — pick, rotate, tap |
+| **02 · ANALYSE** | Full-width trend series (CI + both tests), grid-cell consensus, Earth-system coupling, regional contrast |
+| **03 · EVIDENCE** | Full-size orbital imagery for the same window, plus the literature check |
+
+The control rail (variables, region, period, run) persists across all screens,
+with the primary action pinned to the bottom so it never scrolls out of reach.
+
 | Interaction | What happens |
 |---|---|
 | **Tap anywhere on the 3D globe** | The nearest focus region is selected and analyzed automatically |
