@@ -836,20 +836,21 @@ function initDataModal() {
     });
   });
 
-  // Zoom toolbar buttons
+  // Zoom toolbar buttons - smooth animated steps
   const zoomInBtn = $("btn-zoom-in");
   if (zoomInBtn) {
     zoomInBtn.addEventListener("click", () => {
       if (!expandedChart) return;
       if (typeof expandedChart.zoom === "function") {
+        const factor = 1.15;
         if (state.zoomAxis === "x") {
-          expandedChart.zoom({ x: 1.3, y: 1 });
+          expandedChart.zoom({ x: factor, y: 1 }, "default");
         } else if (state.zoomAxis === "y") {
-          expandedChart.zoom({ x: 1, y: 1.3 });
+          expandedChart.zoom({ x: 1, y: factor }, "default");
         } else {
-          expandedChart.zoom(1.3);
+          expandedChart.zoom(factor, "default");
         }
-        updateZoomBadge();
+        setTimeout(updateZoomBadge, 260);
       }
     });
   }
@@ -859,14 +860,15 @@ function initDataModal() {
     zoomOutBtn.addEventListener("click", () => {
       if (!expandedChart) return;
       if (typeof expandedChart.zoom === "function") {
+        const factor = 0.87;
         if (state.zoomAxis === "x") {
-          expandedChart.zoom({ x: 0.77, y: 1 });
+          expandedChart.zoom({ x: factor, y: 1 }, "default");
         } else if (state.zoomAxis === "y") {
-          expandedChart.zoom({ x: 1, y: 0.77 });
+          expandedChart.zoom({ x: 1, y: factor }, "default");
         } else {
-          expandedChart.zoom(0.77);
+          expandedChart.zoom(factor, "default");
         }
-        updateZoomBadge();
+        setTimeout(updateZoomBadge, 260);
       }
     });
   }
@@ -876,31 +878,86 @@ function initDataModal() {
     zoomResetBtn.addEventListener("click", () => {
       if (!expandedChart) return;
       if (typeof expandedChart.resetZoom === "function") {
-        expandedChart.resetZoom();
-        updateZoomBadge();
+        expandedChart.resetZoom("default");
+        setTimeout(updateZoomBadge, 260);
       }
     });
   }
 
-  // Expanded chart canvas events: double-click to reset, two-finger horizontal swipe to pan
+  // Expanded chart canvas events: double-click to reset, smooth calibrated 60fps wheel & pan
   const expCanvas = $("chart-expanded");
   if (expCanvas) {
     expCanvas.addEventListener("dblclick", () => {
       if (expandedChart && typeof expandedChart.resetZoom === "function") {
-        expandedChart.resetZoom();
-        updateZoomBadge();
+        expandedChart.resetZoom("default");
+        setTimeout(updateZoomBadge, 260);
       }
     });
 
+    let wheelRafId = null;
+    let wheelZoomAccum = 0;
+    let wheelPanAccum = 0;
+    let wheelFocalPoint = null;
+
+    const flushWheel = () => {
+      wheelRafId = null;
+      if (!expandedChart) return;
+
+      // Handle horizontal swipe panning along timeline
+      if (Math.abs(wheelPanAccum) > 0.5) {
+        if (typeof expandedChart.pan === "function") {
+          expandedChart.pan({ x: -wheelPanAccum * 0.85 }, undefined, "none");
+        }
+        wheelPanAccum = 0;
+      }
+
+      // Handle vertical scroll / trackpad pinch zoom
+      if (Math.abs(wheelZoomAccum) > 0.2) {
+        // Calibrated exponential scaling: gentle trackpad tick (2px) -> ~0.3% zoom, solid mouse notch (20px) -> ~3% zoom
+        const factor = Math.exp(-wheelZoomAccum * 0.0015);
+        if (typeof expandedChart.zoom === "function") {
+          const fp = wheelFocalPoint;
+          if (state.zoomAxis === "x") {
+            expandedChart.zoom({ x: factor, y: 1, focalPoint: fp }, "none");
+          } else if (state.zoomAxis === "y") {
+            expandedChart.zoom({ x: 1, y: factor, focalPoint: fp }, "none");
+          } else {
+            expandedChart.zoom({ x: factor, y: factor, focalPoint: fp }, "none");
+          }
+        }
+        wheelZoomAccum = 0;
+      }
+
+      updateZoomBadge();
+    };
+
     expCanvas.addEventListener("wheel", (e) => {
       if (!expandedChart) return;
-      // When user swipes sideways (two-finger horizontal scroll on trackpad)
-      if (Math.abs(e.deltaX) > Math.abs(e.deltaY) && Math.abs(e.deltaX) > 2) {
-        e.preventDefault();
-        if (typeof expandedChart.pan === "function") {
-          expandedChart.pan({ x: -e.deltaX * 1.3 });
-          updateZoomBadge();
-        }
+      e.preventDefault();
+
+      let dx = e.deltaX;
+      let dy = e.deltaY;
+      if (e.deltaMode === 1) { dx *= 16; dy *= 16; }
+      else if (e.deltaMode === 2) { dx *= 300; dy *= 300; }
+
+      // Clamp individual events to avoid wild spikes from sudden flick inertia
+      dx = Math.max(-40, Math.min(40, dx));
+      dy = Math.max(-30, Math.min(30, dy));
+
+      const rect = expCanvas.getBoundingClientRect();
+      wheelFocalPoint = {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+      };
+
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 1.2) {
+        wheelPanAccum += dx;
+      } else if (Math.abs(dy) > 0.4) {
+        wheelZoomAccum += dy;
+      }
+
+      if (!wheelRafId) {
+        wheelRafId = requestAnimationFrame(flushWheel);
       }
     }, { passive: false });
   }
@@ -1078,12 +1135,25 @@ function drawExpandedChart() {
   const ctx = canvas.getContext("2d");
   const isYear = state.expandedMode === "yearly";
 
-  const labels = isYear
-    ? s.yearly_timeseries.map((p) => p.year)
-    : d.months;
-  const values = isYear
-    ? s.yearly_timeseries.map((p) => p.value)
-    : s.region_timeseries;
+  let chartPoints = [];
+  let minX = 0;
+  let maxX = 0;
+
+  if (isYear) {
+    chartPoints = s.yearly_timeseries.map((p) => ({
+      x: Number(p.year),
+      y: p.value,
+    }));
+    minX = Number(s.yearly_timeseries[0].year);
+    maxX = Number(s.yearly_timeseries[s.yearly_timeseries.length - 1].year);
+  } else {
+    chartPoints = s.region_timeseries.map((v, i) => ({
+      x: i,
+      y: v,
+    }));
+    minX = 0;
+    maxX = Math.max(0, d.months.length - 1);
+  }
 
   if (expandedChart) expandedChart.destroy();
 
@@ -1096,32 +1166,33 @@ function drawExpandedChart() {
 
   const datasets = [{
     label: s.variable.name,
-    data: values,
+    data: chartPoints,
     borderColor: accent,
     backgroundColor: grad,
     fill: true,
     tension: 0.25,
-    pointRadius: isYear ? 3 : 1,
+    pointRadius: isYear ? 3.5 : 1.2,
     pointHoverRadius: 6,
     pointBackgroundColor: accent,
     borderWidth: 2,
     spanGaps: true,
   }];
 
-  const pts = values.map((v, i) => [i, v]).filter((p) => p[1] !== null);
-  if (pts.length > 2) {
-    let line;
+  const validPts = chartPoints.filter((p) => p.y !== null && Number.isFinite(p.y));
+  if (validPts.length > 2) {
+    let lineFn;
     if (o.ok) {
       const slopePerStep = o.slope * (isYear ? 1 : 1 / 12);
-      const mid = pts.reduce((a, p) => a + p[1], 0) / pts.length;
-      const midIdx = (values.length - 1) / 2;
-      line = (x) => mid + slopePerStep * (x - midIdx);
+      const midY = validPts.reduce((a, p) => a + p.y, 0) / validPts.length;
+      const midX = (minX + maxX) / 2;
+      lineFn = (x) => midY + slopePerStep * (x - midX);
     } else {
-      line = fitLine(pts);
+      const ptPairs = validPts.map((p) => [p.x, p.y]);
+      lineFn = fitLine(ptPairs);
     }
     datasets.push({
       label: "Theil–Sen Trend Line",
-      data: values.map((_, i) => line(i)),
+      data: chartPoints.map((p) => ({ x: p.x, y: lineFn(p.x) })),
       borderColor: "#ffffff",
       borderDash: [6, 4],
       borderWidth: 1.5,
@@ -1133,12 +1204,19 @@ function drawExpandedChart() {
 
   expandedChart = new Chart(ctx, {
     type: "line",
-    data: { labels, datasets },
+    data: { datasets },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      animation: { duration: 350 },
-      interaction: { mode: "index", intersect: false },
+      animation: {
+        duration: 250,
+        easing: "easeOutCubic",
+      },
+      interaction: {
+        mode: "nearest",
+        axis: "x",
+        intersect: false,
+      },
       plugins: {
         zoom: {
           pan: {
@@ -1149,14 +1227,20 @@ function drawExpandedChart() {
           },
           zoom: {
             wheel: {
-              enabled: true,
-              speed: 0.1,
+              enabled: false, // Handled by our normalized smooth wheel controller
             },
             pinch: {
               enabled: true,
             },
             mode: state.zoomAxis || "x",
             onZoomComplete: updateZoomBadge,
+          },
+          limits: {
+            x: {
+              min: minX,
+              max: maxX,
+              minRange: isYear ? 3 : 12,
+            },
           },
         },
         legend: {
@@ -1178,16 +1262,42 @@ function drawExpandedChart() {
           titleColor: "#e9ebed",
           bodyColor: "#b9bdc2",
           callbacks: {
+            title: (items) => {
+              if (!items || !items.length) return "";
+              const xVal = items[0].parsed.x;
+              if (isYear) return `YEAR: ${Math.round(xVal)}`;
+              const idx = Math.round(xVal);
+              return `MONTH: ${d.months[idx] || ""}`;
+            },
             label: (c) => `${c.dataset.label}: ${num(c.parsed.y, 3)} ${s.variable.unit}`,
           },
         },
       },
       scales: {
         x: {
+          type: "linear",
+          min: minX,
+          max: maxX,
           ticks: {
             color: "#8c9297",
-            maxTicksLimit: isYear ? 14 : 12,
+            maxTicksLimit: isYear ? 12 : 10,
+            stepSize: isYear ? 1 : undefined,
             font: { family: "monospace", size: 10 },
+            callback: (val) => {
+              if (!Number.isFinite(val)) return "";
+              if (isYear) {
+                if (Math.abs(val - Math.round(val)) < 0.05) {
+                  return String(Math.round(val));
+                }
+                return "";
+              } else {
+                const idx = Math.round(val);
+                if (Math.abs(val - idx) < 0.05 && idx >= 0 && idx < d.months.length) {
+                  return d.months[idx];
+                }
+                return "";
+              }
+            },
           },
           grid: { color: "#1c1e21" },
           border: { color: "#2a2d31" },
