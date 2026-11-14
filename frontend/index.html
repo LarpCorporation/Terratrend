@@ -147,7 +147,12 @@
     <section class="panel">
       <div class="panel-head">
         <span class="ph-label">REGIONAL SIGNAL</span>
-        <span class="ph-count" id="verdict-chip">—</span>
+        <div class="panel-head-actions">
+          <span class="ph-count" id="verdict-chip">—</span>
+          <button id="btn-expand-signal" class="panel-icon-btn" title="Expand Full Statistical Deep Dive" aria-label="Expand statistics">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+          </button>
+        </div>
       </div>
       <div class="threat">
         <div class="threat-dial">
@@ -177,13 +182,19 @@
     <section class="panel chart-panel">
       <div class="panel-head">
         <span class="ph-label">TREND SERIES</span>
-        <div class="seg">
-          <button class="seg-btn on" data-mode="yearly">YEAR</button>
-          <button class="seg-btn" data-mode="monthly">MONTH</button>
+        <div class="panel-head-actions">
+          <div class="seg">
+            <button class="seg-btn on" data-mode="yearly">YEAR</button>
+            <button class="seg-btn" data-mode="monthly">MONTH</button>
+          </div>
+          <button id="btn-expand-chart" class="panel-icon-btn" title="Expand High-Resolution Graph & Observatory" aria-label="Expand graph">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+          </button>
         </div>
       </div>
-      <div class="chart-box">
+      <div class="chart-box" id="chart-box-clickable" title="Click to expand full graph & statistics">
         <canvas id="chart"></canvas>
+        <span class="chart-expand-badge" id="chart-expand-badge">⛶ EXPAND</span>
       </div>
       <div id="trendline" class="trend-note">—</div>
     </section>
@@ -354,6 +365,85 @@
 
       <div class="modal-notes">
         <p><strong>Physical Corroboration:</strong> NASA GIBS imagery is orthorectified and surface-reflectance calibrated. Comparing identical calendar dates across decades isolates multiannual environmental trends (such as vegetation expansion, aridification, or ice margin retreat) from regular seasonal cycles.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ DATA & GRAPH OBSERVATORY MODAL ============ -->
+<div id="data-modal" class="modal-backdrop" hidden>
+  <div class="modal-window modal-window-wide">
+    <div class="modal-header">
+      <div class="mh-left">
+        <span class="mh-tag">TERRATREND · SCIENTIFIC OBSERVATORY DEEP DIVE</span>
+        <h2 id="data-modal-title">HIGH-RESOLUTION TREND ANALYSIS</h2>
+        <span class="mh-sub" id="data-modal-sub">REGION · SAMPLES · ALPHA: 0.05</span>
+      </div>
+      <button id="data-modal-close" class="modal-close-btn" aria-label="Close modal">&times;</button>
+    </div>
+
+    <div class="modal-toolbar">
+      <div class="mt-group" id="data-modal-var-tabs">
+        <!-- Dynamic variable tabs will be rendered here -->
+      </div>
+
+      <div class="mt-group">
+        <span class="mt-label">SERIES:</span>
+        <div class="seg modal-seg">
+          <button class="seg-btn on" id="data-mode-yearly" data-data-mode="yearly">ANNUAL (THEIL-SEN)</button>
+          <button class="seg-btn" id="data-mode-monthly" data-data-mode="monthly">MONTHLY (SEASONAL)</button>
+        </div>
+      </div>
+
+      <div class="mt-group mt-links">
+        <button id="data-export-csv" class="hud-btn-mini">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          EXPORT CSV
+        </button>
+      </div>
+    </div>
+
+    <div class="modal-body data-modal-body">
+      <!-- EXPANDED HIGH-RES CHART -->
+      <div class="expanded-chart-container">
+        <canvas id="chart-expanded"></canvas>
+      </div>
+      <div id="expanded-trendline" class="trend-note expanded-trend-note">—</div>
+
+      <!-- 4-CARD STATISTICAL METRIC STRIP -->
+      <div class="stats-metric-strip" id="stats-metric-strip">
+        <div class="metric-card">
+          <span class="mc-label">THEIL–SEN SLOPE</span>
+          <div class="mc-val" id="mc-slope">—</div>
+          <span class="mc-sub" id="mc-slope-sub">Median rate of change</span>
+        </div>
+        <div class="metric-card">
+          <span class="mc-label">CUMULATIVE CHANGE</span>
+          <div class="mc-val" id="mc-change">—</div>
+          <span class="mc-sub" id="mc-change-sub">Total shift over period</span>
+        </div>
+        <div class="metric-card">
+          <span class="mc-label">MANN–KENDALL TEST</span>
+          <div class="mc-val" id="mc-mk">—</div>
+          <span class="mc-sub" id="mc-mk-sub">p-value & significance</span>
+        </div>
+        <div class="metric-card">
+          <span class="mc-label">HIRSCH–SLACK CROSS-CHECK</span>
+          <div class="mc-val" id="mc-seasonal">—</div>
+          <span class="mc-sub" id="mc-seasonal-sub">Seasonality-controlled test</span>
+        </div>
+      </div>
+
+      <!-- 5x5 SPATIAL CELL MATRIX -->
+      <div class="expanded-grid-section">
+        <div class="eg-header">
+          <span class="eg-title">SPATIAL GRID CONSENSUS (5×5 MATRIX)</span>
+          <span class="eg-badge" id="eg-cell-count">25 CELLS</span>
+        </div>
+        <div class="eg-matrix" id="eg-cell-matrix">
+          <!-- 25 cell chips dynamically rendered -->
+        </div>
+        <div class="eg-detail" id="eg-cell-detail">Hover or click a cell chip in the 5×5 matrix to inspect coordinate-specific trends.</div>
       </div>
     </div>
   </div>

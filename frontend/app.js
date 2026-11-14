@@ -34,9 +34,12 @@ const state = {
   satYearBase: 2005,
   satYearRecent: 2024,
   satCustomDate: "08-15",
+  expandedVarIdx: 0,
+  expandedMode: "yearly",
 };
 
 let chart = null;
+let expandedChart = null;
 let clockTimer = null;
 
 /* ============================================================
@@ -69,6 +72,15 @@ async function boot() {
   );
 
   initSatModal();
+  initDataModal();
+
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      closeSatelliteModal();
+      closeDataModal();
+    }
+  });
+
   startClock();
   await initGlobe();
 }
@@ -566,11 +578,25 @@ function initSatModal() {
   initSplitSlider();
 }
 
+function showModal(modal) {
+  if (!modal) return;
+  modal.hidden = false;
+  void modal.offsetWidth; // force browser layout reflow for animation
+  modal.classList.add("open");
+}
+
+function hideModal(modal) {
+  if (!modal) return;
+  modal.classList.remove("open");
+  setTimeout(() => {
+    if (!modal.classList.contains("open")) modal.hidden = true;
+  }, 270);
+}
+
 function openSatelliteModal(customBbox = null, customTitle = null) {
   const modal = $("sat-modal");
   if (!modal) return;
 
-  modal.hidden = false;
   const startYr = Math.max(2000, parseInt($("start").value, 10) || 2005);
   const endYr = Math.max(2000, parseInt($("end").value, 10) || 2024);
   state.satYearBase = startYr;
@@ -592,12 +618,12 @@ function openSatelliteModal(customBbox = null, customTitle = null) {
   state.activeSatBbox = targetBbox;
   state.activeSatTitle = targetTitle;
 
+  showModal(modal);
   reloadModalSatellite();
 }
 
 function closeSatelliteModal() {
-  const modal = $("sat-modal");
-  if (modal) modal.hidden = true;
+  hideModal($("sat-modal"));
 }
 
 function setSatModalMode(mode) {
@@ -743,6 +769,350 @@ function initSplitSlider() {
 
   wrapper.addEventListener("pointerup", stopDrag);
   wrapper.addEventListener("pointercancel", stopDrag);
+}
+
+/* ============================================================
+   DATA & GRAPH OBSERVATORY MODAL (EXPANDED VIEW)
+   ============================================================ */
+function initDataModal() {
+  const modal = $("data-modal");
+  const closeBtn = $("data-modal-close");
+  if (!modal) return;
+
+  if (closeBtn) closeBtn.addEventListener("click", closeDataModal);
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) closeDataModal();
+  });
+
+  const expandChartBtn = $("btn-expand-chart");
+  if (expandChartBtn) {
+    expandChartBtn.addEventListener("click", () => openDataModal());
+  }
+
+  const expandSignalBtn = $("btn-expand-signal");
+  if (expandSignalBtn) {
+    expandSignalBtn.addEventListener("click", () => openDataModal());
+  }
+
+  const chartBox = $("chart-box-clickable");
+  if (chartBox) {
+    chartBox.addEventListener("click", () => openDataModal());
+  }
+
+  const yearlyBtn = $("data-mode-yearly");
+  const monthlyBtn = $("data-mode-monthly");
+  if (yearlyBtn && monthlyBtn) {
+    yearlyBtn.addEventListener("click", () => setDataModalMode("yearly"));
+    monthlyBtn.addEventListener("click", () => setDataModalMode("monthly"));
+  }
+
+  const exportBtn = $("data-export-csv");
+  if (exportBtn) {
+    exportBtn.addEventListener("click", exportDataCSV);
+  }
+}
+
+function openDataModal(varIdx = null) {
+  const modal = $("data-modal");
+  if (!modal) return;
+  if (!state.result || !state.result.series || !state.result.series.length) {
+    flashHint("RUN AN ANALYSIS FIRST TO EXPAND DATA");
+    return;
+  }
+
+  if (varIdx !== null && varIdx >= 0) {
+    state.expandedVarIdx = Math.min(varIdx, state.result.series.length - 1);
+  } else {
+    state.expandedVarIdx = Math.min(state.activeVarIdx, state.result.series.length - 1);
+  }
+  state.expandedMode = state.mode || "yearly";
+
+  showModal(modal);
+  renderDataModal();
+}
+
+function closeDataModal() {
+  hideModal($("data-modal"));
+  if (expandedChart) {
+    expandedChart.destroy();
+    expandedChart = null;
+  }
+}
+
+function setDataModalMode(mode) {
+  state.expandedMode = mode;
+  const yearlyBtn = $("data-mode-yearly");
+  const monthlyBtn = $("data-mode-monthly");
+  if (yearlyBtn) yearlyBtn.classList.toggle("on", mode === "yearly");
+  if (monthlyBtn) monthlyBtn.classList.toggle("on", mode === "monthly");
+  drawExpandedChart();
+}
+
+function renderDataModal() {
+  const d = state.result;
+  if (!d) return;
+  const s = d.series[state.expandedVarIdx] || d.series[0];
+  const v = s.variable;
+  const o = s.overall || {};
+
+  $("data-modal-title").textContent = `${v.name.toUpperCase()} · ${d.region.name.toUpperCase()}`;
+  $("data-modal-sub").textContent =
+    `PERIOD: ${d.start} – ${d.end} · SENSOR/MODEL: ${v.mission} · SAMPLES: 25 CELLS · ALPHA: 0.05`;
+
+  const tabBox = $("data-modal-var-tabs");
+  if (tabBox) {
+    tabBox.innerHTML = "";
+    d.series.forEach((ser, idx) => {
+      const btn = document.createElement("button");
+      btn.className = `data-var-tab ${idx === state.expandedVarIdx ? "on" : ""}`;
+      btn.textContent = ser.variable.name;
+      btn.style.setProperty("--vc", ser.variable.color);
+      btn.addEventListener("click", () => {
+        state.expandedVarIdx = idx;
+        renderDataModal();
+      });
+      tabBox.appendChild(btn);
+    });
+  }
+
+  const yearlyBtn = $("data-mode-yearly");
+  const monthlyBtn = $("data-mode-monthly");
+  if (yearlyBtn) yearlyBtn.classList.toggle("on", state.expandedMode === "yearly");
+  if (monthlyBtn) monthlyBtn.classList.toggle("on", state.expandedMode === "monthly");
+
+  if (o.ok) {
+    const slopeDecade = o.slope * 10;
+    $("mc-slope").textContent = `${slopeDecade > 0 ? "+" : ""}${num(slopeDecade, 2)} ${v.unit}`;
+    $("mc-slope").style.color = o.direction === "falling" ? C.fall : (o.direction === "rising" ? C.rise : C.flat);
+    $("mc-slope-sub").textContent = `${o.slope > 0 ? "+" : ""}${num(o.slope, 3)} ${v.unit}/year`;
+
+    $("mc-change").textContent = `${o.change_total > 0 ? "+" : ""}${num(o.change_total, 2)} ${v.unit}`;
+    $("mc-change").style.color = o.direction === "falling" ? C.fall : (o.direction === "rising" ? C.rise : C.flat);
+    $("mc-change-sub").textContent = `Cumulative shift: ${o.change_pct > 0 ? "+" : ""}${num(o.change_pct, 1)}%`;
+
+    $("mc-mk").textContent = `p = ${num(o.p, 3)} · Z = ${o.z > 0 ? "+" : ""}${num(o.z, 2)}`;
+    $("mc-mk").style.color = o.significant ? (o.direction === "falling" ? C.fall : C.rise) : C.flat;
+    $("mc-mk-sub").textContent = o.significant
+      ? (o.direction === "rising" ? "▲ STATISTICALLY SIGNIFICANT RISE" : "▼ STATISTICALLY SIGNIFICANT FALL")
+      : "◆ NO STATISTICALLY SIGNIFICANT TREND";
+
+    if (o.seasonal_p !== undefined && o.seasonal_p !== null) {
+      $("mc-seasonal").textContent = `p = ${num(o.seasonal_p, 3)} · Z = ${o.seasonal_z > 0 ? "+" : ""}${num(o.seasonal_z, 2)}`;
+      $("mc-seasonal-sub").textContent = o.seasonal_significant
+        ? "Seasonal cycle controlled: CONFIRMED"
+        : "Seasonality unverified";
+    } else {
+      $("mc-seasonal").textContent = "N/A";
+      $("mc-seasonal-sub").textContent = "Insufficient monthly data";
+    }
+  } else {
+    $("mc-slope").textContent = "NO DATA";
+    $("mc-change").textContent = "—";
+    $("mc-mk").textContent = "—";
+    $("mc-seasonal").textContent = "—";
+  }
+
+  const matrixBox = $("eg-cell-matrix");
+  if (matrixBox) {
+    matrixBox.innerHTML = "";
+    const cells = s.cells || [];
+    $("eg-cell-count").textContent = `${cells.length} OBSERVED CELLS`;
+
+    cells.forEach((c) => {
+      const chip = document.createElement("div");
+      chip.className = "eg-cell-chip";
+      const cColor = c.significant
+        ? (c.direction === "rising" ? C.rise : C.fall)
+        : C.flat;
+      const slopeStr = c.slope !== null && c.slope !== undefined
+        ? `${c.slope > 0 ? "+" : ""}${num(c.slope * 10, 2)}`
+        : "—";
+
+      chip.innerHTML = `
+        <span class="egc-coord">${c.lat.toFixed(1)}°, ${c.lon.toFixed(1)}°</span>
+        <span class="egc-slope" style="color:${cColor}">${slopeStr} ${v.unit}</span>
+      `;
+
+      chip.addEventListener("mouseenter", () => {
+        matrixBox.querySelectorAll(".eg-cell-chip").forEach((el) => el.classList.remove("active"));
+        chip.classList.add("active");
+        $("eg-cell-detail").innerHTML = `
+          <strong>Cell [${c.lat.toFixed(2)}°, ${c.lon.toFixed(2)}°]:</strong>
+          Slope: <span style="color:${cColor}">${slopeStr} ${v.unit}/decade</span> ·
+          Mann-Kendall p-value: <strong>${c.p !== undefined ? num(c.p, 3) : "—"}</strong> ·
+          Status: <strong>${c.significant ? (c.direction === "rising" ? "▲ SIGNIFICANT RISE" : "▼ SIGNIFICANT FALL") : "◆ STABLE / NO TREND"}</strong>
+        `;
+      });
+
+      matrixBox.appendChild(chip);
+    });
+  }
+
+  requestAnimationFrame(() => {
+    drawExpandedChart();
+  });
+}
+
+function drawExpandedChart() {
+  const d = state.result;
+  if (!d) return;
+  const s = d.series[state.expandedVarIdx] || d.series[0];
+  const canvas = $("chart-expanded");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  const isYear = state.expandedMode === "yearly";
+
+  const labels = isYear
+    ? s.yearly_timeseries.map((p) => p.year)
+    : d.months;
+  const values = isYear
+    ? s.yearly_timeseries.map((p) => p.value)
+    : s.region_timeseries;
+
+  if (expandedChart) expandedChart.destroy();
+
+  const o = s.overall || {};
+  const accent = o.ok && o.direction === "falling" ? C.fall : (s.variable.color || C.rise);
+
+  const grad = ctx.createLinearGradient(0, 0, 0, 320);
+  grad.addColorStop(0, hexA(accent, 0.38));
+  grad.addColorStop(1, hexA(accent, 0.01));
+
+  const datasets = [{
+    label: s.variable.name,
+    data: values,
+    borderColor: accent,
+    backgroundColor: grad,
+    fill: true,
+    tension: 0.25,
+    pointRadius: isYear ? 3 : 1,
+    pointHoverRadius: 6,
+    pointBackgroundColor: accent,
+    borderWidth: 2,
+    spanGaps: true,
+  }];
+
+  const pts = values.map((v, i) => [i, v]).filter((p) => p[1] !== null);
+  if (pts.length > 2) {
+    let line;
+    if (o.ok) {
+      const slopePerStep = o.slope * (isYear ? 1 : 1 / 12);
+      const mid = pts.reduce((a, p) => a + p[1], 0) / pts.length;
+      const midIdx = (values.length - 1) / 2;
+      line = (x) => mid + slopePerStep * (x - midIdx);
+    } else {
+      line = fitLine(pts);
+    }
+    datasets.push({
+      label: "Theil–Sen Trend Line",
+      data: values.map((_, i) => line(i)),
+      borderColor: "#ffffff",
+      borderDash: [6, 4],
+      borderWidth: 1.5,
+      pointRadius: 0,
+      fill: false,
+      tension: 0,
+    });
+  }
+
+  expandedChart = new Chart(ctx, {
+    type: "line",
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 350 },
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        legend: {
+          display: true,
+          position: "top",
+          labels: {
+            color: "#e9ebed",
+            font: { family: "monospace", size: 11 },
+            boxWidth: 14,
+          },
+        },
+        tooltip: {
+          backgroundColor: "rgba(8,9,10,.95)",
+          borderColor: "#3b3e44",
+          borderWidth: 1,
+          padding: 10,
+          titleFont: { family: "monospace", size: 12 },
+          bodyFont: { family: "monospace", size: 12 },
+          titleColor: "#e9ebed",
+          bodyColor: "#b9bdc2",
+          callbacks: {
+            label: (c) => `${c.dataset.label}: ${num(c.parsed.y, 3)} ${s.variable.unit}`,
+          },
+        },
+      },
+      scales: {
+        x: {
+          ticks: {
+            color: "#8c9297",
+            maxTicksLimit: isYear ? 14 : 12,
+            font: { family: "monospace", size: 10 },
+          },
+          grid: { color: "#1c1e21" },
+          border: { color: "#2a2d31" },
+        },
+        y: {
+          ticks: {
+            color: "#8c9297",
+            font: { family: "monospace", size: 10 },
+            callback: (v) => `${num(v, 2)} ${s.variable.unit}`,
+          },
+          grid: { color: "#1c1e21" },
+          border: { color: "#2a2d31" },
+        },
+      },
+    },
+  });
+
+  const expTrendEl = $("expanded-trendline");
+  if (expTrendEl) {
+    if (o.ok) {
+      const slopePerDec = o.slope * 10;
+      const stars = o.p < 0.001 ? "***" : (o.p < 0.01 ? "**" : (o.p < 0.05 ? "*" : ""));
+      expTrendEl.innerHTML =
+        `THEIL–SEN ESTIMATOR: <strong>${o.slope > 0 ? "+" : ""}${num(slopePerDec, 2)} ${s.variable.unit}/decade</strong> · ` +
+        `MANN–KENDALL p = <strong>${num(o.p, 3)}${stars}</strong> (${o.significant ? "SIGNIFICANT" : "NOT SIGNIFICANT"}) · ` +
+        `CUMULATIVE SHIFT: <strong>${o.change_total > 0 ? "+" : ""}${num(o.change_total, 2)} ${s.variable.unit} (${o.change_pct > 0 ? "+" : ""}${num(o.change_pct, 1)}%)</strong>`;
+    } else {
+      expTrendEl.textContent = "INSUFFICIENT DATA POINTS FOR STATISTICAL SIGNIFICANCE TESTING";
+    }
+  }
+}
+
+function exportDataCSV() {
+  const d = state.result;
+  if (!d) return;
+  const s = d.series[state.expandedVarIdx] || d.series[0];
+  const isYear = state.expandedMode === "yearly";
+
+  let csvContent = "";
+  if (isYear) {
+    csvContent = `Year,Annual_Mean_${s.variable.id}_${s.variable.unit}\n`;
+    s.yearly_timeseries.forEach((p) => {
+      csvContent += `${p.year},${p.value}\n`;
+    });
+  } else {
+    csvContent = `Month_YYYY_MM,Regional_Mean_${s.variable.id}_${s.variable.unit}\n`;
+    d.months.forEach((m, i) => {
+      csvContent += `${m},${s.region_timeseries[i]}\n`;
+    });
+  }
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `terratrend_${d.region.id}_${s.variable.id}_${d.start}_${d.end}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 /* ============================================================
