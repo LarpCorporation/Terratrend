@@ -1611,20 +1611,20 @@ function drawExpandedChart() {
           display: true,
           position: "top",
           labels: {
-            color: "#e9ebed",
-            font: { family: "monospace", size: 11 },
+            color: "#ffffff",
+            font: { family: "monospace", size: 11, weight: "600" },
             boxWidth: 14,
           },
         },
         tooltip: {
           backgroundColor: "rgba(8,9,10,.95)",
-          borderColor: "#3b3e44",
+          borderColor: "#505663",
           borderWidth: 1,
           padding: 10,
-          titleFont: { family: "monospace", size: 12 },
+          titleFont: { family: "monospace", size: 12, weight: "bold" },
           bodyFont: { family: "monospace", size: 12 },
-          titleColor: "#e9ebed",
-          bodyColor: "#b9bdc2",
+          titleColor: "#ffffff",
+          bodyColor: "#dbe0e6",
           callbacks: {
             title: (items) => {
               if (!items || !items.length) return "";
@@ -1643,10 +1643,10 @@ function drawExpandedChart() {
           min: minX,
           max: maxX,
           ticks: {
-            color: "#8c9297",
+            color: "#b4bac2",
             maxTicksLimit: isYear ? 12 : 10,
             stepSize: isYear ? 1 : undefined,
-            font: { family: "monospace", size: 10 },
+            font: { family: "monospace", size: 11, weight: "500" },
             callback: (val) => {
               if (!Number.isFinite(val)) return "";
               if (isYear) {
@@ -1663,17 +1663,17 @@ function drawExpandedChart() {
               }
             },
           },
-          grid: { color: "#1c1e21" },
-          border: { color: "#2a2d31" },
+          grid: { color: "#242830" },
+          border: { color: "#3d434d" },
         },
         y: {
           ticks: {
-            color: "#8c9297",
-            font: { family: "monospace", size: 10 },
+            color: "#b4bac2",
+            font: { family: "monospace", size: 11, weight: "500" },
             callback: (v) => `${num(v, 2)} ${s.variable.unit}`,
           },
-          grid: { color: "#1c1e21" },
-          border: { color: "#2a2d31" },
+          grid: { color: "#242830" },
+          border: { color: "#3d434d" },
         },
       },
     },
@@ -1823,12 +1823,12 @@ function drawChart() {
         legend: { display: false },
         tooltip: {
           backgroundColor: "rgba(8,9,10,.97)",
-          borderColor: "#3b3e44",
+          borderColor: "#505663",
           borderWidth: 1,
-          titleFont: { family: "monospace", size: 10 },
+          titleFont: { family: "monospace", size: 10, weight: "bold" },
           bodyFont: { family: "monospace", size: 10 },
-          titleColor: "#e9ebed",
-          bodyColor: "#b9bdc2",
+          titleColor: "#ffffff",
+          bodyColor: "#dbe0e6",
           displayColors: false,
           callbacks: {
             label: (c) =>
@@ -1839,26 +1839,26 @@ function drawChart() {
       scales: {
         x: {
           ticks: {
-            color: "#6d7276",
+            color: "#a6adb5",
             maxTicksLimit: isYear ? 8 : 6,
             maxRotation: 0,
-            font: { family: "monospace", size: 9 },
+            font: { family: "monospace", size: 10, weight: "500" },
             callback: function (val) {
               const raw = this.getLabelForValue(val);
               return isYear ? String(raw).slice(2) : String(raw).slice(0, 4);
             },
           },
-          grid: { color: "#1c1e21", tickLength: 3 },
-          border: { color: "#2a2d31" },
+          grid: { color: "#242830", tickLength: 3 },
+          border: { color: "#3d434d" },
         },
         y: {
           ticks: {
-            color: "#6d7276",
+            color: "#a6adb5",
             maxTicksLimit: 5,
-            font: { family: "monospace", size: 9 },
+            font: { family: "monospace", size: 10, weight: "500" },
           },
-          grid: { color: "#1c1e21", tickLength: 3 },
-          border: { color: "#2a2d31" },
+          grid: { color: "#242830", tickLength: 3 },
+          border: { color: "#3d434d" },
         },
       },
     },
@@ -2290,7 +2290,7 @@ function bindGlobeEvents(host) {
         <div class="tt-row"><span>LON</span><b>${c.lon.toFixed(2)}°</b></div>
         <div class="tt-row"><span>SLOPE</span><b>${c.slope > 0 ? "+" : ""}${num(c.slope * 10, 3)} ${esc(v.unit)}/dec</b></div>
         <div class="tt-row"><span>p</span><b>${c.p === undefined ? "—" : num(c.p, 3)}</b></div>
-        <div class="tt-row"><span>TREND</span><b style="color:${c.significant ? (c.direction === "falling" ? C.fall : C.rise) : "#8c9297"}">${dir}</b></div>`;
+        <div class="tt-row"><span>TREND</span><b style="color:${c.significant ? (c.direction === "falling" ? C.fall : C.rise) : "#b4bac2"}">${dir}</b></div>`;
       tip.style.display = "block";
       tip.style.left = Math.min(window.innerWidth - 220, e.clientX + 14) + "px";
       tip.style.top = Math.min(window.innerHeight - 130, e.clientY + 14) + "px";
