@@ -173,6 +173,128 @@ def _z_for(alpha):
     return (lo + hi) / 2.0
 
 
+# ---------------------------------------------------------------------------
+# Ordinary least squares + t-test
+#
+# The challenge brief names three acceptable approaches: "a t-test, the
+# Mann-Kendall test, or confidence intervals". We lead with Mann-Kendall
+# because climate series are rarely normal, but running the classic t-test
+# alongside it lets a user see the two agree — and see exactly where the
+# normality assumption starts to matter.
+# ---------------------------------------------------------------------------
+def _betacf(a, b, x):
+    """Continued fraction for the incomplete beta function (Lentz)."""
+    maxit, eps, fpmin = 200, 3e-16, 1e-300
+    qab, qap, qam = a + b, a + 1.0, a - 1.0
+    c = 1.0
+    d = 1.0 - qab * x / qap
+    if abs(d) < fpmin:
+        d = fpmin
+    d = 1.0 / d
+    h = d
+    for m in range(1, maxit + 1):
+        m2 = 2 * m
+        aa = m * (b - m) * x / ((qam + m2) * (a + m2))
+        d = 1.0 + aa * d
+        if abs(d) < fpmin:
+            d = fpmin
+        c = 1.0 + aa / c
+        if abs(c) < fpmin:
+            c = fpmin
+        d = 1.0 / d
+        h *= d * c
+        aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2))
+        d = 1.0 + aa * d
+        if abs(d) < fpmin:
+            d = fpmin
+        c = 1.0 + aa / c
+        if abs(c) < fpmin:
+            c = fpmin
+        d = 1.0 / d
+        delta = d * c
+        h *= delta
+        if abs(delta - 1.0) < eps:
+            break
+    return h
+
+
+def _betai(a, b, x):
+    """Regularized incomplete beta function I_x(a, b)."""
+    if x <= 0.0:
+        return 0.0
+    if x >= 1.0:
+        return 1.0
+    lbeta = (math.lgamma(a + b) - math.lgamma(a) - math.lgamma(b)
+             + a * math.log(x) + b * math.log(1.0 - x))
+    bt = math.exp(lbeta)
+    if x < (a + 1.0) / (a + b + 2.0):
+        return bt * _betacf(a, b, x) / a
+    return 1.0 - bt * _betacf(b, a, 1.0 - x) / b
+
+
+def t_cdf(t, df):
+    """Student's t cumulative distribution function."""
+    x = df / (df + t * t)
+    p = 0.5 * _betai(df / 2.0, 0.5, x)
+    return 1.0 - p if t > 0 else p
+
+
+def t_test_trend(ys, xs=None):
+    """OLS slope with a two-sided t-test on the slope.
+
+    Returns dict(slope, intercept, se, t, df, p, ci_low, ci_high) or None.
+    """
+    n = len(ys)
+    if n < 4:
+        return None
+    if xs is None:
+        xs = list(range(n))
+    mx = sum(xs) / n
+    my = sum(ys) / n
+    sxx = sum((x - mx) ** 2 for x in xs)
+    if sxx == 0:
+        return None
+    sxy = sum((x - mx) * (y - my) for x, y in zip(xs, ys))
+    slope = sxy / sxx
+    intercept = my - slope * mx
+    sse = sum((y - (intercept + slope * x)) ** 2 for x, y in zip(xs, ys))
+    df = n - 2
+    mse = sse / df
+    if mse <= 0:
+        se = 0.0
+    else:
+        se = math.sqrt(mse / sxx)
+
+    if se == 0.0:
+        t = 0.0 if slope == 0 else float("inf")
+        p = 1.0 if slope == 0 else 0.0
+        lo = hi = slope
+    else:
+        t = slope / se
+        p = 2.0 * (1.0 - t_cdf(abs(t), df))
+        p = min(1.0, max(0.0, p))
+        tcrit = _t_critical(0.975, df)
+        lo = slope - tcrit * se
+        hi = slope + tcrit * se
+
+    return {
+        "slope": slope, "intercept": intercept, "se": se,
+        "t": t, "df": df, "p": p, "ci_low": lo, "ci_high": hi,
+    }
+
+
+def _t_critical(q, df):
+    """Inverse Student's t CDF by bisection (q in (0,1))."""
+    lo, hi = 0.0, 100.0
+    for _ in range(200):
+        mid = (lo + hi) / 2.0
+        if t_cdf(mid, df) < q:
+            lo = mid
+        else:
+            hi = mid
+    return (lo + hi) / 2.0
+
+
 def analyze_series(values, dt_per_step=1.0, dt_label="year"):
     """Full trend analysis of one ordered series.
 
@@ -187,6 +309,7 @@ def analyze_series(values, dt_per_step=1.0, dt_label="year"):
     z, p, tau, h = mk_test(ys)
     slope, intercept = theil_sen(ys, xs)
     ci_lo, ci_hi = theil_sen_ci(ys, xs)
+    tt = t_test_trend(ys, xs)
 
     first, last = ys[0], ys[-1]
     total = last - first
@@ -215,6 +338,17 @@ def analyze_series(values, dt_per_step=1.0, dt_label="year"):
         "change_total": total,
         "change_pct": pct,
         "per_decade": slope * 10.0 / dt_per_step,
+        # classic OLS + t-test, reported alongside Mann-Kendall
+        "t_slope": tt["slope"] if tt else None,
+        "t_per_decade": (tt["slope"] * 10.0 / dt_per_step) if tt else None,
+        "t_p": tt["p"] if tt else None,
+        "t_df": tt["df"] if tt else None,
+        "t_significant": (tt["p"] < ALPHA) if tt else False,
+        "t_ci_low_per_decade": ((tt["ci_low"] * 10.0 / dt_per_step)
+                                if tt else None),
+        "t_ci_high_per_decade": ((tt["ci_high"] * 10.0 / dt_per_step)
+                                 if tt else None),
+        "methods_agree": (tt is not None) and ((tt["p"] < ALPHA) == h),
         "ci_low": ci_lo,
         "ci_high": ci_hi,
         "ci_low_per_decade": (ci_lo * 10.0 / dt_per_step

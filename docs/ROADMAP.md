@@ -148,6 +148,13 @@ confidence intervals". We do MK but report **no CI**. Add Sen's slope **95% CI**
 t-test alongside MK lets us show *both* methods agreeing (or disagreeing when
 outliers matter) — a strong "we know the limits" talking point. Effort: **S**.
 
+> **Status: DONE.** `t_test_trend()` fits OLS and runs a two-sided t-test on the
+> slope, with a real Student-t CDF (Lentz continued fraction for the incomplete
+> beta — no scipy). Every analysis now reports the MK p-value *and* the t-test
+> p-value, plus an explicit **AGREES / DISAGREES** verdict. Example, Ghana South
+> air temperature: MK p = 0.037, t-test p = 0.027 → agree. 4 new tests,
+> including known t-CDF values (t=2.086, df=20 → p=0.025).
+
 **3.10 "Find variables that are trending" — the discovery mode** ⭐
 
 This is **the first half of the challenge statement** and we do not have it.
@@ -186,6 +193,14 @@ We have a one-line `desc` in a tooltip and a long `docs/GUIDE.md`. **Fix:** an
 expandable "?" per variable with: what it measures, units in plain words, why it
 matters, and what a rising/falling trend *means* (e.g. "soil moisture falling =
 drier root zone = drought stress"). Effort: **S–M**, high judge value.
+
+> **Status: DONE.** Every variable in the catalog carries `plain` (what the
+> measurement physically is) and `trend_means` (what a rising or falling trend
+> implies). A **"ⓘ WHAT DO THESE VARIABLES MEAN?"** button under the variable
+> picker opens a full-screen glossary modal — grouped by theme, one row per
+> variable with its colour, unit, mission and both explanations. Keeping it in a
+> modal leaves the cockpit uncluttered. Written for a high-school reader: no
+> jargon that isn't immediately defined.
 
 ---
 

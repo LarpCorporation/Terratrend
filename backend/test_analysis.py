@@ -1,6 +1,6 @@
 """Unit test for the trend analysis core."""
 from analysis import (mk_test, theil_sen, analyze_series, seasonal_mk,
-                      theil_sen_ci)
+                      theil_sen_ci, t_test_trend, t_cdf)
 
 
 def approx(a, b, tol=0.01):
@@ -105,6 +105,46 @@ def test_analysis_exposes_ci_per_decade():
     r = analyze_series(ys)
     assert r["ci_low_per_decade"] is not None
     assert r["ci_low_per_decade"] <= r["per_decade"] <= r["ci_high_per_decade"]
+
+
+def test_t_cdf_known_values():
+    # two-sided 5% critical value for df=20 is 2.086
+    assert approx(t_cdf(-2.086, 20), 0.025, 0.002)
+    assert approx(t_cdf(2.086, 20), 0.975, 0.002)
+    # symmetric around zero
+    assert approx(t_cdf(0.0, 10), 0.5, 1e-9)
+
+
+def test_t_test_detects_clean_trend():
+    ys = [0.5 * x for x in range(24)]
+    tt = t_test_trend(ys)
+    assert tt is not None
+    assert approx(tt["slope"], 0.5, 1e-9)
+    assert tt["p"] < 1e-6, f"clean linear trend should be significant, p={tt['p']}"
+    assert tt["df"] == 22
+
+
+def test_t_test_rejects_noise():
+    import random
+    random.seed(11)
+    ys = [random.uniform(-1, 1) for _ in range(24)]
+    tt = t_test_trend(ys)
+    assert tt is not None
+    assert tt["p"] > 0.05, f"pure noise should not be significant, p={tt['p']}"
+
+
+def test_t_test_ci_contains_slope():
+    ys = [0.5 * x for x in range(24)]
+    tt = t_test_trend(ys)
+    assert tt["ci_low"] <= tt["slope"] <= tt["ci_high"]
+
+
+def test_analyze_series_reports_both_tests():
+    ys = [0.5 * x for x in range(24)]
+    r = analyze_series(ys)
+    assert r["t_p"] is not None and r["p"] is not None
+    assert r["t_significant"] and r["significant"]
+    assert r["methods_agree"] is True
 
 
 if __name__ == "__main__":

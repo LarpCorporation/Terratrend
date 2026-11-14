@@ -64,6 +64,7 @@
       </div>
       <div id="var-list" class="var-list"></div>
       <p class="micro">Select up to 3 to overlay on the globe.</p>
+      <button id="defs-open" class="link-btn">ⓘ WHAT DO THESE VARIABLES MEAN?</button>
     </section>
 
     <section class="panel">
@@ -361,6 +362,22 @@
         <p><strong>Physical Corroboration:</strong> NASA GIBS imagery is orthorectified and surface-reflectance calibrated. Comparing identical calendar dates across decades isolates multiannual environmental trends (such as vegetation expansion, aridification, or ice margin retreat) from regular seasonal cycles.</p>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ============ VARIABLE DEFINITIONS MODAL ============ -->
+<div id="defs-modal" class="modal-backdrop" hidden>
+  <div class="modal-window defs-window">
+    <div class="modal-header">
+      <div class="mh-left">
+        <span class="mh-tag">GLOSSARY · PLAIN ENGLISH</span>
+        <h2>WHAT THESE VARIABLES MEAN</h2>
+        <span class="mh-sub">Every measurement explained without jargon — for
+          students, journalists and anyone new to Earth science</span>
+      </div>
+      <button id="defs-close" class="modal-close-btn" aria-label="Close">&times;</button>
+    </div>
+    <div id="defs-body" class="defs-body"></div>
   </div>
 </div>
 

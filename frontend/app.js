@@ -79,11 +79,16 @@ async function boot() {
   $("run").addEventListener("click", analyze);
   $("scan").addEventListener("click", scanAll);
   $("scan-close").addEventListener("click", closeScan);
+  $("defs-open").addEventListener("click", openDefs);
+  $("defs-close").addEventListener("click", closeDefs);
+  $("defs-modal").addEventListener("click", (e) => {
+    if (e.target === $("defs-modal")) closeDefs();
+  });
   $("scan-modal").addEventListener("click", (e) => {
     if (e.target === $("scan-modal")) closeScan();
   });
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeScan();
+    if (e.key === "Escape") { closeScan(); closeDefs(); }
   });
   $("region").addEventListener("change", onRegionChange);
   $("start").addEventListener("change", clampRange);
@@ -234,6 +239,47 @@ function setStatus(kind, html) {
   el.innerHTML = html;
   $("sys-status").textContent =
     kind === "err" ? "ERROR" : kind === "busy" ? "ANALYZING" : "READY";
+}
+
+/* ============================================================
+   VARIABLE DEFINITIONS — plain English, for a student audience
+   ============================================================ */
+const DEF_GROUPS = [
+  ["temperature", "TEMPERATURE — how hot or cold"],
+  ["water", "WATER & MOISTURE — rain, humidity, soil, evaporation"],
+  ["energy", "ENERGY & ATMOSPHERE — sunlight, heat radiation, wind, pressure"],
+];
+
+function openDefs() {
+  const box = $("defs-body");
+  const vars = state.catalog.variables;
+
+  box.innerHTML = DEF_GROUPS.map(([gid, label]) => {
+    const items = vars.filter((v) => v.group === gid)
+      .map((v) => `
+        <div class="def-item">
+          <div class="def-left">
+            <i class="def-dot" style="background:${v.color}"></i>
+            <div>
+              <div class="def-name">${esc(v.name)}</div>
+              <div class="def-meta">${esc(v.unit)} · ${esc(v.mission)}</div>
+            </div>
+          </div>
+          <div>
+            <div class="def-plain">${esc(v.plain || v.desc)}</div>
+            ${v.trend_means ? `<div class="def-means"><b>A trend means:</b>
+              ${esc(v.trend_means)}</div>` : ""}
+          </div>
+        </div>`).join("");
+    return `<div class="defs-group">${label}</div>${items}`;
+  }).join("");
+
+  $("defs-modal").hidden = false;
+}
+
+function closeDefs() {
+  const m = $("defs-modal");
+  if (m) m.hidden = true;
 }
 
 /* ============================================================
@@ -1075,6 +1121,15 @@ function drawChart() {
         ${esc(s.variable.unit)}/decade</b> — Sen slope confidence interval`
     : "";
 
+  const tNote = o.ok && o.t_p !== null && o.t_p !== undefined
+    ? `<br><span style="color:#8c9297">t-test</span> ` +
+      `(OLS, df=${o.t_df}) p=<b>${o.t_p < 0.001 ? "<0.001" : num(o.t_p, 3)}</b>` +
+      ` · slope ${o.t_per_decade > 0 ? "+" : ""}${num(o.t_per_decade, 3)}` +
+      ` · <b style="color:${o.methods_agree ? "#9bd36a" : "#e3c265"}">` +
+      `${o.methods_agree ? "AGREES with Mann–Kendall" : "DISAGREES with Mann–Kendall"}` +
+      `</b>`
+    : "";
+
   $("trendline").innerHTML = (o.ok
     ? `<b>${s.variable.name}</b> ${o.direction === "rising" ? "rising" :
        o.direction === "falling" ? "falling" : "flat"} at
@@ -1083,7 +1138,7 @@ function drawChart() {
        p=<b>${o.p < 0.001 ? "<0.001" : num(o.p, 3)}</b>
        ${o.significant ? "· SIGNIFICANT" : "· NOT SIGNIFICANT"}
        · n=<b>${o.n}</b> complete years`
-    : "Insufficient data for trend estimation.") + ciNote + partialNote;
+    : "Insufficient data for trend estimation.") + ciNote + tNote + partialNote;
 }
 
 function fitLine(pts) {

@@ -123,3 +123,110 @@ REGIONS = [
     {"id": "southern_ocean", "name": "Southern Ocean", "bbox": [-10.0, -60.0, 10.0, -52.0],
      "desc": "Antarctic Circumpolar Current zone", "surface": "ocean"},
 ]
+
+# ---------------------------------------------------------------------------
+# Plain-English explanations, for a high-school / general-public audience.
+# The challenge brief explicitly asks for simple variable definitions.
+#
+#   plain       : what the measurement physically is, without jargon
+#   trend_means : what a rising or falling trend in it actually implies
+# ---------------------------------------------------------------------------
+EXPLAIN = {
+    "T2M": {
+        "plain": "How warm the air is, about 2 metres above the ground — "
+                 "roughly what you feel standing outside.",
+        "trend_means": "Rising means the air is getting warmer on average.",
+    },
+    "T2M_MAX": {
+        "plain": "The average of each day's highest temperature for the month.",
+        "trend_means": "Rising means hotter afternoons — heat stress on crops "
+                       "and people.",
+    },
+    "T2M_MIN": {
+        "plain": "The average of each day's lowest temperature for the month.",
+        "trend_means": "Rising means warmer nights — plants burn more energy "
+                       "and lose more water overnight.",
+    },
+    "TS": {
+        "plain": "The temperature of the very top of the surface — soil, "
+                 "leaves or water — the layer a satellite actually sees.",
+        "trend_means": "Rising means the ground or sea surface itself is "
+                       "heating, not just the air above it.",
+    },
+    "T2M_RANGE": {
+        "plain": "How much the temperature swings between the daily low and "
+                 "the daily high.",
+        "trend_means": "A narrowing range usually means more cloud or "
+                       "moisture; a widening one means clearer, drier skies.",
+    },
+    "PRECTOTCORR": {
+        "plain": "How much rain and snow falls, averaged over each day of the "
+                 "month. 1 mm/day is about 30 mm of rain in a month.",
+        "trend_means": "Rising means more water arriving. Falling means drier "
+                       "months — the first signal of drought.",
+    },
+    "RH2M": {
+        "plain": "How full of moisture the air is, as a percentage of the most "
+                 "it could hold at that temperature.",
+        "trend_means": "Falling means drier air, which pulls more water out of "
+                       "the soil and out of plants.",
+    },
+    "QV2M": {
+        "plain": "The actual mass of water vapour in a kilogram of air — the "
+                 "true moisture content, whatever the temperature.",
+        "trend_means": "Rising means the atmosphere is holding more water, "
+                       "which can feed heavier rain when it condenses.",
+    },
+    "EVPTRNS": {
+        "plain": "Water leaving the ground and plants into the air — "
+                 "evaporation from soil plus transpiration from leaves.",
+        "trend_means": "Rising means the landscape is losing water faster. "
+                       "Falling can mean it has none left to lose.",
+    },
+    "EVLAND": {
+        "plain": "Water evaporating from bare ground and open water, without "
+                 "the plant part.",
+        "trend_means": "Tracks how quickly the land surface itself dries out.",
+    },
+    "GWETROOT": {
+        "plain": "How much water is stored in the soil around plant roots, "
+                 "from 0 (bone dry) to 1 (saturated).",
+        "trend_means": "Falling is the signature of agricultural drought — "
+                       "the water crops actually live on.",
+    },
+    "GWETTOP": {
+        "plain": "Water in just the top layer of soil, from 0 to 1.",
+        "trend_means": "Responds within days to rainfall, so it is the "
+                       "earliest warning sign of flash drought.",
+    },
+    "WS2M": {
+        "plain": "How fast the air is moving, 2 metres above the ground.",
+        "trend_means": "Rising means windier conditions — more evaporation, "
+                       "more dust, more fire risk.",
+    },
+    "ALLSKY_SFC_SW_DNI": {
+        "plain": "How much direct sunshine reaches the surface.",
+        "trend_means": "Falling often means more cloud or haze; rising means "
+                       "clearer skies.",
+    },
+    "ALLSKY_SFC_LW_DWN": {
+        "plain": "Invisible heat radiation coming down from the sky and "
+                 "clouds — you feel it as warmth on a cloudy night.",
+        "trend_means": "Rising is a fingerprint of a warmer, moister "
+                       "atmosphere — the greenhouse effect in action.",
+    },
+    "PS": {
+        "plain": "The weight of the air pressing down on the surface.",
+        "trend_means": "Small swings track day-to-day weather; a long rise "
+                       "points to a change in large-scale circulation.",
+    },
+}
+
+for _v in CATALOG:
+    _v.update(EXPLAIN.get(_v["id"], {}))
+
+GROUP_LABELS = {
+    "temperature": "TEMPERATURE",
+    "water": "WATER & MOISTURE",
+    "energy": "ENERGY & ATMOSPHERE",
+}
