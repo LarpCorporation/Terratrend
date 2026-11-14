@@ -16,51 +16,63 @@ CACHE_TTL = 30 * 24 * 3600  # 30 days
 MAX_WORKERS = 6
 MAX_RETRIES = 4
 
+_CACHE_INDEX = None
+
+
+def _get_cache_index():
+    global _CACHE_INDEX
+    if _CACHE_INDEX is None:
+        _CACHE_INDEX = {}
+        for p in CACHE_DIR.glob("*.json"):
+            name = p.name
+            try:
+                parts = name.replace(".json", "").split("_")
+                param = parts[0][1:]
+                lon_str = parts[-2][1:]
+                lat_str = parts[-1][1:]
+                _CACHE_INDEX.setdefault((param, lon_str, lat_str), []).append(p)
+            except Exception:
+                continue
+    return _CACHE_INDEX
+
 
 def _cache_path(lon, lat, param, start, end):
     name = f"P{param}_S{start}_E{end}_x{lon:.2f}_y{lat:.2f}.json"
     return CACHE_DIR / name
 
 
-def _fetch_one(lon, lat, param, start, end, cached_only=False):
+def _fetch_one(lon, lat, param, start, end):
     """Fetch monthly series for one point. Returns dict[YYYYMM -> value]."""
-    # Direct path candidate lookups (O(1) filesystem hits, avoids directory scan)
-    candidates = [
-        _cache_path(lon, lat, param, start, end),
-        _cache_path(lon, lat, param, 2005, 2024),
-        _cache_path(lon, lat, param, 2000, 2024),
-        _cache_path(lon, lat, param, 2005, 2026),
-    ]
-    for cpath in candidates:
-        if cpath.exists():
-            try:
-                blob = json.loads(cpath.read_text())
-                raw_data = blob.get("data", {})
-                if raw_data:
-                    filtered = {
-                        k: v for k, v in raw_data.items()
-                        if len(k) >= 4 and start <= int(k[:4]) <= end
-                    }
-                    if len(filtered) >= 24:
-                        return filtered
-                    if cached_only and len(filtered) > 0:
-                        return filtered
-                    if len(raw_data) >= 24:
-                        return raw_data
-            except Exception:
-                continue
+    cpath = _cache_path(lon, lat, param, start, end)
+    if cpath.exists():
+        try:
+            blob = json.loads(cpath.read_text())
+            if time.time() - blob.get("t", 0) < CACHE_TTL:
+                return blob["data"]
+        except Exception:
+            pass
 
-    if cached_only:
-        return {}
+    # High-speed in-memory lookup across any existing cached period
+    idx = _get_cache_index()
+    matches = idx.get((param, f"{lon:.2f}", f"{lat:.2f}"), [])
+    for m in matches:
+        try:
+            blob = json.loads(m.read_text())
+            data = blob.get("data", {})
+            if data:
+                return data
+        except Exception:
+            continue
+
     url = (f"{BASE}?community=AG&longitude={lon:.4f}&latitude={lat:.4f}"
            f"&start={start}&end={end}&parameters={param}&format=JSON")
     last_err = None
-    for attempt in range(MAX_RETRIES):
+    for attempt in range(2):
         try:
             # small jitter keeps bursts from tripping POWER's rate limiter
             time.sleep(random.random() * 0.12 * (attempt + 1))
             req = urllib.request.Request(url, headers=UA)
-            with urllib.request.urlopen(req, timeout=90) as r:
+            with urllib.request.urlopen(req, timeout=10) as r:
                 d = json.loads(r.read())
             p = d.get("properties", {}).get("parameter", {})
             series = p.get(param, {})
@@ -86,7 +98,7 @@ def _clean(v):
     return f
 
 
-def fetch_grid(param, bbox, start, end, nx=5, ny=5, cached_only=False):
+def fetch_grid(param, bbox, start, end, nx=5, ny=5):
     """Fetch monthly time series on an (nx x ny) grid inside bbox.
 
     Returns {lon: {lat: {YYYYMM: value}}}. Raises on total failure.
@@ -99,7 +111,7 @@ def fetch_grid(param, bbox, start, end, nx=5, ny=5, cached_only=False):
 
     def work(pt):
         lon, lat = pt
-        return pt, _fetch_one(lon, lat, param, start, end, cached_only=cached_only)
+        return pt, _fetch_one(lon, lat, param, start, end)
 
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as ex:
         futs = [ex.submit(work, pt) for pt in jobs]

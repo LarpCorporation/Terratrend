@@ -40,7 +40,8 @@ const state = {
   expandedVarIdx: 0,
   expandedMode: "yearly",
   zoomAxis: "x",
-  teleconData: null,
+  compareRegionId: null,
+  telecon: null,
 };
 
 let chart = null;
@@ -94,6 +95,17 @@ async function boot() {
   const scanM = $("scan-modal");
   if (scanM) scanM.addEventListener("click", (e) => { if (e.target === scanM) closeScan(); });
 
+  const traceBtn = $("btn-trace-impacts");
+  if (traceBtn) traceBtn.addEventListener("click", traceGlobalImpacts);
+  const ledgerBtn = $("btn-open-ledger");
+  if (ledgerBtn) ledgerBtn.addEventListener("click", openImpactLedger);
+  const ledgerClose = $("ledger-close");
+  if (ledgerClose) ledgerClose.addEventListener("click", closeImpactLedger);
+  const ledgerDone = $("ledger-done");
+  if (ledgerDone) ledgerDone.addEventListener("click", closeImpactLedger);
+  const ledgerM = $("impact-ledger-modal");
+  if (ledgerM) ledgerM.addEventListener("click", (e) => { if (e.target === ledgerM) closeImpactLedger(); });
+
   $("region").addEventListener("change", onRegionChange);
   const compToggle = $("toggle-compare-mode");
   if (compToggle) compToggle.addEventListener("click", toggleCompareMode);
@@ -112,17 +124,6 @@ async function boot() {
 
   initSatModal();
   initDataModal();
-
-  const traceBtn = $("btn-trace-impacts");
-  if (traceBtn) traceBtn.addEventListener("click", traceGlobalImpacts);
-  const openLedgerBtn = $("btn-open-ledger");
-  if (openLedgerBtn) openLedgerBtn.addEventListener("click", openImpactLedger);
-  const closeLedgerBtn = $("ledger-close");
-  if (closeLedgerBtn) closeLedgerBtn.addEventListener("click", closeImpactLedger);
-  const doneLedgerBtn = $("ledger-done");
-  if (doneLedgerBtn) doneLedgerBtn.addEventListener("click", closeImpactLedger);
-  const ledgerM = $("impact-ledger-modal");
-  if (ledgerM) ledgerM.addEventListener("click", (e) => { if (e.target === ledgerM) closeImpactLedger(); });
 
   window.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
@@ -499,6 +500,292 @@ function openFromScan(vid) {
   updateGlobeOverlay();
   closeScan();
   analyze();
+}
+
+/* ============================================================
+   GLOBAL IMPACT & TELECONNECTION DETECTIVE
+   ============================================================ */
+
+async function traceGlobalImpacts() {
+  const reg = currentRegion();
+  if (!reg) return;
+
+  const vId = (state.result && state.result.series && state.result.series[state.activeVarIdx])
+    ? state.result.series[state.activeVarIdx].variable.id
+    : (state.selected[0] || "T2M");
+
+  const btn = $("btn-trace-impacts");
+  if (btn) btn.disabled = true;
+
+  setStatus("busy", `<span class="spin"></span>TRACING GLOBAL TELECONNECTIONS FOR ${esc(reg.name.toUpperCase())}...`);
+
+  const params = new URLSearchParams({
+    region: reg.id,
+    variable: vId,
+    start: $("start").value,
+    end: $("end").value,
+    min_r: "0.38",
+  });
+
+  try {
+    const r = await fetch(`/api/teleconnections?${params}`);
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
+
+    state.telecon = d;
+    renderTeleconHUD(d);
+    render3DTeleconArcs(d);
+    renderImpactLedger(d);
+    openImpactLedger();
+    setStatus("ok", "");
+  } catch (err) {
+    setStatus("err", `TELECONNECTION SCAN FAILED: ${esc(err.message)}`);
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+function renderTeleconHUD(d) {
+  const tag = $("telecon-tag");
+  const summaryText = $("telecon-summary-text");
+  const miniList = $("telecon-mini-list");
+  const openBtn = $("btn-open-ledger");
+
+  const conns = (d && d.teleconnections) ? d.teleconnections : [];
+  if (tag) tag.textContent = `${conns.length} FOUND`;
+
+  if (summaryText) {
+    if (conns.length > 0) {
+      summaryText.textContent = `Found ${conns.length} statistically significant remote ripple effects (|r| >= 0.38, p < 0.05).`;
+    } else {
+      summaryText.textContent = "No significant planetary teleconnections detected (|r| < 0.38). This variable operates as a localized regional signal.";
+    }
+  }
+
+  if (miniList) {
+    miniList.innerHTML = "";
+    conns.slice(0, 3).forEach((c) => {
+      const pill = document.createElement("div");
+      pill.className = "tc-pill";
+      const isDirect = c.direction === "direct";
+      const sign = c.r > 0 ? "+" : "";
+      pill.innerHTML = `
+        <span class="tc-pill-name">${esc(c.target_region.name)}: ${esc(c.target_variable.name)}</span>
+        <span class="tc-pill-r ${isDirect ? "direct" : "inverse"}">${sign}${c.r.toFixed(2)}</span>
+      `;
+      pill.title = `${c.strength}: ${c.mechanism}`;
+      pill.addEventListener("click", () => {
+        investigateTeleconnection(c.target_region.id, c.target_variable.id);
+      });
+      miniList.appendChild(pill);
+    });
+  }
+
+  if (openBtn) {
+    openBtn.style.display = conns.length > 0 ? "block" : "none";
+  }
+}
+
+function renderImpactLedger(d) {
+  const src = (d && d.source) ? d.source : {};
+  const sReg = src.region || {};
+  const sVar = src.variable || {};
+  const sum = (d && d.summary) ? d.summary : {};
+  const conns = (d && d.teleconnections) ? d.teleconnections : [];
+
+  $("ledger-title").textContent = `GLOBAL RIPPLE EFFECTS: ${sVar.name ? sVar.name.toUpperCase() : "VARIABLE"} · ${sReg.name ? sReg.name.toUpperCase() : "REGION"}`;
+  $("ledger-sub").textContent = `CROSS-REGIONAL MULTI-SPHERE TELECONNECTIONS (${src.start || ""}–${src.end || ""} · p < 0.05)`;
+
+  const regEl = $("ls-origin-reg");
+  if (regEl) regEl.textContent = sReg.name || "—";
+  const varEl = $("ls-origin-var");
+  if (varEl) varEl.textContent = sVar.name ? `${sVar.name} (${sVar.unit})` : "—";
+  const countEl = $("ls-count");
+  if (countEl) countEl.textContent = `${conns.length} / ${sum.total_scanned || 0}`;
+
+  const maxREl = $("ls-max-r");
+  if (maxREl) {
+    if (sum.strongest_direct) {
+      maxREl.textContent = `+${sum.strongest_direct.r.toFixed(2)} (${sum.strongest_direct.region})`;
+      maxREl.style.color = "var(--rise)";
+    } else if (sum.strongest_inverse) {
+      maxREl.textContent = `${sum.strongest_inverse.r.toFixed(2)} (${sum.strongest_inverse.region})`;
+      maxREl.style.color = "#00e5ff";
+    } else {
+      maxREl.textContent = "NONE";
+      maxREl.style.color = "var(--muted)";
+    }
+  }
+
+  const body = $("ledger-body");
+  if (!body) return;
+
+  if (conns.length === 0) {
+    body.innerHTML = `
+      <div style="padding: 24px; text-align: center; color: #a6adb5; font-family: var(--font);">
+        NO STATISTICALLY SIGNIFICANT GLOBAL TELECONNECTIONS FOUND (|r| < 0.38).<br>
+        <span style="font-size: .54rem; color: var(--muted); margin-top: 6px; display: block;">
+          This variable's variance is predominantly localized to ${esc(sReg.name || "the selected region")}.
+        </span>
+      </div>`;
+    return;
+  }
+
+  const head = `
+    <div class="ledger-head">
+      <span>#</span>
+      <span>IMPACTED REGION</span>
+      <span>VARIABLE</span>
+      <span>CORRELATION</span>
+      <span>PHYSICAL MECHANISM</span>
+      <span style="text-align: right;">ACTION</span>
+    </div>
+  `;
+
+  const rows = conns.map((c, i) => {
+    const rank = String(i + 1).padStart(2, "0");
+    const isDirect = c.direction === "direct";
+    const sign = c.r > 0 ? "+" : "";
+    const strengthClass = c.strength.toLowerCase();
+
+    return `
+      <div class="ledger-row">
+        <span class="lr-rank">${rank}</span>
+        <div class="lr-reg">
+          <span class="lr-reg-name">${esc(c.target_region.name)}</span>
+          <span class="lr-reg-surf">${esc(c.target_region.surface || "land")}</span>
+        </div>
+        <div class="lr-var">
+          <i class="lr-var-dot" style="background:${c.target_variable.color}"></i>
+          <div class="lr-var-info">
+            <span class="lr-var-name">${esc(c.target_variable.name)}</span>
+            <span class="lr-var-sph">[${esc(c.target_variable.sphere_code)}] ${esc(c.target_variable.unit)}</span>
+          </div>
+        </div>
+        <div class="lr-coupling">
+          <span class="lr-r ${isDirect ? "direct" : "inverse"}">${sign}${c.r.toFixed(2)}</span>
+          <span class="lr-p">p = ${c.p < 0.001 ? "<0.001" : c.p.toFixed(3)}</span>
+          <span class="lr-strength ${strengthClass}">${esc(c.strength)}</span>
+        </div>
+        <div class="lr-mech">${esc(c.mechanism)}</div>
+        <div class="lr-act">
+          <button class="lr-btn" data-reg="${esc(c.target_region.id)}" data-var="${esc(c.target_variable.id)}">INVESTIGATE</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  body.innerHTML = head + rows;
+
+  body.querySelectorAll(".lr-btn").forEach((b) => {
+    b.addEventListener("click", () => {
+      investigateTeleconnection(b.dataset.reg, b.dataset.var);
+    });
+  });
+}
+
+function openImpactLedger() {
+  showModal($("impact-ledger-modal"));
+}
+
+function closeImpactLedger() {
+  hideModal($("impact-ledger-modal"));
+}
+
+function investigateTeleconnection(targetRegId, targetVarId) {
+  closeImpactLedger();
+
+  // Switch to Regional Contrast Mode comparing Origin vs Target
+  state.compareMode = true;
+  const toggleBtn = $("toggle-compare-mode");
+  if (toggleBtn) {
+    toggleBtn.classList.add("active");
+    toggleBtn.textContent = "MODE: CONTRAST (A vs B)";
+  }
+
+  const compBox = $("compare-region-box");
+  if (compBox) compBox.hidden = false;
+
+  const compSel = $("compare-region");
+  if (compSel) compSel.value = targetRegId;
+
+  // Make sure target variable is in selected list
+  if (targetVarId && !state.selected.includes(targetVarId)) {
+    while (state.selected.length >= MAX_VARS) state.selected.pop();
+    state.selected.push(targetVarId);
+    renderVarList();
+  }
+
+  // Smoothly rotate globe towards midpoint
+  const srcReg = currentRegion();
+  const tgtReg = state.catalog.regions.find((r) => r.id === targetRegId);
+  if (srcReg && tgtReg) {
+    const midLon = (srcReg.bbox[0] + srcReg.bbox[2] + tgtReg.bbox[0] + tgtReg.bbox[2]) / 4;
+    const midLat = (srcReg.bbox[1] + srcReg.bbox[3] + tgtReg.bbox[1] + tgtReg.bbox[3]) / 4;
+    const targetY = -(midLon * Math.PI / 180) - Math.PI / 2;
+    const targetX = midLat * Math.PI / 180;
+    animateGlobeTo(targetX, targetY);
+  }
+
+  analyze();
+}
+
+function render3DTeleconArcs(d) {
+  if (!teleconArcsGroup) return;
+
+  // Clear existing arcs
+  while (teleconArcsGroup.children.length > 0) {
+    const obj = teleconArcsGroup.children[0];
+    teleconArcsGroup.remove(obj);
+    if (obj.geometry) obj.geometry.dispose();
+    if (obj.material) obj.material.dispose();
+  }
+
+  const conns = (d && d.teleconnections) ? d.teleconnections.slice(0, 10) : [];
+  if (!conns.length) return;
+
+  const src = d.source;
+  const srcLat = (src.region.bbox[1] + src.region.bbox[3]) / 2;
+  const srcLon = (src.region.bbox[0] + src.region.bbox[2]) / 2;
+  const p1 = latLonToVec3(srcLat, srcLon, 1.0);
+
+  conns.forEach((c) => {
+    const tgt = c.target_region;
+    const p2 = latLonToVec3(tgt.lat, tgt.lon, 1.0);
+
+    const isDirect = c.direction === "direct";
+    const colorHex = isDirect ? 0xffaa40 : 0x00e5ff;
+
+    // Elevation height scales with angular distance across globe
+    const angle = p1.angleTo(p2);
+    const altitude = 1.0 + Math.sin(angle / 2) * 0.42;
+
+    const mid = p1.clone().add(p2).multiplyScalar(0.5).normalize().multiplyScalar(altitude);
+    const curve = new THREE.QuadraticBezierCurve3(p1, mid, p2);
+    const points = curve.getPoints(45);
+
+    const geom = new THREE.BufferGeometry().setFromPoints(points);
+    const mat = new THREE.LineBasicMaterial({
+      color: colorHex,
+      transparent: true,
+      opacity: Math.min(0.9, Math.abs(c.r) * 1.1),
+    });
+    const line = new THREE.Line(geom, mat);
+    teleconArcsGroup.add(line);
+
+    // Glowing target ring on destination
+    const ringGeom = new THREE.RingGeometry(0.018, 0.030, 24);
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: colorHex,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.85,
+    });
+    const ring = new THREE.Mesh(ringGeom, ringMat);
+    ring.position.copy(p2.clone().multiplyScalar(1.002));
+    ring.lookAt(p2.clone().multiplyScalar(2.0));
+    teleconArcsGroup.add(ring);
+  });
 }
 
 /* ============================================================
@@ -2240,11 +2527,11 @@ function esc(s) {
    ============================================================ */
 const R = 1;
 let renderer, scene, camera, globeGroup;
+let teleconArcsGroup;
 let landPoints, gridLines, regionMesh, haloMesh, atmosphere, pickSphere;
 let dragState = null;
 let autoRotate = true;
 let regionMarkers = [];
-let teleconObjects = [];
 let landData = [];
 let raycaster, pointer;
 let lastPointer = { x: 0, y: 0 };
@@ -2284,6 +2571,9 @@ async function initGlobe() {
   globeGroup = new THREE.Group();
   globeGroup.rotation.y = -0.6;
   scene.add(globeGroup);
+
+  teleconArcsGroup = new THREE.Group();
+  globeGroup.add(teleconArcsGroup);
 
   try {
     const r = await fetch("land_dots.json");
@@ -2798,260 +3088,6 @@ function animateGlobe() {
     regionMesh.visible = false;
   }
   renderer.render(scene, camera);
-}
-
-/* ============================================================
-   GLOBAL IMPACT TELECONNECTIONS & 3D CONNECTION RAYS
-   ============================================================ */
-async function traceGlobalImpacts() {
-  const reg = currentRegion();
-  const v = state.catalog ? state.catalog.variables.find((x) => x.id === (state.selected[state.activeVarIdx] || state.selected[0])) : null;
-  if (!reg || !v) {
-    setStatus("err", "Select a region and variable first.");
-    return;
-  }
-
-  const btn = $("btn-trace-impacts");
-  if (btn) btn.disabled = true;
-  setStatus("busy", `<span class="spin"></span>DISCOVERING GLOBAL IMPACT RIPPLES FROM ${reg.name.toUpperCase()}…`);
-
-  const tag = $("telecon-tag");
-  const summaryText = $("telecon-summary-text");
-  const miniList = $("telecon-mini-list");
-  const ledgerBtn = $("btn-open-ledger");
-
-  if (tag) tag.textContent = "SCANNING...";
-  if (summaryText) summaryText.textContent = `Analyzing planetary cross-correlations against ${v.name} in ${reg.name}...`;
-  if (miniList) {
-    miniList.innerHTML = `<p class="micro">Tracing planetary ripples and causal wave trains across Earth system spheres...</p>`;
-  }
-
-  try {
-    const startYr = $("start").value;
-    const endYr = $("end").value;
-    const url = `/api/teleconnections?region=${encodeURIComponent(reg.id)}&variable=${encodeURIComponent(v.id)}&start=${startYr}&end=${endYr}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    state.teleconData = data;
-
-    renderTeleconnections(data);
-    openImpactLedger();
-    setStatus("ok", `Discovered ${data.teleconnections.filter(t => t.significant).length} significant planetary ripples.`);
-  } catch (err) {
-    console.error("Teleconnections error:", err);
-    if (tag) tag.textContent = "ERR";
-    setStatus("err", `FAILED TO TRACE IMPACTS: ${esc(err.message)}`);
-  } finally {
-    if (btn) btn.disabled = false;
-  }
-}
-
-function clearTeleconGlobeArcs() {
-  if (teleconObjects && teleconObjects.length) {
-    teleconObjects.forEach((obj) => globeGroup.remove(obj));
-    teleconObjects = [];
-  }
-}
-
-function renderTeleconGlobeArcs(srcRegion, targets) {
-  clearTeleconGlobeArcs();
-  if (!srcRegion || !targets || !targets.length) return;
-
-  const R_SURFACE = 1.0;
-  const pA = bboxCenter(srcRegion.bbox, R_SURFACE);
-
-  targets.forEach((target) => {
-    const targetBbox = target.bbox || target.target_bbox;
-    if (!targetBbox) return;
-    const pB = bboxCenter(targetBbox, R_SURFACE);
-    const dist = pA.distanceTo(pB);
-
-    const pMid = new THREE.Vector3().addVectors(pA, pB).multiplyScalar(0.5);
-    const elev = R_SURFACE + Math.min(0.45, Math.max(0.12, dist * 0.35));
-    pMid.normalize().multiplyScalar(elev);
-
-    const curve = new THREE.QuadraticBezierCurve3(pA, pMid, pB);
-    const pts = curve.getPoints(45);
-    const geo = new THREE.BufferGeometry().setFromPoints(pts);
-
-    const isPos = target.r >= 0;
-    const arcColor = isPos ? 0xff7a33 : 0x4d7cf3;
-
-    const mat = new THREE.LineBasicMaterial({
-      color: arcColor,
-      transparent: true,
-      opacity: 0.85,
-    });
-    const line = new THREE.Line(geo, mat);
-    line.renderOrder = 12;
-    globeGroup.add(line);
-    teleconObjects.push(line);
-
-    // Endpoint pulsing marker on remote region
-    const dotGeo = new THREE.SphereGeometry(0.018, 8, 8);
-    const dotMat = new THREE.MeshBasicMaterial({
-      color: arcColor,
-      transparent: true,
-      opacity: 0.9,
-    });
-    const dot = new THREE.Mesh(dotGeo, dotMat);
-    dot.position.copy(pB.clone().multiplyScalar(1.02));
-    dot.renderOrder = 13;
-    globeGroup.add(dot);
-    teleconObjects.push(dot);
-
-    // Endpoint pulse ring
-    const ringGeo = new THREE.RingGeometry(0.024, 0.032, 24);
-    const ringMat = new THREE.MeshBasicMaterial({
-      color: arcColor,
-      side: THREE.DoubleSide,
-      transparent: true,
-      opacity: 0.65,
-    });
-    const ring = new THREE.Mesh(ringGeo, ringMat);
-    ring.position.copy(pB.clone().multiplyScalar(1.025));
-    ring.lookAt(pB.clone().multiplyScalar(2));
-    ring.renderOrder = 13;
-    globeGroup.add(ring);
-    teleconObjects.push(ring);
-  });
-}
-
-function renderTeleconnections(data) {
-  const tag = $("telecon-tag");
-  const summaryText = $("telecon-summary-text");
-  const miniList = $("telecon-mini-list");
-  const ledgerBtn = $("btn-open-ledger");
-
-  const items = (data.teleconnections || []).filter((t) => t.significant);
-  if (tag) tag.textContent = `${items.length} FOUND`;
-  if (ledgerBtn) ledgerBtn.style.display = items.length ? "block" : "none";
-
-  if (summaryText) {
-    summaryText.textContent = items.length
-      ? `Found ${items.length} statistically significant remote impacts (p < 0.05) originating from ${data.source_region.name}. 3D rays are visible on the globe.`
-      : `No statistically significant teleconnections detected for this window.`;
-  }
-
-  if (miniList) {
-    if (!items.length) {
-      miniList.innerHTML = `<p class="micro">No significant remote ripples detected (p < 0.05). Try expanding year range.</p>`;
-    } else {
-      miniList.innerHTML = items.slice(0, 4).map((t, idx) => {
-        const isPos = t.r >= 0;
-        const rSign = isPos ? "+" : "";
-        const badgeClass = isPos ? "pos" : "neg";
-        const dirClass = isPos ? "amplifying" : "opposing";
-        return `
-          <div class="telecon-mini-item ${dirClass}" data-idx="${idx}">
-            <div class="telecon-mini-head">
-              <span class="telecon-mini-region">${esc(t.region_name || t.target_region_name)}</span>
-              <span class="telecon-mini-r ${badgeClass}">r = ${rSign}${t.r.toFixed(3)}</span>
-            </div>
-            <div class="telecon-mini-var">${esc(t.variable_name || t.target_var_name)} · p=${t.p.toFixed(3)}</div>
-          </div>
-        `;
-      }).join("");
-
-      miniList.querySelectorAll(".telecon-mini-item").forEach((card) => {
-        card.addEventListener("click", () => {
-          const idx = +card.dataset.idx;
-          const telecon = items[idx];
-          focusTeleconnection(telecon);
-        });
-      });
-    }
-  }
-
-  renderTeleconGlobeArcs(data.source_region, items.slice(0, 8));
-}
-
-function openImpactLedger() {
-  const data = state.teleconData;
-  if (!data) return;
-
-  const items = (data.teleconnections || []).filter((t) => t.significant);
-  const srcReg = data.source_region || {};
-  const srcVar = data.source_variable || {};
-
-  $("ledger-title").textContent = `GLOBAL RIPPLE EFFECTS: ${srcReg.name.toUpperCase()}`;
-  $("ledger-sub").textContent = `Analyzing planetary teleconnections and remote impacts driven by ${srcVar.name} (${data.start}–${data.end})`;
-
-  $("ls-origin-reg").textContent = srcReg.name || "—";
-  $("ls-origin-var").textContent = srcVar.name || "—";
-  $("ls-count").textContent = `${items.length} SIGNIFICANT`;
-
-  const maxR = items.length ? items.reduce((m, t) => Math.abs(t.r) > Math.abs(m.r) ? t : m, items[0]) : null;
-  $("ls-max-r").textContent = maxR ? `${maxR.r > 0 ? "+" : ""}${maxR.r.toFixed(3)} (${maxR.region_name || maxR.target_region_name})` : "—";
-
-  const body = $("ledger-body");
-  if (!body) return;
-
-  if (!items.length) {
-    body.innerHTML = `<div class="ledger-card"><p class="micro">No statistically significant planetary teleconnections detected (p < 0.05). Try expanding the time range.</p></div>`;
-  } else {
-    body.innerHTML = items.map((t, idx) => {
-      const isPos = t.r >= 0;
-      const rSign = isPos ? "+" : "";
-      const badgeClass = isPos ? "pos" : "neg";
-      const dirClass = isPos ? "amplifying" : "opposing";
-      const relLabel = t.relationship || (isPos ? "AMPLIFYING (IN-PHASE)" : "OPPOSING (INVERSE)");
-      const sphereLabel = t.target_sphere || "ATM";
-      const regName = t.region_name || t.target_region_name;
-      const varName = t.variable_name || t.target_var_name;
-      const unit = t.unit || t.target_var_unit || "";
-      const pStr = t.p < 0.001 ? "p < 0.001" : `p = ${t.p.toFixed(3)}`;
-
-      return `
-        <div class="ledger-card ${dirClass}">
-          <div class="ledger-card-head">
-            <div class="lc-left">
-              <span class="lc-target-region">${esc(regName)}</span>
-              <span class="lc-sphere-tag">${esc(sphereLabel)}</span>
-            </div>
-            <div class="lc-right">
-              <span class="lc-verdict-tag">${esc(relLabel)}</span>
-              <span class="lc-r-badge ${badgeClass}">r = ${rSign}${t.r.toFixed(3)}</span>
-            </div>
-          </div>
-          <div class="lc-var-row">
-            <span class="lc-var-name">${esc(varName)} (${esc(unit)})</span>
-            <span class="lc-var-stats">${pStr} · ${t.n || 20} YR SAMPLE</span>
-          </div>
-          <div class="lc-mechanism">${esc(t.mechanism || t.explanation)}</div>
-          <div class="lc-actions">
-            <button class="lc-focus-btn" data-idx="${idx}">VIEW ON GLOBE</button>
-          </div>
-        </div>
-      `;
-    }).join("");
-
-    body.querySelectorAll(".lc-focus-btn").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const idx = +btn.dataset.idx;
-        const telecon = items[idx];
-        closeImpactLedger();
-        focusTeleconnection(telecon);
-      });
-    });
-  }
-
-  showModal($("impact-ledger-modal"));
-}
-
-function closeImpactLedger() {
-  hideModal($("impact-ledger-modal"));
-}
-
-function focusTeleconnection(target) {
-  const bbox = target.bbox || target.target_bbox;
-  if (!bbox) return;
-  const lon = (bbox[0] + bbox[2]) / 2;
-  const lat = (bbox[1] + bbox[3]) / 2;
-  const targetY = -(lon * Math.PI / 180) - Math.PI / 2;
-  const targetX = lat * Math.PI / 180;
-  animateGlobeTo(targetX, targetY);
 }
 
 boot();

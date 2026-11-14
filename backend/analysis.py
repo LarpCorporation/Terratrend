@@ -385,21 +385,6 @@ def calculate_pearson(xs, ys):
     return max(-1.0, min(1.0, r))
 
 
-def pearson_r_and_p(xs, ys):
-    """Compute Pearson correlation r and two-tailed p-value via Student's t distribution."""
-    r = calculate_pearson(xs, ys)
-    pairs = [(x, y) for x, y in zip(xs, ys) if x is not None and y is not None and not math.isnan(x) and not math.isnan(y)]
-    n = len(pairs)
-    if n < 4:
-        return r, 1.0
-    if abs(r) >= 0.9999:
-        return r, 0.0
-    df = n - 2
-    t_stat = abs(r) * math.sqrt(df / max(1e-12, 1.0 - r * r))
-    p = 2.0 * (1.0 - t_cdf(t_stat, df))
-    return r, max(0.0, min(1.0, p))
-
-
 PHYSICAL_COUPLINGS = {
     frozenset({"T2M", "RH2M"}): {
         "title": "Vapor Pressure Deficit (VPD) Expansion",
@@ -548,55 +533,56 @@ def analyze_regional_contrast(var, reg_a, reg_b, series_a, series_b, stats_a, st
     }
 
 
-TELECONNECTION_MECHANISMS = {
-    frozenset({"tropical_pacific", "ghana_north"}): (
-        "Equatorial Pacific convective heating shifts the global Walker circulation and Rossby wave trains, "
-        "modulating the West African monsoon and driving concurrent thermal heatwaves across northern Ghana."
-    ),
-    frozenset({"tropical_pacific", "ghana_south"}): (
-        "El Niño thermal shifts perturb the Gulf of Guinea sea surface thermal gradients, altering moisture transport "
-        "into the southern Ghanaian forest belt."
-    ),
-    frozenset({"tropical_pacific", "amazon"}): (
-        "Eastward migration of Pacific deep convection during El Niño creates powerful atmospheric subsidence over "
-        "South America, suppressing Amazonian rainfall and creating severe drought conditions."
-    ),
-    frozenset({"tropical_pacific", "california"}): (
-        "Equatorial Pacific sea surface warming displaces the Pacific subtropical jet stream southward, channeling "
-        "enhanced atmospheric rivers and heavy winter precipitation into California."
-    ),
-    frozenset({"tropical_pacific", "australia_east"}): (
-        "Relocation of the western Pacific warm pool during El Niño drives regional atmospheric drying and trade wind "
-        "weakening over eastern Australia, increasing heat and agricultural drought."
-    ),
-    frozenset({"sahara", "sahel"}): (
-        "Intense radiant heating over the hyper-arid Sahara intensifies the Saharan Air Layer, which advects dry air "
-        "across the Sahel, elevating evapotranspiration and depleting root-zone soil moisture."
-    ),
-    frozenset({"north_atlantic", "europe"}): (
-        "North Atlantic sea surface temperature and pressure anomalies drive the North Atlantic Oscillation (NAO), "
-        "steering European storm tracks and modulating continent-wide summer heatwaves."
-    ),
-}
+def pearson_significance(r, n):
+    """Compute Student's t-test p-value for Pearson correlation r."""
+    if n < 4 or abs(r) >= 1.0 - 1e-9:
+        return 0.0 if abs(r) >= 0.5 else 1.0
+    denom = math.sqrt(max(1e-12, 1.0 - r * r))
+    df = n - 2
+    t = abs(r) * math.sqrt(df) / denom
+    p = 2.0 * (1.0 - t_cdf(t, df))
+    return max(0.0, min(1.0, p))
 
 
-def explain_teleconnection(reg_a_id, reg_b_id, var_a_id, var_b_id, r):
-    """Return scientific explanation of a cross-regional teleconnection."""
-    key = frozenset({reg_a_id, reg_b_id})
-    if key in TELECONNECTION_MECHANISMS:
-        return TELECONNECTION_MECHANISMS[key]
+def explain_teleconnection(src_reg, src_var, dst_reg, dst_var, r, p):
+    """Generate a scientific plain-English mechanism explanation for a discovered teleconnection."""
+    src_rid = src_reg.get("id", "")
+    src_vid = src_var.get("id", "")
+    dst_rid = dst_reg.get("id", "")
+    dst_vid = dst_var.get("id", "")
 
-    if r >= 0.50:
-        return (
-            f"Planetary wave teleconnection: atmospheric pressure and thermal anomalies in {reg_a_id.replace('_', ' ').title()} "
-            f"co-trend in-phase with {reg_b_id.replace('_', ' ').title()} via circumglobal Rossby wave trains."
-        )
-    elif r <= -0.50:
-        return (
-            f"Compensatory atmospheric dipole: anomalous warming or rising motion in {reg_a_id.replace('_', ' ').title()} "
-            f"induces remote atmospheric subsidence and opposing drying/cooling in {reg_b_id.replace('_', ' ').title()}."
-        )
-    return (
-        f"Coupled variability: moderate cross-regional correlation observed across multidecadal satellite observations."
-    )
+    # ENSO / Pacific Trade Wind teleconnections
+    if src_rid == "tropical_pacific" and src_vid in ("WS2M", "TS"):
+        if "ghana" in dst_rid and dst_vid in ("T2M", "TS"):
+            if r > 0:
+                return "Walker circulation displacement: equatorial Pacific sea warming drives concurrent thermal anomalies across the Gulf of Guinea and West Africa."
+            return "Trade wind breakdown teleconnection: Pacific wind relaxation correlates with West African heatwave amplification."
+        if dst_rid == "amazon" and dst_vid == "PRECTOTCORR":
+            return "Pacific-Atlantic Walker cell seesaw: eastward shift of deep convection during El Nino suppresses convective precipitation over the Amazon basin."
+        if dst_rid == "california" and dst_vid == "PRECTOTCORR":
+            return "Subtropical jet stream steering: warm ENSO conditions displace the Pacific storm track southward, driving atmospheric river precipitation into California."
+        if "sahel" in dst_rid and dst_vid in ("GWETROOT", "PRECTOTCORR"):
+            return "Monsoon modulation: equatorial Pacific sea surface thermal forcing alters Hadley circulation, impacting sub-Saharan convective moisture transport."
 
+    # Sahara desert thermal forcing
+    if src_rid == "sahara" and src_vid in ("T2M", "TS"):
+        if "sahel" in dst_rid and dst_vid in ("GWETROOT", "GWETTOP", "PRECTOTCORR"):
+            return "Sahara thermal low intensification: hyper-arid desert heating enhances boundary-layer moisture deficits, depleting root-zone soil wetness in the Sahel."
+        if dst_rid == "lake_volta" and dst_vid in ("EVPTRNS", "EVLAND"):
+            return "Advective evaporative demand: warm, dry Saharan air masses accelerate open-water evaporation over West African hydrological reservoirs."
+        if dst_rid == "mediterranean":
+            return "Subtropical ridge extension: Saharan thermal ridges extend northward, driving marine heatwaves and high pressure over the Mediterranean basin."
+
+    # Polar / Arctic amplification
+    if "greenland" in src_rid or "siberia" in src_rid:
+        if dst_rid == "europe" and dst_vid in ("T2M", "TS"):
+            return "Reduced pole-to-equator thermal gradient: Arctic warming weakens and destabilizes the polar jet stream, creating persistent blocking weather patterns over Europe."
+
+    # General planetary dipole or co-variation
+    if r >= 0.65:
+        return f"Planetary co-variation: strong positive teleconnection (r = {r:+.2f}, p = {p:.3f}) indicating synchronized global-scale climate variability."
+    if r <= -0.65:
+        return f"Global dipole seesaw: strong inverse teleconnection (r = {r:+.2f}, p = {p:.3f}) indicating mass or moisture displacement between regions."
+    if r > 0:
+        return f"Direct teleconnection: positive co-trend (r = {r:+.2f}) linking {src_reg.get('name')} {src_var.get('name')} with {dst_reg.get('name')} {dst_var.get('name')}."
+    return f"Inverse teleconnection: opposing phase response (r = {r:+.2f}) linking {src_reg.get('name')} {src_var.get('name')} with {dst_reg.get('name')} {dst_var.get('name')}."

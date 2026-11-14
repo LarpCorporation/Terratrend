@@ -217,29 +217,27 @@ def test_analyze_regional_contrast():
     assert contrast["verdict"] == "LOCALIZED SIGNAL"
 
 
-def test_pearson_r_and_p():
-    from analysis import pearson_r_and_p
-    # Perfect correlation
-    xs = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]
-    ys = [2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0]
-    r, p = pearson_r_and_p(xs, ys)
-    assert approx(r, 1.0)
-    assert p < 0.001
+def test_pearson_significance():
+    from analysis import pearson_significance
+    # r = 0.60 with n = 20 should be highly significant (p < 0.01)
+    p = pearson_significance(0.60, 20)
+    assert p < 0.01, f"Expected p < 0.01, got {p}"
 
-    # Inverse correlation
-    ys_inv = [20.0 - 2.0 * x for x in xs]
-    r_inv, p_inv = pearson_r_and_p(xs, ys_inv)
-    assert approx(r_inv, -1.0)
-    assert p_inv < 0.001
+    # r = 0.05 with n = 20 should not be significant (p > 0.5)
+    p_null = pearson_significance(0.05, 20)
+    assert p_null > 0.5, f"Expected p > 0.5, got {p_null}"
 
 
 def test_explain_teleconnection():
     from analysis import explain_teleconnection
-    exp_ghana = explain_teleconnection("tropical_pacific", "ghana_north", "TS", "T2M", 0.60)
-    assert "Walker circulation" in exp_ghana or "Rossby wave" in exp_ghana
+    src_reg = {"id": "tropical_pacific", "name": "Tropical Pacific"}
+    src_var = {"id": "WS2M", "name": "Wind Speed"}
+    dst_reg = {"id": "ghana_north", "name": "Ghana North"}
+    dst_var = {"id": "T2M", "name": "Air Temperature"}
 
-    exp_amazon = explain_teleconnection("tropical_pacific", "amazon", "TS", "PRECTOTCORR", -0.55)
-    assert "Amazon" in exp_amazon and "subsidence" in exp_amazon
+    exp = explain_teleconnection(src_reg, src_var, dst_reg, dst_var, -0.62, 0.003)
+    assert "teleconnection" in exp.lower() or "circulation" in exp.lower()
+    assert len(exp) > 20
 
 
 if __name__ == "__main__":

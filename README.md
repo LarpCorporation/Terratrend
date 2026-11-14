@@ -32,18 +32,14 @@ TerraTrend does all four in one interactive observatory.
 
 | Interaction | What happens |
 |---|---|
-| **Mode Switcher** | Seamlessly toggle between **REGIONAL OBSERVATORY**, **GLOBAL TELECONNECTIONS**, and **DETECTIVE STORIES** |
 | **Tap anywhere on the 3D globe** | The nearest focus region is selected and analyzed automatically |
 | **Drag / scroll** | Rotate and zoom the dot-matrix Earth |
-| **Collapsible Left Drawer** | Toggle `[ < ]` / `[ > ]` to collapse sidebar controls and expand the 3D globe and docked console across the screen |
-| **Docked Time Series Console** | Full-width time-series chart docked beneath the 3D globe with zoom/pan, export (CSV/PNG/GeoJSON/GeoTIFF), threat score, and overall trend verdict |
-| **Tabbed Right Inspector** | 4-tab clean inspector (`SIGNALS`, `RIPPLES`, `SATELLITE`, `PAPERS`) preventing visual crowding and infinite vertical scrolling |
-| **Global Teleconnections & Ripples** | Click `TRACE GLOBAL IMPACTS` or `SCAN ALL GLOBAL RIPPLES` to compute cross-correlations against all other Earth regions, rendering 3D elevated bezier arcs on the globe |
-| **Detective Stories Modal** | Explore 6 curated investigations with automated end-to-end orchestration across regions, variables, and planetary teleconnections |
 | **Filter by Earth Sphere** | Toggle between ALL, ATM (Atmosphere), HYD (Hydrosphere), and ENG (Energy) |
 | **Select up to 3 variables** | Signals stack in the right rail, each with its own color |
 | **Earth System Coupling** | When 2+ variables are selected, automatically diagnoses cross-sphere physical interactions (VPD expansion, greenhouse radiative trapping, hydrological sensitivity) |
 | **Regional Contrast Mode** | Compare two distinct geographic regions (Region A vs Region B) simultaneously on the 3D globe and trend observatory |
+| **Trace Global Impacts** | Click `TRACE GLOBAL IMPACTS` to detect remote planetary cascading ripple effects across global climate zones (e.g. Pacific Trade Winds driving West African heatwaves or Amazon drought) with 3D Great-Circle glowing connection arcs |
+| **Earth System Impact Ledger** | Comprehensive modal ranking remote teleconnections with Pearson r, Student's t p-values, physical mechanisms, and 1-click `INVESTIGATE` contrast triggers |
 | **Click a signal or color key** | The globe swaps to that variable's grid analysis |
 | **Hover a grid cell** | Tooltip with lat/lon, slope/decade, p-value, trend verdict |
 | **Click a grid cell** | Cell detail readout in the coordinate bar + orbital zoom action |
@@ -59,9 +55,8 @@ TerraTrend does all four in one interactive observatory.
 | Select variables from Earth science missions/models | 16 curated NASA POWER variables (MERRA-2, GPCP, CERES) across 4 Earth System Spheres (Atmosphere, Hydrosphere, Land, Energy) |
 | Multi-Sphere System Framework | Filter variables by Atmosphere (ATM), Hydrosphere (HYD), Land (LND), and Energy (ENG) across 3 functional groups |
 | Automated Trend Discovery Mode | One-click `SCAN ALL VARIABLES` systematically queries and ranks all 16 variables by trend slope and grid consensus |
-| Dynamic Global Teleconnections | Statistical cross-correlation engine (`/api/teleconnections`) identifying remote climate ripples (e.g. El Niño Pacific warming driving Ghana heatwaves and Amazon droughts) with physical mechanisms and 3D glowing bezier arcs |
-| Detective Stories Investigations | 6 curated investigations with one-click orchestration of regional focus, dates, multi-variable stacks, and teleconnection discovery |
 | Cross-Variable Physical Coupling | Automated thermodynamic coupling detection (VPD expansion, greenhouse radiative trapping, hydrological sensitivity, moisture convergence) with Pearson r |
+| Planetary Teleconnection Detective | Dynamic `TRACE GLOBAL IMPACTS` engine scanning multi-sphere driver variables across 7 global climate zones, quantifying remote ripple effects (r, p < 0.05), rendering 3D Great-Circle connection arcs, and providing physical mechanism explanations |
 | Regional Contrast (A vs B) | Simultaneous dual-region comparison on the 3D globe and trend observatory with differential slope, co-trend correlation, and divergence verdicts |
 | Visualize change over time | Interactive yearly/monthly series with Theil-Sen trend lines, partial-year guards through 2026, and multi-region comparisons |
 | What is changing | Plain-language verdict per variable (rising / falling / stable) + in-app scientific glossary |
@@ -187,23 +182,23 @@ sampling).
 ```
 terratrend/
 ├── backend/
-│   ├── server.py        # zero-dependency HTTP server + API + analysis pipeline
-│   ├── analysis.py      # Mann-Kendall, Theil-Sen CI, Hirsch-Slack seasonal MK, OLS t-test, Pearson coupling
+│   ├── server.py        # zero-dependency HTTP server + API + teleconnections engine
+│   ├── analysis.py      # Mann-Kendall, Theil-Sen CI, Hirsch-Slack seasonal MK, OLS t-test, Pearson coupling, teleconnection mechanisms
 │   ├── gibs.py          # NASA GIBS WMS & Worldview orbital comparison engine
 │   ├── power_client.py  # NASA POWER fetcher: parallel grid + disk cache + availability probe
 │   ├── literature.py    # OpenAlex lookup with relevance re-ranking
 │   ├── catalog.py       # 16 variables · 23 regions (land & ocean) · glossary
 │   ├── warm_cache.py    # pre-fetch demo regions before judging
 │   ├── warm_scan.py     # pre-warm full 16-variable scans for demo regions
-│   ├── test_analysis.py # 23 unit tests for statistical engine
+│   ├── test_analysis.py # 25 unit tests for statistical & teleconnection engine
 │   ├── test_catalog.py  # 11 unit tests for catalog integrity
 │   ├── test_currency.py # 8 unit tests for data currency & partial-year guards
 │   ├── test_gibs.py     # 4 unit tests for GIBS & Worldview integration
 │   └── cache/           # auto-created; 30-day TTL
 └── frontend/
-    ├── index.html       # HUD shell + scan modal + defs modal + data observatory + orbital modal
+    ├── index.html       # HUD shell + scan modal + defs modal + data observatory + orbital modal + impact ledger modal
     ├── styles.css       # monochrome observatory theme + WCAG AA contrast styling
-    ├── app.js           # three.js globe + chart + scan + glossary + GIBS orbital comparator
+    ├── app.js           # three.js globe (with 3D teleconnection arcs) + chart + scan + glossary + GIBS orbital comparator + teleconnection ledger
     └── land_dots.json   # 6,550 Natural Earth land points
 ```
 
@@ -218,6 +213,8 @@ blue = falling), exactly like a mission-control display where hue carries meanin
 - `GET /api/availability` → live NASA POWER probe `{ok, max_year, latest_month, latest_day}`
 - `GET /api/catalog` → 16 variables, spheres, 23 regions, year bounds, availability
 - `GET /api/scan?region=sahel&start=2005&end=2026` → ranks all 16 variables by trend slope and grid consensus
+- `GET /api/teleconnections?region=tropical_pacific&variable=WS2M&start=2005&end=2024&min_r=0.38`
+  → discovers and quantifies remote cascading ripple effects across planetary sentinel hubs with Pearson r, Student's t significance (p < 0.05), and physical mechanism explanations
 - `GET /api/analyze?variables=T2M,PRECTOTCORR&region=europe&start=2005&end=2024`
   → for each variable: monthly + yearly series (with partial-year guards), per-cell trends, regional
   summary, 95% CI, OLS t-test, seasonal MK, cross-sphere couplings, literature, and NASA GIBS satellite evidence
@@ -231,7 +228,7 @@ blue = falling), exactly like a mission-control display where hue carries meanin
 
 ```bash
 cd terratrend/backend
-python test_analysis.py      # ALL PASS (23 tests: MK, Sen CI, t-test, couplings, contrast)
+python test_analysis.py      # ALL PASS (25 tests: MK, Sen CI, t-test, couplings, contrast, teleconnections)
 python test_catalog.py       # ALL PASS (11 tests: catalog structure & completeness)
 python test_currency.py      # ALL PASS (8 tests: data currency & partial-year protection)
 python test_gibs.py          # ALL PASS (4 tests: GIBS WMS & Worldview URL engine)
