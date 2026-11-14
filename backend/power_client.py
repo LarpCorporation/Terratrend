@@ -22,16 +22,36 @@ def _cache_path(lon, lat, param, start, end):
     return CACHE_DIR / name
 
 
-def _fetch_one(lon, lat, param, start, end):
+def _fetch_one(lon, lat, param, start, end, cached_only=False):
     """Fetch monthly series for one point. Returns dict[YYYYMM -> value]."""
-    cpath = _cache_path(lon, lat, param, start, end)
-    if cpath.exists():
-        try:
-            blob = json.loads(cpath.read_text())
-            if time.time() - blob.get("t", 0) < CACHE_TTL:
-                return blob["data"]
-        except Exception:
-            pass
+    # Direct path candidate lookups (O(1) filesystem hits, avoids directory scan)
+    candidates = [
+        _cache_path(lon, lat, param, start, end),
+        _cache_path(lon, lat, param, 2005, 2024),
+        _cache_path(lon, lat, param, 2000, 2024),
+        _cache_path(lon, lat, param, 2005, 2026),
+    ]
+    for cpath in candidates:
+        if cpath.exists():
+            try:
+                blob = json.loads(cpath.read_text())
+                raw_data = blob.get("data", {})
+                if raw_data:
+                    filtered = {
+                        k: v for k, v in raw_data.items()
+                        if len(k) >= 4 and start <= int(k[:4]) <= end
+                    }
+                    if len(filtered) >= 24:
+                        return filtered
+                    if cached_only and len(filtered) > 0:
+                        return filtered
+                    if len(raw_data) >= 24:
+                        return raw_data
+            except Exception:
+                continue
+
+    if cached_only:
+        return {}
     url = (f"{BASE}?community=AG&longitude={lon:.4f}&latitude={lat:.4f}"
            f"&start={start}&end={end}&parameters={param}&format=JSON")
     last_err = None
@@ -66,7 +86,7 @@ def _clean(v):
     return f
 
 
-def fetch_grid(param, bbox, start, end, nx=5, ny=5):
+def fetch_grid(param, bbox, start, end, nx=5, ny=5, cached_only=False):
     """Fetch monthly time series on an (nx x ny) grid inside bbox.
 
     Returns {lon: {lat: {YYYYMM: value}}}. Raises on total failure.
@@ -79,7 +99,7 @@ def fetch_grid(param, bbox, start, end, nx=5, ny=5):
 
     def work(pt):
         lon, lat = pt
-        return pt, _fetch_one(lon, lat, param, start, end)
+        return pt, _fetch_one(lon, lat, param, start, end, cached_only=cached_only)
 
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as ex:
         futs = [ex.submit(work, pt) for pt in jobs]

@@ -217,6 +217,31 @@ def test_analyze_regional_contrast():
     assert contrast["verdict"] == "LOCALIZED SIGNAL"
 
 
+def test_pearson_r_and_p():
+    from analysis import pearson_r_and_p
+    # Perfect correlation
+    xs = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]
+    ys = [2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0]
+    r, p = pearson_r_and_p(xs, ys)
+    assert approx(r, 1.0)
+    assert p < 0.001
+
+    # Inverse correlation
+    ys_inv = [20.0 - 2.0 * x for x in xs]
+    r_inv, p_inv = pearson_r_and_p(xs, ys_inv)
+    assert approx(r_inv, -1.0)
+    assert p_inv < 0.001
+
+
+def test_explain_teleconnection():
+    from analysis import explain_teleconnection
+    exp_ghana = explain_teleconnection("tropical_pacific", "ghana_north", "TS", "T2M", 0.60)
+    assert "Walker circulation" in exp_ghana or "Rossby wave" in exp_ghana
+
+    exp_amazon = explain_teleconnection("tropical_pacific", "amazon", "TS", "PRECTOTCORR", -0.55)
+    assert "Amazon" in exp_amazon and "subsidence" in exp_amazon
+
+
 if __name__ == "__main__":
     fns = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     for fn in fns:

@@ -40,6 +40,9 @@ const state = {
   expandedVarIdx: 0,
   expandedMode: "yearly",
   zoomAxis: "x",
+  activeAppMode: "regional",
+  teleconData: null,
+  isDrawerCollapsed: false,
 };
 
 let chart = null;
@@ -105,12 +108,21 @@ async function boot() {
 
   $("start").addEventListener("change", clampRange);
   $("end").addEventListener("change", clampRange);
-  document.querySelectorAll(".chart-panel .seg-btn").forEach((b) =>
+  document.querySelectorAll(".dc-chart-panel .seg-btn, .chart-panel .seg-btn").forEach((b) =>
     b.addEventListener("click", () => setMode(b.dataset.mode))
   );
 
   initSatModal();
   initDataModal();
+  initModeSwitcher();
+  initInspectorTabs();
+  initDrawerCollapse();
+  initStoriesModal();
+
+  const traceBtn = $("btn-trace-impacts");
+  if (traceBtn) traceBtn.addEventListener("click", traceGlobalImpacts);
+  const rippleScanBtn = $("btn-scan-ripples");
+  if (rippleScanBtn) rippleScanBtn.addEventListener("click", traceGlobalImpacts);
 
   window.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
@@ -118,6 +130,7 @@ async function boot() {
       closeDataModal();
       closeScan();
       closeDefs();
+      closeStories();
     }
   });
 
@@ -319,7 +332,7 @@ function clampRange() {
 
 function setMode(m) {
   state.mode = m;
-  document.querySelectorAll(".chart-panel .seg-btn").forEach((b) =>
+  document.querySelectorAll(".dc-chart-panel .seg-btn, .chart-panel .seg-btn").forEach((b) =>
     b.classList.toggle("on", b.dataset.mode === m)
   );
   if (state.result) drawChart();
@@ -758,6 +771,25 @@ function renderHeader(d) {
     ? `${o.per_decade > 0 ? "+" : ""}${num(o.per_decade, 2)}`
     : "—";
   $("threat-val").style.color = color;
+
+  const verdictEl = $("tm-verdict");
+  if (verdictEl) {
+    if (!o.ok) {
+      verdictEl.textContent = "NODATA";
+      verdictEl.className = "verdict-badge";
+    } else if (o.significant) {
+      verdictEl.textContent = o.direction === "rising" ? "RISING TREND" : "FALLING TREND";
+      verdictEl.className = `verdict-badge ${o.direction}`;
+    } else {
+      verdictEl.textContent = "STABLE / FLAT";
+      verdictEl.className = "verdict-badge flat";
+    }
+  }
+
+  const threatUnitEl = $("threat-unit");
+  if (threatUnitEl) {
+    threatUnitEl.textContent = s.variable.unit ? `${s.variable.unit}/dec` : "/decade";
+  }
 }
 
 function renderSignals(d) {
@@ -2231,6 +2263,7 @@ let landPoints, gridLines, regionMesh, haloMesh, atmosphere, pickSphere;
 let dragState = null;
 let autoRotate = true;
 let regionMarkers = [];
+let teleconObjects = [];
 let landData = [];
 let raycaster, pointer;
 let lastPointer = { x: 0, y: 0 };
@@ -2784,6 +2817,401 @@ function animateGlobe() {
     regionMesh.visible = false;
   }
   renderer.render(scene, camera);
+}
+
+/* ============================================================
+   LAYER 1: OPERATIONAL MODES (REGIONAL / TELECONNECTIONS / STORIES)
+   ============================================================ */
+function initModeSwitcher() {
+  const modes = [
+    { id: "mode-btn-regional", mode: "regional" },
+    { id: "mode-btn-telecon", mode: "teleconnections" },
+    { id: "mode-btn-stories", mode: "stories" },
+  ];
+
+  modes.forEach(({ id, mode }) => {
+    const btn = $(id);
+    if (!btn) return;
+    btn.addEventListener("click", () => setAppMode(mode));
+  });
+}
+
+function setAppMode(mode) {
+  state.activeAppMode = mode;
+  document.querySelectorAll(".nav-mode-btn").forEach((b) => {
+    b.classList.toggle("on", b.dataset.mode === mode);
+  });
+
+  if (mode === "regional") {
+    switchInspectorTab("pane-signals");
+  } else if (mode === "teleconnections") {
+    switchInspectorTab("pane-ripples");
+    traceGlobalImpacts();
+  } else if (mode === "stories") {
+    openStories();
+  }
+}
+
+/* ============================================================
+   LAYER 2: TABBED RIGHT INSPECTOR
+   ============================================================ */
+function initInspectorTabs() {
+  const tabs = document.querySelectorAll(".insp-tab");
+  tabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      const paneId = tab.dataset.pane || ("pane-" + tab.dataset.tab);
+      switchInspectorTab(paneId);
+    });
+  });
+}
+
+function switchInspectorTab(paneId) {
+  const tabName = paneId.replace("pane-", "");
+  document.querySelectorAll(".insp-tab").forEach((t) => {
+    const isMatch = t.dataset.pane === paneId || t.dataset.tab === tabName;
+    t.classList.toggle("active", isMatch);
+  });
+  document.querySelectorAll(".insp-pane").forEach((p) => {
+    p.style.display = p.id === paneId ? "flex" : "none";
+  });
+}
+
+/* ============================================================
+   LAYER 3: COLLAPSIBLE LEFT MISSION DRAWER
+   ============================================================ */
+function initDrawerCollapse() {
+  const btn = $("btn-toggle-drawer");
+  const grid = $("hud-grid");
+  if (!btn || !grid) return;
+
+  btn.addEventListener("click", () => {
+    state.isDrawerCollapsed = !state.isDrawerCollapsed;
+    grid.classList.toggle("left-collapsed", state.isDrawerCollapsed);
+    btn.textContent = state.isDrawerCollapsed ? "[ > ]" : "[ < ]";
+    btn.title = state.isDrawerCollapsed
+      ? "Expand sidebar controls"
+      : "Collapse sidebar to expand 3D globe";
+
+    window.dispatchEvent(new Event("resize"));
+    if (chart) chart.resize();
+  });
+}
+
+/* ============================================================
+   DYNAMIC GLOBAL TELECONNECTIONS & RIPPLES ENGINE
+   ============================================================ */
+async function traceGlobalImpacts() {
+  const reg = currentRegion();
+  const v = state.catalog ? state.catalog.variables.find((x) => x.id === (state.selected[state.activeVarIdx] || state.selected[0])) : null;
+  if (!reg || !v) return;
+
+  const btn = $("btn-trace-impacts");
+  const rippleBtn = $("btn-scan-ripples");
+  if (btn) btn.disabled = true;
+  if (rippleBtn) rippleBtn.disabled = true;
+
+  const list = $("telecon-list");
+  const tag = $("telecon-tag");
+  const sub = $("telecon-sub");
+
+  if (tag) tag.textContent = "SCANNING...";
+  if (sub) sub.textContent = `Analyzing global cross-correlations against ${v.name} in ${reg.name}...`;
+  if (list) {
+    list.innerHTML = `<div class="telecon-empty">Scanning Earth system spheres for planetary teleconnections...</div>`;
+  }
+
+  switchInspectorTab("pane-ripples");
+
+  try {
+    const startYr = $("start").value;
+    const endYr = $("end").value;
+    const url = `/api/teleconnections?region=${encodeURIComponent(reg.id)}&variable=${encodeURIComponent(v.id)}&start=${startYr}&end=${endYr}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    state.teleconData = data;
+    renderTeleconnections(data);
+  } catch (err) {
+    console.error("Teleconnections error:", err);
+    if (tag) tag.textContent = "ERROR";
+    if (list) {
+      list.innerHTML = `<div class="telecon-empty">Failed to discover teleconnections: ${esc(err.message)}</div>`;
+    }
+  } finally {
+    if (btn) btn.disabled = false;
+    if (rippleBtn) rippleBtn.disabled = false;
+  }
+}
+
+function clearTeleconGlobeArcs() {
+  if (teleconObjects && teleconObjects.length) {
+    teleconObjects.forEach((obj) => globeGroup.remove(obj));
+    teleconObjects = [];
+  }
+}
+
+function renderTeleconnections(data) {
+  const list = $("telecon-list");
+  const tag = $("telecon-tag");
+  const sub = $("telecon-sub");
+  if (!list) return;
+
+  const items = (data.teleconnections || []).filter((t) => t.significant);
+  if (tag) tag.textContent = `${items.length} DISCOVERED`;
+  if (sub) {
+    sub.textContent = `Identified ${items.length} statistically significant planetary ripples (p < 0.05) originating from ${data.source_region.name}.`;
+  }
+
+  if (items.length === 0) {
+    list.innerHTML = `<div class="telecon-empty">No statistically significant teleconnections detected at p < 0.05 for this window. Try expanding the year range.</div>`;
+    clearTeleconGlobeArcs();
+    return;
+  }
+
+  list.innerHTML = items.map((t, idx) => {
+    const isPos = t.r >= 0;
+    const rSign = isPos ? "+" : "";
+    const badgeClass = isPos ? "pos" : "neg";
+    const dirClass = t.direction === "amplifying" ? "amplifying" : "opposing";
+    const pStr = t.p < 0.001 ? "p < 0.001" : `p = ${t.p.toFixed(3)}`;
+
+    return `
+      <div class="telecon-item ${dirClass}" data-idx="${idx}">
+        <div class="telecon-item-head">
+          <span class="telecon-region">${esc(t.region_name)}</span>
+          <span class="telecon-r-badge ${badgeClass}">r = ${rSign}${t.r.toFixed(3)}</span>
+        </div>
+        <div class="telecon-var">${esc(t.variable_name)} (${esc(t.unit)})</div>
+        <div class="telecon-mechanism">${esc(t.mechanism)}</div>
+        <div class="telecon-meta">
+          <span>${t.direction ? t.direction.toUpperCase() : "COUPLED"}</span>
+          <span>${pStr} · ${t.n} YR</span>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  list.querySelectorAll(".telecon-item").forEach((card) => {
+    card.addEventListener("click", () => {
+      const idx = +card.dataset.idx;
+      const telecon = items[idx];
+      focusTeleconnection(telecon, data.source_region);
+    });
+  });
+
+  renderTeleconGlobeArcs(data.source_region, items.slice(0, 8));
+}
+
+function renderTeleconGlobeArcs(srcRegion, targets) {
+  clearTeleconGlobeArcs();
+  if (!srcRegion || !targets || !targets.length) return;
+
+  const R_SURFACE = 1.0;
+  const pA = bboxCenter(srcRegion.bbox, R_SURFACE);
+
+  targets.forEach((target) => {
+    const pB = bboxCenter(target.bbox, R_SURFACE);
+    const dist = pA.distanceTo(pB);
+
+    const pMid = new THREE.Vector3().addVectors(pA, pB).multiplyScalar(0.5);
+    const elev = R_SURFACE + Math.min(0.45, Math.max(0.12, dist * 0.35));
+    pMid.normalize().multiplyScalar(elev);
+
+    const curve = new THREE.QuadraticBezierCurve3(pA, pMid, pB);
+    const pts = curve.getPoints(40);
+    const geo = new THREE.BufferGeometry().setFromPoints(pts);
+
+    const isPos = target.r >= 0;
+    const arcColor = isPos ? 0xff7a33 : 0x4d7cf3;
+
+    const mat = new THREE.LineBasicMaterial({
+      color: arcColor,
+      transparent: true,
+      opacity: 0.85,
+    });
+    const line = new THREE.Line(geo, mat);
+    line.renderOrder = 12;
+    globeGroup.add(line);
+    teleconObjects.push(line);
+
+    const dotGeo = new THREE.SphereGeometry(0.018, 8, 8);
+    const dotMat = new THREE.MeshBasicMaterial({
+      color: arcColor,
+      transparent: true,
+      opacity: 0.9,
+    });
+    const dot = new THREE.Mesh(dotGeo, dotMat);
+    dot.position.copy(pB.clone().multiplyScalar(1.02));
+    dot.renderOrder = 13;
+    globeGroup.add(dot);
+    teleconObjects.push(dot);
+
+    const ringGeo = new THREE.RingGeometry(0.024, 0.032, 24);
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: arcColor,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.65,
+    });
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.position.copy(pB.clone().multiplyScalar(1.025));
+    ring.lookAt(pB.clone().multiplyScalar(2));
+    ring.renderOrder = 13;
+    globeGroup.add(ring);
+    teleconObjects.push(ring);
+  });
+}
+
+function focusTeleconnection(target, srcRegion) {
+  if (!target || !target.bbox) return;
+  const bbox = target.bbox;
+  const lon = (bbox[0] + bbox[2]) / 2;
+  const lat = (bbox[1] + bbox[3]) / 2;
+  const targetY = -(lon * Math.PI / 180) - Math.PI / 2;
+  const targetX = lat * Math.PI / 180;
+  animateGlobeTo(targetX, targetY);
+}
+
+/* ============================================================
+   CURATED DETECTIVE CASES / STORIES MODAL
+   ============================================================ */
+const DETECTIVE_STORIES = [
+  {
+    id: "el_nino_mega_shock",
+    category: "CLIMATE TELECONNECTION",
+    title: "El Nino Global Ripple (Pacific to Ghana & Amazon)",
+    synopsis: "Super El Nino shifts equatorial Pacific trade winds, elevating sea surface skin temperatures and causing remote heatwaves in West Africa (Ghana) and severe drought suppression across the Amazon rainforest.",
+    region: "tropical_pacific",
+    variables: ["TS", "PRECTOTCORR", "WS2M"],
+    start: 2005,
+    end: 2024,
+    tags: ["OCEAN-ATMOSPHERE", "TRANS-CONTINENTAL", "EL NINO 3.4"]
+  },
+  {
+    id: "sahel_greenup",
+    category: "HYDROCLIMATE REGIME",
+    title: "Sahel Green-Up vs. Desertification Dynamics",
+    synopsis: "Investigating the fluctuating precipitation belt across the southern Sahara and how topsoil moisture responds to shifting West African Monsoon dynamics over two decades.",
+    region: "sahel",
+    variables: ["GWETTOP", "PRECTOTCORR", "T2M"],
+    start: 2000,
+    end: 2024,
+    tags: ["SAHEL", "MONSOON BELT", "HYDROLOGY"]
+  },
+  {
+    id: "california_whiplash",
+    category: "ATMOSPHERIC RIVERS",
+    title: "California Megadrought to Atmospheric Deluge",
+    synopsis: "Extreme oscillations between historic multi-year megadrought and intense atmospheric river deluges driven by Pacific jet stream displacement and wind shear shifts.",
+    region: "california",
+    variables: ["PRECTOTCORR", "GWETTOP", "WS2M"],
+    start: 2000,
+    end: 2024,
+    tags: ["JET STREAM", "HYDROLOGIC EXTREMES", "WHIPLASH"]
+  },
+  {
+    id: "amazon_forest_strain",
+    category: "BIOSPHERE RESILIENCE",
+    title: "Amazon Rainforest Moisture Recycling Stress",
+    synopsis: "Rising thermal pressure and forest fragmentation reducing vegetative evapotranspiration, weakening the critical aerial moisture recycling corridors that support South America.",
+    region: "amazon",
+    variables: ["EVPTRNS", "GWETROOT", "TS"],
+    start: 2002,
+    end: 2024,
+    tags: ["EVAPOTRANSPIRATION", "ROOT MOISTURE", "FLYING RIVERS"]
+  },
+  {
+    id: "arctic_polar_vortex",
+    category: "POLAR AMPLIFICATION",
+    title: "Arctic Thermal Acceleration & Cryosphere Forcing",
+    synopsis: "High-latitude warming occurring at more than double the global rate, triggering positive albedo feedback loops and destabilizing the polar jet stream across mid-latitudes.",
+    region: "greenland",
+    variables: ["T2M", "ALLSKY_SFC_SW_DNI", "PRECTOTCORR"],
+    start: 2000,
+    end: 2024,
+    tags: ["ALBEDO FEEDBACK", "CRYOSPHERE", "POLAR VORTEX"]
+  },
+  {
+    id: "mediterranean_squeeze",
+    category: "FLASH DROUGHT DYNAMICS",
+    title: "Mediterranean Basin Thermal & Drying Squeeze",
+    synopsis: "Rapid continental heating outpacing maritime moisture influx, exacerbating summer soil moisture deficits and accelerating flash drought hazards across Southern Europe.",
+    region: "mediterranean",
+    variables: ["TS", "GWETTOP", "ALLSKY_SFC_LW_DWN"],
+    start: 2000,
+    end: 2024,
+    tags: ["MEDITERRANEAN", "FLASH DROUGHT", "HEATWAVE"]
+  }
+];
+
+function initStoriesModal() {
+  const closeBtn = $("stories-close");
+  const modal = $("stories-modal");
+  if (closeBtn) closeBtn.addEventListener("click", closeStories);
+  if (modal) modal.addEventListener("click", (e) => { if (e.target === modal) closeStories(); });
+}
+
+function openStories() {
+  const body = $("stories-body");
+  if (!body) return;
+
+  body.innerHTML = DETECTIVE_STORIES.map((story) => `
+    <div class="story-card" data-story-id="${story.id}">
+      <span class="story-category">${esc(story.category)}</span>
+      <h3 class="story-title">${esc(story.title)}</h3>
+      <p class="story-synopsis">${esc(story.synopsis)}</p>
+      <div class="story-chips">
+        ${story.tags.map(t => `<span class="story-chip">${esc(t)}</span>`).join("")}
+      </div>
+      <button class="story-launch-btn">LAUNCH INVESTIGATION</button>
+    </div>
+  `).join("");
+
+  body.querySelectorAll(".story-card").forEach((card) => {
+    card.addEventListener("click", () => {
+      const storyId = card.dataset.storyId;
+      const story = DETECTIVE_STORIES.find((s) => s.id === storyId);
+      if (story) launchDetectiveStory(story);
+    });
+  });
+
+  showModal($("stories-modal"));
+}
+
+function closeStories() {
+  hideModal($("stories-modal"));
+}
+
+async function launchDetectiveStory(story) {
+  closeStories();
+
+  const regSel = $("region");
+  if (regSel) regSel.value = story.region;
+
+  const r = currentRegion();
+  if (r) {
+    $("region-desc").textContent = r.desc;
+    $("region-readout").textContent = r.name.toUpperCase();
+    updateGlobeOverlay();
+    if (regionMesh) regionMesh.position.copy(bboxCenter(r.bbox, 1.005));
+  }
+
+  const sIn = $("start");
+  const eIn = $("end");
+  if (sIn) sIn.value = story.start;
+  if (eIn) eIn.value = story.end;
+
+  state.selected = [...story.variables].slice(0, MAX_VARS);
+  state.activeVarIdx = 0;
+  renderVarList();
+
+  setAppMode(story.id === "el_nino_mega_shock" ? "teleconnections" : "regional");
+
+  await analyze();
+
+  if (story.id === "el_nino_mega_shock") {
+    await traceGlobalImpacts();
+  }
 }
 
 boot();

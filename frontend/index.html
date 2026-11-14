@@ -28,23 +28,20 @@
     </div>
   </div>
 
+  <!-- LAYER 1: OPERATIONAL MODE SWITCHER -->
+  <nav class="hud-nav-modes" aria-label="Observatory Modes">
+    <button id="mode-btn-regional" class="nav-mode-btn on" data-mode="regional">REGIONAL OBSERVATORY</button>
+    <button id="mode-btn-telecon" class="nav-mode-btn" data-mode="teleconnections">GLOBAL TELECONNECTIONS</button>
+    <button id="mode-btn-stories" class="nav-mode-btn" data-mode="stories">DETECTIVE STORIES</button>
+  </nav>
+
   <div class="top-readouts">
-    <div class="readout">
-      <span class="rl">SOURCE</span>
-      <span class="rv">NASA POWER</span>
-    </div>
-    <div class="readout">
-      <span class="rl">METHOD</span>
-      <span class="rv">MANN–KENDALL</span>
-    </div>
-    <div class="readout">
-      <span class="rl">ALPHA</span>
-      <span class="rv">0.05</span>
-    </div>
     <div class="readout">
       <span class="rl">DATA THROUGH</span>
       <span class="rv" id="data-through">—</span>
     </div>
+    <button id="scan" class="hud-pill-btn" title="Scan all 16 variables to rank trend strength">SCAN ALL</button>
+    <button id="defs-open" class="hud-pill-btn" title="Plain-English explanation of all variables">GLOSSARY</button>
     <div class="readout live">
       <span class="rl">STATUS</span>
       <span class="rv"><i class="pulse"></i><span id="sys-status">STANDBY</span></span>
@@ -52,10 +49,15 @@
   </div>
 </header>
 
-<main class="hud-grid">
+<main class="hud-grid" id="hud-grid">
 
-  <!-- ============ LEFT COLUMN ============ -->
-  <aside class="col col-left">
+  <!-- ============ LEFT COLUMN (COLLAPSIBLE DRAWER) ============ -->
+  <aside class="col col-left" id="col-left">
+
+    <div class="drawer-header">
+      <span class="drawer-title">MISSION CONTROLS</span>
+      <button id="btn-toggle-drawer" class="drawer-toggle-btn" title="Collapse sidebar to expand 3D globe" aria-label="Toggle sidebar">[ &lt; ]</button>
+    </div>
 
     <section class="panel">
       <div class="panel-head">
@@ -71,7 +73,6 @@
       </div>
       <div id="var-list" class="var-list"></div>
       <p class="micro">Select up to 3 variables across Earth system spheres.</p>
-      <button id="defs-open" class="link-btn">WHAT DO THESE VARIABLES MEAN?</button>
     </section>
 
     <section class="panel">
@@ -111,7 +112,6 @@
         <span class="btn-glitch"></span>
         RUN ANALYSIS
       </button>
-      <button id="scan" class="hud-btn ghost">SCAN ALL VARIABLES</button>
       <div id="status" class="hud-status" hidden></div>
     </section>
 
@@ -130,7 +130,7 @@
 
   </aside>
 
-  <!-- ============ CENTER GLOBE ============ -->
+  <!-- ============ CENTER COLUMN (3D GLOBE + DOCKED CONSOLE) ============ -->
   <section class="col col-center">
     <div class="globe-wrap">
       <div id="globe"></div>
@@ -162,113 +162,146 @@
       <span class="cb-sep"></span>
       <span id="proj-readout">ORTHOGRAPHIC</span>
     </div>
+
+    <!-- DOCKED LOWER CONSOLE (TIME SERIES & REGIONAL SIGNAL) -->
+    <div class="docked-console" id="docked-console">
+      <div class="dc-signal-panel">
+        <div class="dc-head">
+          <span class="ph-label">REGIONAL SIGNAL</span>
+          <div class="panel-head-actions">
+            <span class="ph-count" id="verdict-chip">—</span>
+            <button id="btn-expand-signal" class="panel-icon-btn" title="Expand Full Statistical Deep Dive" aria-label="Expand statistics">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="dc-threat-row">
+          <div class="threat-dial mini-dial">
+            <svg viewBox="0 0 120 120" class="dial">
+              <circle cx="60" cy="60" r="50" class="dial-bg"/>
+              <circle cx="60" cy="60" r="50" class="dial-arc" id="dial-arc"/>
+            </svg>
+            <div class="threat-val" id="threat-val">—</div>
+          </div>
+          <div class="dc-meta">
+            <div class="tm-row"><span>REGION</span><b id="tm-region">—</b></div>
+            <div class="tm-row"><span>PERIOD</span><b id="tm-period">—</b></div>
+            <div class="tm-row"><span>SAMPLES</span><b id="tm-samples">—</b></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dc-chart-panel">
+        <div class="dc-head">
+          <span class="ph-label">TREND SERIES</span>
+          <div class="dc-actions">
+            <div class="seg">
+              <button class="seg-btn on" data-mode="yearly">YEAR</button>
+              <button class="seg-btn" data-mode="monthly">MONTH</button>
+            </div>
+            <button id="btn-trace-impacts" class="hud-btn-mini trace-btn" title="Trace how this variable impacts other regions across the globe">TRACE GLOBAL IMPACTS</button>
+            <button id="btn-expand-chart" class="panel-icon-btn" title="Expand High-Resolution Graph & Observatory" aria-label="Expand graph">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="chart-box" id="chart-box-clickable" title="Click to expand full graph & statistics">
+          <canvas id="chart"></canvas>
+          <span class="chart-expand-badge" id="chart-expand-badge">EXPAND</span>
+        </div>
+        <div id="trendline" class="trend-note">—</div>
+      </div>
+    </div>
   </section>
 
-  <!-- ============ RIGHT COLUMN ============ -->
-  <aside class="col col-right">
+  <!-- ============ RIGHT COLUMN (TABBED INSPECTOR) ============ -->
+  <aside class="col col-right" id="col-right">
 
-    <section class="panel">
-      <div class="panel-head">
-        <span class="ph-label">REGIONAL SIGNAL</span>
-        <div class="panel-head-actions">
-          <span class="ph-count" id="verdict-chip">—</span>
-          <button id="btn-expand-signal" class="panel-icon-btn" title="Expand Full Statistical Deep Dive" aria-label="Expand statistics">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
-          </button>
+    <div class="inspector-tabs" id="inspector-tabs">
+      <button class="insp-tab active" data-tab="signals">SIGNALS</button>
+      <button class="insp-tab" data-tab="ripples" id="tab-ripples">RIPPLES</button>
+      <button class="insp-tab" data-tab="satellite">SATELLITE</button>
+      <button class="insp-tab" data-tab="literature">PAPERS</button>
+    </div>
+
+    <!-- PANE 1: SIGNALS -->
+    <div class="insp-pane active" id="pane-signals">
+      <section class="panel">
+        <div class="panel-head">
+          <span class="ph-label">VARIABLE SIGNALS</span>
         </div>
-      </div>
-      <div class="threat">
-        <div class="threat-dial">
-          <svg viewBox="0 0 120 120" class="dial">
-            <circle cx="60" cy="60" r="50" class="dial-bg"/>
-            <circle cx="60" cy="60" r="50" class="dial-arc" id="dial-arc"/>
-          </svg>
-          <div class="threat-val" id="threat-val">—</div>
+        <div id="signal-list" class="signal-list">
+          <p class="micro">Run an analysis to populate.</p>
         </div>
-        <div class="threat-meta">
-          <div class="tm-row"><span>REGION</span><b id="tm-region">—</b></div>
-          <div class="tm-row"><span>PERIOD</span><b id="tm-period">—</b></div>
-          <div class="tm-row"><span>SAMPLES</span><b id="tm-samples">—</b></div>
+      </section>
+
+      <section class="panel" id="coupling-panel" style="display: none;">
+        <div class="panel-head">
+          <span class="ph-label">EARTH SYSTEM COUPLING</span>
+          <span class="ph-count" id="coupling-tag">CROSS-SPHERE</span>
         </div>
-      </div>
-    </section>
-
-    <section class="panel">
-      <div class="panel-head">
-        <span class="ph-label">VARIABLE SIGNALS</span>
-      </div>
-      <div id="signal-list" class="signal-list">
-        <p class="micro">Run an analysis to populate.</p>
-      </div>
-    </section>
-
-    <section class="panel chart-panel">
-      <div class="panel-head">
-        <span class="ph-label">TREND SERIES</span>
-        <div class="panel-head-actions">
-          <div class="seg">
-            <button class="seg-btn on" data-mode="yearly">YEAR</button>
-            <button class="seg-btn" data-mode="monthly">MONTH</button>
-          </div>
-          <button id="btn-expand-chart" class="panel-icon-btn" title="Expand High-Resolution Graph & Observatory" aria-label="Expand graph">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
-          </button>
+        <div id="coupling-list" class="coupling-list">
+          <p class="micro">Select 2+ variables across spheres to diagnose couplings.</p>
         </div>
-      </div>
-      <div class="chart-box" id="chart-box-clickable" title="Click to expand full graph & statistics">
-        <canvas id="chart"></canvas>
-        <span class="chart-expand-badge" id="chart-expand-badge">EXPAND</span>
-      </div>
-      <div id="trendline" class="trend-note">—</div>
-    </section>
+      </section>
 
-    <!-- EARTH SYSTEM COUPLING PANEL -->
-    <section class="panel" id="coupling-panel" style="display: none;">
-      <div class="panel-head">
-        <span class="ph-label">EARTH SYSTEM COUPLING</span>
-        <span class="ph-count" id="coupling-tag">CROSS-SPHERE</span>
-      </div>
-      <div id="coupling-list" class="coupling-list">
-        <p class="micro">Select 2+ variables across spheres to diagnose couplings.</p>
-      </div>
-    </section>
+      <section class="panel" id="contrast-panel" style="display: none;">
+        <div class="panel-head">
+          <span class="ph-label">REGIONAL CONTRAST</span>
+          <span class="ph-count" id="contrast-tag">A VS B</span>
+        </div>
+        <div id="contrast-list" class="contrast-list">
+          <p class="micro">Select Contrast Mode to compare two geographic regions.</p>
+        </div>
+      </section>
 
-    <!-- REGIONAL CONTRAST PANEL -->
-    <section class="panel" id="contrast-panel" style="display: none;">
-      <div class="panel-head">
-        <span class="ph-label">REGIONAL CONTRAST</span>
-        <span class="ph-count" id="contrast-tag">A VS B</span>
-      </div>
-      <div id="contrast-list" class="contrast-list">
-        <p class="micro">Select Contrast Mode to compare two geographic regions.</p>
-      </div>
-    </section>
+      <section class="panel">
+        <div class="panel-head">
+          <span class="ph-label">GRID CELLS</span>
+          <span class="ph-count" id="cell-tag">—</span>
+        </div>
+        <div id="cell-summary" class="cell-summary"></div>
+      </section>
+    </div>
 
-    <section class="panel">
-      <div class="panel-head">
-        <span class="ph-label">GRID CELLS</span>
-        <span class="ph-count" id="cell-tag">—</span>
-      </div>
-      <div id="cell-summary" class="cell-summary"></div>
-    </section>
+    <!-- PANE 2: GLOBAL RIPPLES (TELECONNECTIONS) -->
+    <div class="insp-pane" id="pane-ripples" style="display: none;">
+      <section class="panel telecon-panel">
+        <div class="panel-head">
+          <span class="ph-label">GLOBAL IMPACT DETECTIVE</span>
+          <span class="ph-count" id="telecon-tag">0 FOUND</span>
+        </div>
+        <p class="micro" id="telecon-sub">Discovers causal ripple effects by cross-correlating this timeline against all other Earth system regions.</p>
+        <button id="btn-scan-ripples" class="hud-btn ghost mini ripple-scan-btn">SCAN ALL GLOBAL RIPPLES</button>
+        <div id="telecon-list" class="telecon-list">
+          <div class="telecon-empty">Click "TRACE GLOBAL IMPACTS" or "SCAN ALL GLOBAL RIPPLES" to detect long-range teleconnections across the Earth.</div>
+        </div>
+      </section>
+    </div>
 
-    <section class="panel sat-panel">
-      <div class="panel-head">
-        <span class="ph-label">SATELLITE EVIDENCE</span>
-        <span class="ph-count" id="sat-tag">NASA GIBS</span>
-      </div>
-      <div id="sat-summary" class="sat-summary">
-        <p class="micro">Run an analysis to inspect orbital imagery.</p>
-      </div>
-    </section>
+    <!-- PANE 3: SATELLITE -->
+    <div class="insp-pane" id="pane-satellite" style="display: none;">
+      <section class="panel sat-panel">
+        <div class="panel-head">
+          <span class="ph-label">SATELLITE EVIDENCE</span>
+          <span class="ph-count" id="sat-tag">NASA GIBS</span>
+        </div>
+        <div id="sat-summary" class="sat-summary">
+          <p class="micro">Run an analysis to inspect orbital imagery.</p>
+        </div>
+      </section>
+    </div>
 
-    <section class="panel">
-      <div class="panel-head">
-        <span class="ph-label">LITERATURE CHECK</span>
-        <span class="ph-count" id="lit-tag">—</span>
-      </div>
-      <div id="lit-list" class="lit-list"></div>
-    </section>
+    <!-- PANE 4: PAPERS -->
+    <div class="insp-pane" id="pane-literature" style="display: none;">
+      <section class="panel">
+        <div class="panel-head">
+          <span class="ph-label">LITERATURE CHECK</span>
+          <span class="ph-count" id="lit-tag">—</span>
+        </div>
+        <div id="lit-list" class="lit-list"></div>
+      </section>
+    </div>
 
   </aside>
 </main>
@@ -585,6 +618,21 @@
       Results are cached, so repeat scans are instant.
       Cells shown as significant / total.
     </p>
+  </div>
+</div>
+
+<!-- ============ DETECTIVE STORIES MODAL ============ -->
+<div id="stories-modal" class="modal-backdrop" hidden>
+  <div class="modal-window stories-window">
+    <div class="modal-header">
+      <div class="mh-left">
+        <span class="mh-tag">EARTH SYSTEM DETECTIVE · CURATED INVESTIGATIONS</span>
+        <h2>FEATURED DETECTIVE CASES</h2>
+        <span class="mh-sub">Select an investigation to automatically orchestrate the globe, variables, and cross-sphere analysis</span>
+      </div>
+      <button id="stories-close" class="modal-close-btn" aria-label="Close modal">&times;</button>
+    </div>
+    <div class="stories-body" id="stories-body"></div>
   </div>
 </div>
 

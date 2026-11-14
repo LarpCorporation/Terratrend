@@ -17,7 +17,8 @@ import literature
 import power_client
 from analysis import (
     analyze_series, seasonal_mk,
-    analyze_cross_coupling, analyze_regional_contrast
+    analyze_cross_coupling, analyze_regional_contrast,
+    calculate_pearson, pearson_r_and_p, explain_teleconnection
 )
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -392,6 +393,118 @@ def run_scan(variables, region, start, end, nx=5, ny=5):
     }
 
 
+def run_teleconnections(region_id, var_id, start, end, threshold=0.38):
+    """Discover global teleconnections and remote impacts for a given region & variable."""
+    if end - start < 8:
+        raise ValueError("Need at least 9 years of data (end - start >= 8)")
+    if end > MAX_YEAR:
+        raise ValueError(f"Data available through {MAX_YEAR}")
+
+    reg_a = next((r for r in catalog.REGIONS if r["id"] == region_id), None)
+    if not reg_a:
+        raise KeyError(f"Unknown region {region_id}")
+
+    var_a = next((v for v in catalog.CATALOG if v["id"] == var_id), None)
+    if not var_a:
+        raise KeyError(f"Unknown variable {var_id}")
+
+    # Fetch source
+    grid_a = power_client.fetch_grid(var_a["id"], reg_a["bbox"], start, end, 5, 5)
+    all_months = set()
+    for lo in grid_a:
+        for la in grid_a[lo]:
+            all_months.update(grid_a[lo][la].keys())
+    months = sorted(m for m in all_months if len(str(m)) == 6 and str(m)[4:] != "13")
+    month_labels = _month_labels(months)
+
+    block_a = analyze_variable(var_a, grid_a, months, month_labels)
+    map_a = {p["year"]: p["value"] for p in block_a["yearly_timeseries"] if p.get("complete")}
+    if len(map_a) < 8:
+        return {"source_region": reg_a, "source_variable": var_a, "teleconnections": []}
+
+    bbox_a = reg_a["bbox"]
+    source_lat = (bbox_a[1] + bbox_a[3]) / 2.0
+    source_lon = (bbox_a[0] + bbox_a[2]) / 2.0
+
+    target_vars = [
+        "T2M", "PRECTOTCORR", "GWETROOT", "TS", "WS2M",
+        "ALLSKY_SFC_SW_DNI", "RH2M", "EVPTRNS", "ALLSKY_SFC_LW_DWN"
+    ]
+
+    telecons = []
+
+    for reg_b in catalog.REGIONS:
+        if reg_b["id"] == region_id:
+            continue
+        bbox_b = reg_b["bbox"]
+        target_lat = (bbox_b[1] + bbox_b[3]) / 2.0
+        target_lon = (bbox_b[0] + bbox_b[2]) / 2.0
+
+        for target_vid in target_vars:
+            var_b = next((v for v in catalog.CATALOG if v["id"] == target_vid), None)
+            if not var_b:
+                continue
+
+            try:
+                grid_b = power_client.fetch_grid(var_b["id"], reg_b["bbox"], start, end, 5, 5, cached_only=True)
+                block_b = analyze_variable(var_b, grid_b, months, month_labels)
+                map_b = {p["year"]: p["value"] for p in block_b["yearly_timeseries"] if p.get("complete")}
+                common_yrs = sorted(set(map_a.keys()) & set(map_b.keys()))
+                if len(common_yrs) < 8:
+                    continue
+
+                ts_a = [map_a[y] for y in common_yrs]
+                ts_b = [map_b[y] for y in common_yrs]
+
+                r, p = pearson_r_and_p(ts_a, ts_b)
+                if r is not None and abs(r) >= threshold and p is not None and p < 0.10:
+                    dir_label = "AMPLIFYING (IN-PHASE)" if r > 0 else "OPPOSING (INVERSE)"
+                    explanation = explain_teleconnection(reg_a["id"], reg_b["id"], var_a["id"], var_b["id"], r)
+                    
+                    telecons.append({
+                        "source_region_id": reg_a["id"],
+                        "source_region_name": reg_a["name"],
+                        "source_coords": [round(source_lat, 2), round(source_lon, 2)],
+                        "source_bbox": reg_a.get("bbox"),
+                        "source_var_id": var_a["id"],
+                        "source_var_name": var_a["name"],
+                        "target_region_id": reg_b["id"],
+                        "target_region_name": reg_b["name"],
+                        "target_coords": [round(target_lat, 2), round(target_lon, 2)],
+                        "target_bbox": reg_b.get("bbox"),
+                        "target_var_id": var_b["id"],
+                        "target_var_name": var_b["name"],
+                        "target_var_unit": var_b["unit"],
+                        "target_sphere": var_b.get("sphere_code", "ATM"),
+                        "r": round(r, 3),
+                        "p": round(p, 4),
+                        "significant": p < 0.05,
+                        "relationship": dir_label,
+                        "explanation": explanation,
+                        "region_id": reg_b["id"],
+                        "region_name": reg_b["name"],
+                        "bbox": reg_b.get("bbox"),
+                        "variable_id": var_b["id"],
+                        "variable_name": var_b["name"],
+                        "unit": var_b["unit"],
+                        "mechanism": explanation,
+                        "direction": "amplifying" if r > 0 else "opposing",
+                    })
+            except Exception:
+                continue
+
+    telecons.sort(key=lambda x: abs(x["r"]), reverse=True)
+
+    return {
+        "source_region": reg_a,
+        "source_variable": var_a,
+        "start": start,
+        "end": end,
+        "total_evaluated": len(catalog.REGIONS) * len(target_vars),
+        "teleconnections": telecons,
+    }
+
+
 class Handler(BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
 
@@ -477,6 +590,19 @@ class Handler(BaseHTTPRequestHandler):
                     max(3, min(6, _int(q, "nx", 5))),
                     max(3, min(6, _int(q, "ny", 5))),
                 )
+                return self._json(200, result)
+            if path == "/api/teleconnections":
+                region = q.get("region", [""])[0]
+                var_id = q.get("variable", [""])[0]
+                if not region or not var_id:
+                    return self._json(400, {"error": "region and variable required"})
+                start_yr = _int(q, "start", 2000)
+                end_yr = _int(q, "end", MAX_YEAR)
+                try:
+                    thresh = float(q.get("threshold", [0.38])[0])
+                except Exception:
+                    thresh = 0.38
+                result = run_teleconnections(region, var_id, start_yr, end_yr, threshold=thresh)
                 return self._json(200, result)
             if path == "/api/analyze":
                 raw = q.get("variables", q.get("variable", [""]))[0]

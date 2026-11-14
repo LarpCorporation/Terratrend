@@ -32,8 +32,14 @@ TerraTrend does all four in one interactive observatory.
 
 | Interaction | What happens |
 |---|---|
+| **Mode Switcher** | Seamlessly toggle between **REGIONAL OBSERVATORY**, **GLOBAL TELECONNECTIONS**, and **DETECTIVE STORIES** |
 | **Tap anywhere on the 3D globe** | The nearest focus region is selected and analyzed automatically |
 | **Drag / scroll** | Rotate and zoom the dot-matrix Earth |
+| **Collapsible Left Drawer** | Toggle `[ < ]` / `[ > ]` to collapse sidebar controls and expand the 3D globe and docked console across the screen |
+| **Docked Time Series Console** | Full-width time-series chart docked beneath the 3D globe with zoom/pan, export (CSV/PNG/GeoJSON/GeoTIFF), threat score, and overall trend verdict |
+| **Tabbed Right Inspector** | 4-tab clean inspector (`SIGNALS`, `RIPPLES`, `SATELLITE`, `PAPERS`) preventing visual crowding and infinite vertical scrolling |
+| **Global Teleconnections & Ripples** | Click `TRACE GLOBAL IMPACTS` or `SCAN ALL GLOBAL RIPPLES` to compute cross-correlations against all other Earth regions, rendering 3D elevated bezier arcs on the globe |
+| **Detective Stories Modal** | Explore 6 curated investigations with automated end-to-end orchestration across regions, variables, and planetary teleconnections |
 | **Filter by Earth Sphere** | Toggle between ALL, ATM (Atmosphere), HYD (Hydrosphere), and ENG (Energy) |
 | **Select up to 3 variables** | Signals stack in the right rail, each with its own color |
 | **Earth System Coupling** | When 2+ variables are selected, automatically diagnoses cross-sphere physical interactions (VPD expansion, greenhouse radiative trapping, hydrological sensitivity) |
@@ -53,6 +59,8 @@ TerraTrend does all four in one interactive observatory.
 | Select variables from Earth science missions/models | 16 curated NASA POWER variables (MERRA-2, GPCP, CERES) across 4 Earth System Spheres (Atmosphere, Hydrosphere, Land, Energy) |
 | Multi-Sphere System Framework | Filter variables by Atmosphere (ATM), Hydrosphere (HYD), Land (LND), and Energy (ENG) across 3 functional groups |
 | Automated Trend Discovery Mode | One-click `SCAN ALL VARIABLES` systematically queries and ranks all 16 variables by trend slope and grid consensus |
+| Dynamic Global Teleconnections | Statistical cross-correlation engine (`/api/teleconnections`) identifying remote climate ripples (e.g. El Niño Pacific warming driving Ghana heatwaves and Amazon droughts) with physical mechanisms and 3D glowing bezier arcs |
+| Detective Stories Investigations | 6 curated investigations with one-click orchestration of regional focus, dates, multi-variable stacks, and teleconnection discovery |
 | Cross-Variable Physical Coupling | Automated thermodynamic coupling detection (VPD expansion, greenhouse radiative trapping, hydrological sensitivity, moisture convergence) with Pearson r |
 | Regional Contrast (A vs B) | Simultaneous dual-region comparison on the 3D globe and trend observatory with differential slope, co-trend correlation, and divergence verdicts |
 | Visualize change over time | Interactive yearly/monthly series with Theil-Sen trend lines, partial-year guards through 2026, and multi-region comparisons |
