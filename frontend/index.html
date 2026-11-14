@@ -41,6 +41,10 @@
       <span class="rl">ALPHA</span>
       <span class="rv">0.05</span>
     </div>
+    <div class="readout">
+      <span class="rl">DATA THROUGH</span>
+      <span class="rv" id="data-through">—</span>
+    </div>
     <div class="readout live">
       <span class="rl">STATUS</span>
       <span class="rv"><i class="pulse"></i><span id="sys-status">STANDBY</span></span>
@@ -62,10 +66,12 @@
         <button class="sphere-tab active" data-sphere="all" type="button">ALL</button>
         <button class="sphere-tab" data-sphere="atmosphere" type="button">ATM</button>
         <button class="sphere-tab" data-sphere="hydrosphere" type="button">HYD</button>
+        <button class="sphere-tab" data-sphere="land" type="button">LND</button>
         <button class="sphere-tab" data-sphere="energy" type="button">ENG</button>
       </div>
       <div id="var-list" class="var-list"></div>
       <p class="micro">Select up to 3 variables across Earth system spheres.</p>
+      <button id="defs-open" class="link-btn">WHAT DO THESE VARIABLES MEAN?</button>
     </section>
 
     <section class="panel">
@@ -105,6 +111,7 @@
         <span class="btn-glitch"></span>
         RUN ANALYSIS
       </button>
+      <button id="scan" class="hud-btn ghost">SCAN ALL VARIABLES</button>
       <div id="status" class="hud-status" hidden></div>
     </section>
 
@@ -542,6 +549,42 @@
         <div class="eg-contrast-grid" id="eg-contrast-grid"></div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ============ GLOSSARY / DEFINITIONS MODAL ============ -->
+<div id="defs-modal" class="modal-backdrop" hidden>
+  <div class="modal-window defs-window">
+    <div class="modal-header">
+      <div class="mh-left">
+        <span class="mh-tag">GLOSSARY · PLAIN ENGLISH</span>
+        <h2>WHAT THESE VARIABLES MEAN</h2>
+        <span class="mh-sub">Every measurement explained without jargon — for students, journalists and Earth observers</span>
+      </div>
+      <button id="defs-close" class="modal-close-btn" aria-label="Close">&times;</button>
+    </div>
+    <div id="defs-body" class="defs-body"></div>
+  </div>
+</div>
+
+<!-- ============ TREND SCAN MODAL ============ -->
+<div id="scan-modal" class="modal-backdrop" hidden>
+  <div class="modal-window scan-window">
+    <div class="modal-header">
+      <div class="mh-left">
+        <span class="mh-tag">TREND SCAN · ALL VARIABLES</span>
+        <h2 id="scan-title">REGION</h2>
+        <span class="mh-sub" id="scan-sub">—</span>
+      </div>
+      <button id="scan-close" class="modal-close-btn" aria-label="Close">&times;</button>
+    </div>
+    <div class="scan-table" id="scan-table"></div>
+    <p class="scan-note">
+      Ranked by significance, then by trend coherence (|τ|). Uses the same 5x5
+      grid as the full analysis, so p-values match when you open a row.
+      Results are cached, so repeat scans are instant.
+      Cells shown as significant / total.
+    </p>
   </div>
 </div>
 

@@ -62,13 +62,15 @@ def mk_test(ys):
     return z, p, tau, p < ALPHA
 
 
-def seasonal_mk(monthly_values, n_months=12):
+def seasonal_mk(monthly_values, n_months=12, period=None):
     """Hirsch-Slack seasonal Mann-Kendall on monthly data.
 
     Splits the series into calendar-month blocks, computes S per block,
     sums S and the variances, then tests the combined statistic. This
     removes the seasonal cycle's influence on significance.
     """
+    if period is not None:
+        n_months = period
     blocks = [[] for _ in range(n_months)]
     for i, v in enumerate(monthly_values):
         if v is not None:
@@ -123,6 +125,180 @@ def stars_for(p):
     return ""
 
 
+def theil_sen_ci(ys, xs=None, alpha=0.05):
+    """Confidence interval for the Theil-Sen slope.
+
+    Gilbert (1987) normal approximation: rank the pairwise slopes and take the
+    ranks bracketing the middle (N -/+ C)/2, where C = z * sqrt(Var(S)).
+    Returns (low, high) on the same scale as the slope, or (None, None).
+    """
+    n = len(ys)
+    if n < 8:
+        return None, None
+    if xs is None:
+        xs = list(range(n))
+
+    slopes = []
+    for i in range(n - 1):
+        for j in range(i + 1, n):
+            dx = xs[j] - xs[i]
+            if dx:
+                slopes.append((ys[j] - ys[i]) / dx)
+    if not slopes:
+        return None, None
+    slopes.sort()
+    m = len(slopes)
+
+    # z for the two-sided interval
+    z_alpha = 1.959963984540054 if abs(alpha - 0.05) < 1e-9 else _z_for(alpha)
+    c = z_alpha * math.sqrt(_var_s(ys))
+    total_pairs = n * (n - 1) / 2.0
+
+    lo_rank = math.ceil((total_pairs - c) / 2.0)
+    hi_rank = math.ceil((total_pairs + c) / 2.0)
+    lo_rank = max(1, min(m, lo_rank))
+    hi_rank = max(1, min(m, hi_rank))
+
+    return slopes[lo_rank - 1], slopes[hi_rank - 1]
+
+
+def _z_for(alpha):
+    """Two-sided critical z via bisection on the normal CDF."""
+    target = 1.0 - alpha / 2.0
+    lo, hi = 0.0, 10.0
+    for _ in range(200):
+        mid = (lo + hi) / 2.0
+        if _norm_cdf(mid) < target:
+            lo = mid
+        else:
+            hi = mid
+    return (lo + hi) / 2.0
+
+
+# ---------------------------------------------------------------------------
+# Ordinary least squares + t-test
+#
+# The challenge brief names three acceptable approaches: "a t-test, the
+# Mann-Kendall test, or confidence intervals". We lead with Mann-Kendall
+# because climate series are rarely normal, but running the classic t-test
+# alongside it lets a user see the two agree — and see exactly where the
+# normality assumption starts to matter.
+# ---------------------------------------------------------------------------
+def _betacf(a, b, x):
+    """Continued fraction for the incomplete beta function (Lentz)."""
+    maxit, eps, fpmin = 200, 3e-16, 1e-300
+    qab, qap, qam = a + b, a + 1.0, a - 1.0
+    c = 1.0
+    d = 1.0 - qab * x / qap
+    if abs(d) < fpmin:
+        d = fpmin
+    d = 1.0 / d
+    h = d
+    for m in range(1, maxit + 1):
+        m2 = 2 * m
+        aa = m * (b - m) * x / ((qam + m2) * (a + m2))
+        d = 1.0 + aa * d
+        if abs(d) < fpmin:
+            d = fpmin
+        c = 1.0 + aa / c
+        if abs(c) < fpmin:
+            c = fpmin
+        d = 1.0 / d
+        h *= d * c
+        aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2))
+        d = 1.0 + aa * d
+        if abs(d) < fpmin:
+            d = fpmin
+        c = 1.0 + aa / c
+        if abs(c) < fpmin:
+            c = fpmin
+        d = 1.0 / d
+        delta = d * c
+        h *= delta
+        if abs(delta - 1.0) < eps:
+            break
+    return h
+
+
+def _betai(a, b, x):
+    """Regularized incomplete beta function I_x(a, b)."""
+    if x <= 0.0:
+        return 0.0
+    if x >= 1.0:
+        return 1.0
+    lbeta = (math.lgamma(a + b) - math.lgamma(a) - math.lgamma(b)
+             + a * math.log(x) + b * math.log(1.0 - x))
+    bt = math.exp(lbeta)
+    if x < (a + 1.0) / (a + b + 2.0):
+        return bt * _betacf(a, b, x) / a
+    return 1.0 - bt * _betacf(b, a, 1.0 - x) / b
+
+
+def t_cdf(t, df):
+    """Student's t cumulative distribution function."""
+    x = df / (df + t * t)
+    p = 0.5 * _betai(df / 2.0, 0.5, x)
+    return 1.0 - p if t > 0 else p
+
+
+def t_test_trend(ys, xs=None):
+    """OLS slope with a two-sided t-test on the slope.
+
+    Returns dict(slope, intercept, se, t, df, p, ci_low, ci_high) or None.
+    """
+    n = len(ys)
+    if n < 4:
+        return None
+    if xs is None:
+        xs = list(range(n))
+    mx = sum(xs) / n
+    my = sum(ys) / n
+    sxx = sum((x - mx) ** 2 for x in xs)
+    if sxx == 0:
+        return None
+    sxy = sum((x - mx) * (y - my) for x, y in zip(xs, ys))
+    slope = sxy / sxx
+    intercept = my - slope * mx
+    sse = sum((y - (intercept + slope * x)) ** 2 for x, y in zip(xs, ys))
+    df = n - 2
+    mse = sse / df
+    if mse <= 0:
+        se = 0.0
+    else:
+        se = math.sqrt(mse / sxx)
+
+    if se == 0.0:
+        t = 0.0 if slope == 0 else float("inf")
+        p = 1.0 if slope == 0 else 0.0
+        lo = hi = slope
+    else:
+        t = slope / se
+        p = 2.0 * (1.0 - t_cdf(abs(t), df))
+        # 95% CI via critical t
+        target = 0.975
+        lo_t, hi_t = 0.0, 20.0
+        for _ in range(100):
+            mid_t = (lo_t + hi_t) / 2.0
+            if t_cdf(mid_t, df) < target:
+                lo_t = mid_t
+            else:
+                hi_t = mid_t
+        crit_t = (lo_t + hi_t) / 2.0
+        lo = slope - crit_t * se
+        hi = slope + crit_t * se
+
+    return {
+        "slope": slope,
+        "intercept": intercept,
+        "se": se,
+        "t": t,
+        "df": df,
+        "p": max(0.0, min(1.0, p)),
+        "ci_low": lo,
+        "ci_high": hi,
+    }
+
+
 def analyze_series(values, dt_per_step=1.0, dt_label="year"):
     """Full trend analysis of one ordered series.
 
@@ -136,6 +312,8 @@ def analyze_series(values, dt_per_step=1.0, dt_label="year"):
 
     z, p, tau, h = mk_test(ys)
     slope, intercept = theil_sen(ys, xs)
+    ci_lo, ci_hi = theil_sen_ci(ys, xs)
+    tt = t_test_trend(ys, xs)
 
     first, last = ys[0], ys[-1]
     total = last - first
@@ -164,6 +342,23 @@ def analyze_series(values, dt_per_step=1.0, dt_label="year"):
         "change_total": total,
         "change_pct": pct,
         "per_decade": slope * 10.0 / dt_per_step,
+        # classic OLS + t-test, reported alongside Mann-Kendall
+        "t_slope": tt["slope"] if tt else None,
+        "t_per_decade": (tt["slope"] * 10.0 / dt_per_step) if tt else None,
+        "t_p": tt["p"] if tt else None,
+        "t_df": tt["df"] if tt else None,
+        "t_significant": (tt["p"] < ALPHA) if tt else False,
+        "t_ci_low_per_decade": ((tt["ci_low"] * 10.0 / dt_per_step)
+                                if tt else None),
+        "t_ci_high_per_decade": ((tt["ci_high"] * 10.0 / dt_per_step)
+                                 if tt else None),
+        "methods_agree": (tt is not None) and ((tt["p"] < ALPHA) == h),
+        "ci_low": ci_lo,
+        "ci_high": ci_hi,
+        "ci_low_per_decade": (ci_lo * 10.0 / dt_per_step
+                              if ci_lo is not None else None),
+        "ci_high_per_decade": (ci_hi * 10.0 / dt_per_step
+                               if ci_hi is not None else None),
         "dt_label": dt_label,
         "first": first,
         "last": last,
@@ -220,6 +415,26 @@ PHYSICAL_COUPLINGS = {
     frozenset({"QV2M", "PRECTOTCORR"}): {
         "title": "Moisture Transport Convergence",
         "description": "Correlated specific humidity and precipitation rates diagnose regional atmospheric moisture advection and convective convergence efficiency.",
+    },
+    frozenset({"TS", "T2M"}): {
+        "title": "Radiometric Skin vs Air Thermal Coupling",
+        "description": "Direct coupling between satellite-observed surface skin temperature and 2m ambient air temperature. A widening divergence highlights amplified ground surface heating and sensible heat exchange.",
+    },
+    frozenset({"GWETROOT", "EVPTRNS"}): {
+        "title": "Root-Zone Transpiration Feedback",
+        "description": "Coupling between root-zone soil moisture and total evapotranspiration tracks vegetation water stress. Depleted root moisture suppresses plant transpiration, signaling agricultural drought.",
+    },
+    frozenset({"GWETTOP", "PRECTOTCORR"}): {
+        "title": "Surface Hydrological Recharge",
+        "description": "Topsoil wetness directly responds to precipitation events. Divergence indicates rapid runoff or high evaporative loss preventing rainfall infiltration into the soil layer.",
+    },
+    frozenset({"TS", "GWETTOP"}): {
+        "title": "Soil Moisture-Skin Temperature Evaporative Cooling",
+        "description": "Strong negative correlation between surface wetness and skin temperature confirms soil moisture evaporative cooling. When soil dries out, evaporative cooling ceases and radiant skin temperature spikes.",
+    },
+    frozenset({"GWETROOT", "T2M"}): {
+        "title": "Soil Moisture Deficit Heat Amplification",
+        "description": "Persistent root-zone drying partitions incoming radiant energy into sensible rather than latent heat, causing extreme afternoon air temperature spikes.",
     },
 }
 

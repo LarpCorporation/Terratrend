@@ -50,15 +50,16 @@ TerraTrend does all four in one interactive observatory.
 
 | Requirement | Implementation |
 |---|---|
-| Select variables from Earth science missions/models | 10 curated NASA POWER variables (MERRA-2, GPCP, CERES) across 3 Earth System Spheres (Atmosphere, Hydrosphere, Energy) |
-| Multi-Sphere System Framework | Filter variables by Atmosphere (ATM), Hydrosphere (HYD), and Energy (ENG) |
+| Select variables from Earth science missions/models | 16 curated NASA POWER variables (MERRA-2, GPCP, CERES) across 4 Earth System Spheres (Atmosphere, Hydrosphere, Land, Energy) |
+| Multi-Sphere System Framework | Filter variables by Atmosphere (ATM), Hydrosphere (HYD), Land (LND), and Energy (ENG) across 3 functional groups |
+| Automated Trend Discovery Mode | One-click `SCAN ALL VARIABLES` systematically queries and ranks all 16 variables by trend slope and grid consensus |
 | Cross-Variable Physical Coupling | Automated thermodynamic coupling detection (VPD expansion, greenhouse radiative trapping, hydrological sensitivity, moisture convergence) with Pearson r |
 | Regional Contrast (A vs B) | Simultaneous dual-region comparison on the 3D globe and trend observatory with differential slope, co-trend correlation, and divergence verdicts |
-| Visualize change over time | Interactive yearly/monthly series with Theil-Sen trend lines and multi-region comparisons |
-| What is changing | Plain-language verdict per variable (rising / falling / stable) |
+| Visualize change over time | Interactive yearly/monthly series with Theil-Sen trend lines, partial-year guards through 2026, and multi-region comparisons |
+| What is changing | Plain-language verdict per variable (rising / falling / stable) + in-app scientific glossary |
 | Where it is changing | 5x5 gridded trend analysis rendered as North-aligned colored cells on the globe and consensus matrix |
-| How much it is changing | Slope/decade, total change, percent change — per region and per cell |
-| Is it significant | **Mann-Kendall** (p < 0.05), **Hirsch-Slack seasonal MK** cross-check, significance stars |
+| How much it is changing | Theil-Sen slope/decade, 95% confidence intervals, total change, percent change — per region and per cell |
+| Is it significant | **Mann-Kendall** (p < 0.05), **Theil-Sen 95% CI**, **OLS t-test** cross-check with Student's t CDF, **Hirsch-Slack seasonal MK**, significance stars |
 | Visual ground truth | **NASA GIBS & Worldview** orbital imagery comparison (MODIS / VIIRS) via side-by-side & interactive split-slider |
 | Does the science agree? | Live **OpenAlex** literature lookup, relevance-ranked per variable + region |
 
@@ -179,19 +180,22 @@ sampling).
 terratrend/
 ├── backend/
 │   ├── server.py        # zero-dependency HTTP server + API + analysis pipeline
-│   ├── analysis.py      # Mann-Kendall, Theil-Sen, Hirsch-Slack seasonal MK
+│   ├── analysis.py      # Mann-Kendall, Theil-Sen CI, Hirsch-Slack seasonal MK, OLS t-test, Pearson coupling
 │   ├── gibs.py          # NASA GIBS WMS & Worldview orbital comparison engine
-│   ├── power_client.py  # NASA POWER fetcher: parallel grid + disk cache
+│   ├── power_client.py  # NASA POWER fetcher: parallel grid + disk cache + availability probe
 │   ├── literature.py    # OpenAlex lookup with relevance re-ranking
-│   ├── catalog.py       # 10 variables · 16 regions
+│   ├── catalog.py       # 16 variables · 23 regions (land & ocean) · glossary
 │   ├── warm_cache.py    # pre-fetch demo regions before judging
-│   ├── test_analysis.py # 10 unit tests for the statistics
+│   ├── warm_scan.py     # pre-warm full 16-variable scans for demo regions
+│   ├── test_analysis.py # 23 unit tests for statistical engine
+│   ├── test_catalog.py  # 11 unit tests for catalog integrity
+│   ├── test_currency.py # 8 unit tests for data currency & partial-year guards
 │   ├── test_gibs.py     # 4 unit tests for GIBS & Worldview integration
 │   └── cache/           # auto-created; 30-day TTL
 └── frontend/
-    ├── index.html       # HUD shell + orbital evidence modal
-    ├── styles.css       # monochrome observatory theme + split-slider styling
-    ├── app.js           # three.js globe + chart + GIBS orbital comparator
+    ├── index.html       # HUD shell + scan modal + defs modal + data observatory + orbital modal
+    ├── styles.css       # monochrome observatory theme + WCAG AA contrast styling
+    ├── app.js           # three.js globe + chart + scan + glossary + GIBS orbital comparator
     └── land_dots.json   # 6,550 Natural Earth land points
 ```
 
@@ -203,10 +207,12 @@ blue = falling), exactly like a mission-control display where hue carries meanin
 **API**
 
 - `GET /api/health` → `{ok, uptime_s}`
-- `GET /api/catalog` → variables, regions, year bounds, max_variables
+- `GET /api/availability` → live NASA POWER probe `{ok, max_year, latest_month, latest_day}`
+- `GET /api/catalog` → 16 variables, spheres, 23 regions, year bounds, availability
+- `GET /api/scan?region=sahel&start=2005&end=2026` → ranks all 16 variables by trend slope and grid consensus
 - `GET /api/analyze?variables=T2M,PRECTOTCORR&region=europe&start=2005&end=2024`
-  → for each variable: monthly + yearly series, per-cell trends, regional
-  summary, seasonal MK, literature, and NASA GIBS satellite evidence
+  → for each variable: monthly + yearly series (with partial-year guards), per-cell trends, regional
+  summary, 95% CI, OLS t-test, seasonal MK, cross-sphere couplings, literature, and NASA GIBS satellite evidence
 - `GET /api/satellite-imagery?region=europe&start=2005&end=2024&layer=true_color`
   → NASA GIBS WMS baseline and recent URLs, cloud-minimized seasonal dates,
   and NASA Worldview deep links (supports custom `bbox=min_lon,min_lat,max_lon,max_lat`)
@@ -217,13 +223,17 @@ blue = falling), exactly like a mission-control display where hue carries meanin
 
 ```bash
 cd terratrend/backend
-python test_analysis.py      # ALL PASS (10 tests: MK, Sen, Hirsch-Slack)
+python test_analysis.py      # ALL PASS (23 tests: MK, Sen CI, t-test, couplings, contrast)
+python test_catalog.py       # ALL PASS (11 tests: catalog structure & completeness)
+python test_currency.py      # ALL PASS (8 tests: data currency & partial-year protection)
 python test_gibs.py          # ALL PASS (4 tests: GIBS WMS & Worldview URL engine)
 ```
 
 Covers: strong rising/falling detection, flat-noise rejection, Theil–Sen on
-perfect linear data, outlier robustness, short-series rejection, gap handling,
-seasonal-MK cycle rejection, and seasonal-MK real-trend detection.
+perfect linear data, outlier robustness, Theil-Sen 95% confidence intervals,
+OLS $t$-test agreement with Student's $t$ CDF, short-series rejection, gap handling,
+seasonal-MK cycle rejection, seasonal-MK real-trend detection, multi-sphere coupling,
+and regional contrast.
 
 ---
 
@@ -234,7 +244,6 @@ seasonal-MK cycle rejection, and seasonal-MK real-trend detection.
 - The globe's analysis grid is **visually amplified 2.8×** so 25 cells are
   readable at planetary scale. Geography is preserved in the popups and
   coordinate readout; the mesh spacing is exaggerated for legibility.
-- Regions are 16 curated focus boxes; freehand bbox selection is a small
+- Regions are 23 curated focus boxes covering continents and major ocean basins; freehand bbox selection is a small
   follow-up.
-- Add **Sen's slope confidence intervals** and **Pettitt change-point detection**
-  for "when did it start changing."
+- Add **Pettitt change-point detection** for "when did it start changing."

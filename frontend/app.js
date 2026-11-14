@@ -27,6 +27,7 @@ const state = {
   activeVarIdx: 0,
   activeSphere: "all",
   compareMode: false,
+  preferredVar: null,
   satellite: null,
   selectedCellBbox: null,
   activeSatBbox: null,
@@ -61,12 +62,37 @@ async function boot() {
   renderVarList();
   renderRegionSelect();
 
+  // Data currency readout from live availability probe
+  const avail = state.catalog.availability || {};
+  if (avail.ok && avail.latest_month_label) {
+    const el = $("data-through");
+    if (el) {
+      el.textContent = avail.latest_month_label;
+      el.title =
+        `NASA POWER monthly data valid through ${avail.latest_month_label}` +
+        (avail.latest_day_label ? ` (daily through ${avail.latest_day_label})` : "");
+    }
+  }
+
+  const maxYear = state.catalog.years.max;
   $("start").min = state.catalog.years.min + 8;
-  $("start").max = state.catalog.years.max - 8;
+  $("start").max = maxYear - 8;
   $("end").min = state.catalog.years.min + 8;
-  $("end").max = state.catalog.years.max;
+  $("end").max = maxYear;
+  if (+$("end").value < maxYear) $("end").value = maxYear;
+  if (+$("start").value > maxYear - 8) $("start").value = maxYear - 8;
 
   $("run").addEventListener("click", analyze);
+  $("scan").addEventListener("click", scanAll);
+  $("scan-close").addEventListener("click", closeScan);
+  $("defs-open").addEventListener("click", openDefs);
+  $("defs-close").addEventListener("click", closeDefs);
+
+  const defsM = $("defs-modal");
+  if (defsM) defsM.addEventListener("click", (e) => { if (e.target === defsM) closeDefs(); });
+  const scanM = $("scan-modal");
+  if (scanM) scanM.addEventListener("click", (e) => { if (e.target === scanM) closeScan(); });
+
   $("region").addEventListener("change", onRegionChange);
   const compToggle = $("toggle-compare-mode");
   if (compToggle) compToggle.addEventListener("click", toggleCompareMode);
@@ -90,6 +116,8 @@ async function boot() {
     if (e.key === "Escape") {
       closeSatelliteModal();
       closeDataModal();
+      closeScan();
+      closeDefs();
     }
   });
 
@@ -123,16 +151,19 @@ function setSphereFilter(sphere) {
 function renderVarList() {
   const box = $("var-list");
   box.innerHTML = "";
-  const varsToDisplay = state.catalog.variables.filter((v) => {
-    if (state.activeSphere === "all") return true;
-    return v.sphere === state.activeSphere;
-  });
 
-  varsToDisplay.forEach((v) => {
+  const GROUPS = [
+    ["temperature", "TEMPERATURE"],
+    ["water", "WATER & MOISTURE"],
+    ["energy", "ENERGY & ATMOSPHERE"],
+  ];
+
+  const addItem = (v) => {
     const on = state.selected.includes(v.id);
     const el = document.createElement("div");
     el.className = "var-item" + (on ? " on" : "");
     el.style.setProperty("--vc", v.color);
+    el.title = v.desc || v.plain || "";
     el.innerHTML = `
       <i class="var-dot"></i>
       <span class="var-name">${esc(v.name)}</span>
@@ -140,7 +171,23 @@ function renderVarList() {
       <span class="var-unit">${esc(v.unit)}</span>`;
     el.addEventListener("click", () => toggleVar(v.id));
     box.appendChild(el);
-  });
+  };
+
+  if (state.activeSphere === "all") {
+    GROUPS.forEach(([gid, label]) => {
+      const vars = state.catalog.variables.filter((v) => v.group === gid);
+      if (!vars.length) return;
+      const head = document.createElement("div");
+      head.className = "var-group";
+      head.textContent = label;
+      box.appendChild(head);
+      vars.forEach(addItem);
+    });
+  } else {
+    const filtered = state.catalog.variables.filter((v) => v.sphere === state.activeSphere);
+    filtered.forEach(addItem);
+  }
+
   $("var-count").textContent = `${state.selected.length} / ${MAX_VARS}`;
 }
 
@@ -257,11 +304,13 @@ function currentCompareRegion() {
 function clampRange() {
   let s = +$("start").value;
   let e = +$("end").value;
+  const maxYear = (state.catalog && state.catalog.years) ? state.catalog.years.max : 2026;
+  const minYear = (state.catalog && state.catalog.years) ? state.catalog.years.min : 1985;
   if (e - s < 8) {
     if (document.activeElement === $("start")) {
-      e = Math.min(2024, s + 8);
+      e = Math.min(maxYear, s + 8);
     } else {
-      s = Math.max(1985, e - 8);
+      s = Math.max(minYear, e - 8);
     }
     $("start").value = s;
     $("end").value = e;
@@ -274,6 +323,171 @@ function setMode(m) {
     b.classList.toggle("on", b.dataset.mode === m)
   );
   if (state.result) drawChart();
+}
+
+/* ============================================================
+   VARIABLE DEFINITIONS & GLOSSARY MODAL
+   ============================================================ */
+const DEF_GROUPS = [
+  ["temperature", "TEMPERATURE — Heat & Thermal Gradients"],
+  ["water", "WATER & MOISTURE — Precipitation, Humidity & Land Moisture"],
+  ["energy", "ENERGY & ATMOSPHERE — Radiant Flux, Pressure & Wind"],
+];
+
+function openDefs() {
+  const box = $("defs-body");
+  const vars = state.catalog.variables;
+
+  box.innerHTML = DEF_GROUPS.map(([gid, label]) => {
+    const items = vars.filter((v) => v.group === gid)
+      .map((v) => `
+        <div class="def-item">
+          <div class="def-left">
+            <i class="def-dot" style="background:${v.color}"></i>
+            <div>
+              <div class="def-name">${esc(v.name)}</div>
+              <div class="def-meta">${esc(v.unit)} · ${esc(v.sphere_name || v.mission)}</div>
+            </div>
+          </div>
+          <div>
+            <div class="def-plain">${esc(v.plain || v.desc)}</div>
+            ${v.trend_means ? `<div class="def-means"><b>A trend means:</b> ${esc(v.trend_means)}</div>` : ""}
+          </div>
+        </div>`).join("");
+    return `<div class="defs-group">${label}</div>${items}`;
+  }).join("");
+
+  $("defs-modal").hidden = false;
+}
+
+function closeDefs() {
+  const m = $("defs-modal");
+  if (m) m.hidden = true;
+}
+
+/* ============================================================
+   TREND SCAN — Automated Multi-Variable Detective
+   ============================================================ */
+async function scanAll() {
+  const btn = $("scan");
+  const ids = state.catalog.variables.map((v) => v.id);
+  const CHUNK = 4;
+  const total = ids.length;
+  const collected = [];
+  const reg = currentRegion();
+  const windowLbl = `${$("start").value}–${$("end").value}`;
+
+  btn.disabled = true;
+  $("scan-title").textContent =
+    `${reg ? reg.name.toUpperCase() : "—"} · ${windowLbl}`;
+  $("scan-sub").textContent = "SCANNING…";
+  $("scan-table").innerHTML =
+    `<div class="scan-note">Acquiring NASA POWER grid across ${total} Earth system variables…</div>`;
+  $("scan-modal").hidden = false;
+
+  try {
+    for (let i = 0; i < total; i += CHUNK) {
+      const batch = ids.slice(i, i + CHUNK);
+      setStatus("busy",
+        `<span class="spin"></span>SCANNING ${Math.min(i + CHUNK, total)}/${total}` +
+        ` · ${batch.join(", ")}`);
+      const params = new URLSearchParams({
+        region: $("region").value,
+        start: $("start").value,
+        end: $("end").value,
+        variables: batch.join(","),
+      });
+      const r = await fetch(`/api/scan?${params}`);
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
+      collected.push(...d.scanned);
+      renderScan(collected, total);
+    }
+    setStatus("ok", "");
+  } catch (e) {
+    setStatus("err", `SCAN FAILED: ${esc(e.message)}`);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function rankRows(rows) {
+  return [...rows].sort((a, b) => {
+    const sa = a.ok && a.significant ? 0 : 1;
+    const sb = b.ok && b.significant ? 0 : 1;
+    if (sa !== sb) return sa - sb;
+    return Math.abs(b.tau || 0) - Math.abs(a.tau || 0);
+  });
+}
+
+function renderScan(rows, total) {
+  const ranked = rankRows(rows);
+  const okRows = ranked.filter((r) => r.ok);
+  const sig = okRows.filter((r) => r.significant);
+  const rising = sig.filter((r) => r.direction === "rising").length;
+  const falling = sig.filter((r) => r.direction === "falling").length;
+  const done = rows.length;
+
+  $("scan-sub").textContent =
+    `${sig.length}/${okRows.length} variables significant · ` +
+    `${rising} rising · ${falling} falling` +
+    (done < total ? ` · scanning ${done}/${total}` : "");
+
+  const head = `<div class="scan-head">
+    <span>#</span><span></span><span>VARIABLE</span><span>SLOPE</span>
+    <span>p-VALUE</span><span>CELLS</span><span>VERDICT</span>
+  </div>`;
+
+  const body = ranked.map((r, i) => {
+    const rank = String(i + 1).padStart(2, "0");
+    if (!r.ok || r.p === undefined || r.p === null) {
+      return `<div class="scan-row nodata">
+        <span class="sr-rank">${rank}</span>
+        <i class="sr-dot" style="background:${r.color}"></i>
+        <span class="sr-name">${esc(r.name)}</span>
+        <span class="sr-slope">—</span>
+        <span class="sr-p">—</span>
+        <span class="sr-cells">—</span>
+        <span class="sr-dir nodata">NODATA</span>
+      </div>`;
+    }
+    const dir = r.significant ? r.direction : "flat";
+    const label = dir === "rising" ? "RISING"
+      : dir === "falling" ? "FALLING" : "STABLE";
+    const sign = r.slope_decade > 0 ? "+" : "";
+    return `<div class="scan-row" data-var="${esc(r.id)}">
+      <span class="sr-rank">${rank}</span>
+      <i class="sr-dot" style="background:${r.color}"></i>
+      <span class="sr-name">${esc(r.name)}</span>
+      <span class="sr-slope">${sign}${num(r.slope_decade, 3)} ${esc(r.unit)}/dec</span>
+      <span class="sr-p">p=${r.p < 0.001 ? "<0.001" : num(r.p, 3)}</span>
+      <span class="sr-cells">${r.cells_sig}/${r.cells_total}</span>
+      <span class="sr-dir ${dir}">${label}</span>
+    </div>`;
+  }).join("");
+
+  const box = $("scan-table");
+  box.innerHTML = head + body;
+  box.querySelectorAll(".scan-row[data-var]").forEach((el) => {
+    el.addEventListener("click", () => openFromScan(el.dataset.var));
+  });
+}
+
+function closeScan() {
+  const m = $("scan-modal");
+  if (m) m.hidden = true;
+}
+
+function openFromScan(vid) {
+  if (!state.selected.includes(vid)) {
+    while (state.selected.length >= MAX_VARS) state.selected.pop();
+    state.selected.push(vid);
+  }
+  state.preferredVar = vid;
+  renderVarList();
+  updateGlobeOverlay();
+  closeScan();
+  analyze();
 }
 
 /* ============================================================
@@ -321,10 +535,16 @@ async function analyze() {
     const data = await r.json();
     if (!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
     state.result = data;
-    // default the globe to the most newsworthy variable: first significant
+    // a variable chosen from the SCAN table wins; otherwise default to first significant
+    const pref = state.preferredVar;
+    state.preferredVar = null;
+    const prefIdx = pref
+      ? data.series.findIndex((s) => s.variable.id === pref)
+      : -1;
     const firstSig = data.series.findIndex(
       (s) => s.overall && s.overall.ok && s.overall.significant);
-    state.activeVarIdx = firstSig >= 0 ? firstSig : 0;
+    state.activeVarIdx = prefIdx >= 0 ? prefIdx
+      : (firstSig >= 0 ? firstSig : 0);
     render();
     setStatus("ok", "");
   } catch (e) {
@@ -550,9 +770,9 @@ function renderSignals(d) {
     const o = s.overall;
     const dir = o.ok ? o.direction : "nodata";
     const dirTxt =
-      dir === "rising" ? "▲ RISING" :
-      dir === "falling" ? "▼ FALLING" :
-      dir === "flat" ? "◆ STABLE" : "— NODATA";
+      dir === "rising" ? "RISING" :
+      dir === "falling" ? "FALLING" :
+      dir === "flat" ? "STABLE" : "NODATA";
     const el = document.createElement("div");
     el.className = "signal";
     el.style.setProperty("--vc", v.color);
@@ -1445,10 +1665,17 @@ function drawExpandedChart() {
   let minX = 0;
   let maxX = 0;
 
+  const partialFlags = isYear
+    ? s.yearly_timeseries.map((p) => !p.complete)
+    : [];
+  const partialYears = isYear
+    ? s.yearly_timeseries.filter((p) => !p.complete)
+    : [];
+
   if (isYear) {
     chartPoints = s.yearly_timeseries.map((p) => ({
       x: Number(p.year),
-      y: p.value,
+      y: p.complete === false ? null : p.value,
     }));
     minX = Number(s.yearly_timeseries[0].year);
     maxX = Number(s.yearly_timeseries[s.yearly_timeseries.length - 1].year);
@@ -1487,6 +1714,26 @@ function drawExpandedChart() {
     spanGaps: true,
   }];
 
+  if (partialYears.length > 0) {
+    datasets.push({
+      label: "Partial Year (Excluded from Trend)",
+      data: s.yearly_timeseries.map((p) => ({
+        x: Number(p.year),
+        y: p.complete === false ? p.value : null,
+      })),
+      showLine: false,
+      borderColor: "transparent",
+      backgroundColor: "#0c0e11",
+      borderWidth: 1.5,
+      pointBackgroundColor: "#0c0e11",
+      pointBorderColor: "#ffffff",
+      pointBorderWidth: 1.5,
+      pointRadius: 5.5,
+      pointHoverRadius: 7,
+      pointStyle: "rectRot",
+    });
+  }
+
   const validPts = chartPoints.filter((p) => p.y !== null && Number.isFinite(p.y));
   if (validPts.length > 2) {
     let lineFn;
@@ -1500,7 +1747,7 @@ function drawExpandedChart() {
       lineFn = fitLine(ptPairs);
     }
     datasets.push({
-      label: hasCompare ? `Trend (${d.region.name})` : "Theil–Sen Trend Line",
+      label: hasCompare ? `Trend (${d.region.name})` : "Theil-Sen Trend Line",
       data: chartPoints.map((p) => ({ x: p.x, y: lineFn(p.x) })),
       borderColor: "#ffffff",
       borderDash: [6, 4],
@@ -1516,7 +1763,7 @@ function drawExpandedChart() {
     if (isYear) {
       chartPointsB = sB.yearly_timeseries.map((p) => ({
         x: Number(p.year),
-        y: p.value,
+        y: p.complete === false ? null : p.value,
       }));
     } else {
       chartPointsB = sB.region_timeseries.map((v, i) => ({
@@ -1686,10 +1933,23 @@ function drawExpandedChart() {
     if (o.ok) {
       const slopePerDec = o.slope * 10;
       const stars = o.p < 0.001 ? "***" : (o.p < 0.01 ? "**" : (o.p < 0.05 ? "*" : ""));
+      const ciText = (o.ci_low_per_decade !== null && o.ci_low_per_decade !== undefined)
+        ? ` · 95% CI: <strong>[${o.ci_low_per_decade > 0 ? "+" : ""}${num(o.ci_low_per_decade, 3)}, ` +
+          `${o.ci_high_per_decade > 0 ? "+" : ""}${num(o.ci_high_per_decade, 3)}] ${s.variable.unit}/dec</strong>`
+        : "";
+      const tText = (o.t_p !== null && o.t_p !== undefined)
+        ? ` · OLS t-test (df=${o.t_df}) p=<strong>${o.t_p < 0.001 ? "<0.001" : num(o.t_p, 3)}</strong> ` +
+          `(${o.methods_agree ? "AGREES" : "DISAGREES"})`
+        : "";
+      const pText = partialYears.length
+        ? ` · PARTIAL: ${partialYears.map((p) => `${p.year} (${p.months}/12 mo)`).join(", ")} (excluded from slope)`
+        : "";
+
       expTrendEl.innerHTML =
-        `THEIL–SEN ESTIMATOR: <strong>${o.slope > 0 ? "+" : ""}${num(slopePerDec, 2)} ${s.variable.unit}/decade</strong> · ` +
-        `MANN–KENDALL p = <strong>${num(o.p, 3)}${stars}</strong> (${o.significant ? "SIGNIFICANT" : "NOT SIGNIFICANT"}) · ` +
-        `CUMULATIVE SHIFT: <strong>${o.change_total > 0 ? "+" : ""}${num(o.change_total, 2)} ${s.variable.unit} (${o.change_pct > 0 ? "+" : ""}${num(o.change_pct, 1)}%)</strong>`;
+        `THEIL-SEN ESTIMATOR: <strong>${o.slope > 0 ? "+" : ""}${num(slopePerDec, 2)} ${s.variable.unit}/decade</strong> · ` +
+        `MANN-KENDALL p = <strong>${num(o.p, 3)}${stars}</strong> (${o.significant ? "SIGNIFICANT" : "NOT SIGNIFICANT"}) · ` +
+        `CUMULATIVE SHIFT: <strong>${o.change_total > 0 ? "+" : ""}${num(o.change_total, 2)} ${s.variable.unit} (${o.change_pct > 0 ? "+" : ""}${num(o.change_pct, 1)}%)</strong>` +
+        ciText + tText + pText;
     } else {
       expTrendEl.textContent = "INSUFFICIENT DATA POINTS FOR STATISTICAL SIGNIFICANCE TESTING";
     }
@@ -1743,6 +2003,13 @@ function drawChart() {
     ? s.yearly_timeseries.map((p) => p.value)
     : s.region_timeseries;
 
+  const partialFlags = isYear
+    ? s.yearly_timeseries.map((p) => !p.complete)
+    : [];
+  const partialYears = isYear
+    ? s.yearly_timeseries.filter((p) => !p.complete)
+    : [];
+
   if (chart) chart.destroy();
 
   const o = s.overall;
@@ -1758,7 +2025,7 @@ function drawChart() {
 
   const datasets = [{
     label: hasCompare ? `${d.region.name}: ${s.variable.name}` : s.variable.name,
-    data: values,
+    data: values.map((v, i) => (partialFlags[i] ? null : v)),
     borderColor: accent,
     backgroundColor: hasCompare ? "transparent" : grad,
     fill: !hasCompare,
@@ -1773,9 +2040,12 @@ function drawChart() {
     const valsB = isYear
       ? sB.yearly_timeseries.map((p) => p.value)
       : sB.region_timeseries;
+    const partialFlagsB = isYear
+      ? sB.yearly_timeseries.map((p) => !p.complete)
+      : [];
     datasets.push({
       label: `${d.compare.region.name}: ${sB.variable.name}`,
-      data: valsB,
+      data: valsB.map((v, i) => (partialFlagsB[i] ? null : v)),
       borderColor: "#00e5ff",
       borderDash: [5, 4],
       backgroundColor: "transparent",
@@ -1788,7 +2058,28 @@ function drawChart() {
     });
   }
 
-  const pts = values.map((v, i) => [i, v]).filter((p) => p[1] !== null);
+  // Draw incomplete / trailing partial years as isolated points
+  if (partialFlags.some(Boolean)) {
+    datasets.push({
+      label: "Partial Year (Excluded from Trend)",
+      data: values.map((v, i) => (partialFlags[i] ? v : null)),
+      showLine: false,
+      borderColor: "transparent",
+      backgroundColor: "#0c0e11",
+      borderWidth: 1.5,
+      pointBackgroundColor: "#0c0e11",
+      pointBorderColor: "#ffffff",
+      pointBorderWidth: 1.5,
+      pointRadius: 4.5,
+      pointHoverRadius: 6,
+      pointStyle: "rectRot",
+    });
+  }
+
+  const pts = values
+    .map((v, i) => [i, v])
+    .filter((p, i) => p[1] !== null && !partialFlags[i]);
+
   if (pts.length > 2) {
     let line;
     if (o.ok) {
@@ -1801,7 +2092,7 @@ function drawChart() {
     }
     datasets.push({
       label: hasCompare ? `Trend (${d.region.name})` : "Trend Line",
-      data: values.map((_, i) => line(i)),
+      data: values.map((_, i) => (partialFlags[i] ? null : line(i))),
       borderColor: "#e9ebed",
       borderDash: [5, 4],
       borderWidth: 1,
@@ -1864,20 +2155,42 @@ function drawChart() {
     },
   });
 
+  const partialNote = partialYears.length
+    ? `<br><span style="color:#a6adb5">PARTIAL YEAR: ${
+        partialYears.map((p) => `${p.year} (${p.months}/12 mo)`).join(" · ")
+      } — shown as points, excluded from trend slope</span>`
+    : "";
+
+  const ciNote = (o.ok && o.ci_low_per_decade !== null && o.ci_low_per_decade !== undefined)
+    ? `<br>95% CI: <b>[${o.ci_low_per_decade > 0 ? "+" : ""}${num(o.ci_low_per_decade, 3)}, ` +
+      `${o.ci_high_per_decade > 0 ? "+" : ""}${num(o.ci_high_per_decade, 3)}] ` +
+      `${esc(s.variable.unit)}/decade</b> · Theil-Sen Confidence Interval`
+    : "";
+
+  const tNote = (o.ok && o.t_p !== null && o.t_p !== undefined)
+    ? `<br><span style="color:#a6adb5">t-test</span> ` +
+      `(OLS, df=${o.t_df}) p=<b>${o.t_p < 0.001 ? "<0.001" : num(o.t_p, 3)}</b>` +
+      ` · slope <b>${o.t_per_decade > 0 ? "+" : ""}${num(o.t_per_decade, 3)}</b>` +
+      ` · <b style="color:${o.methods_agree ? "#00e5ff" : "#e3c265"}">` +
+      `${o.methods_agree ? "AGREES with Mann-Kendall" : "DISAGREES with Mann-Kendall"}` +
+      `</b>`
+    : "";
+
   if (hasCompare && sB && sB.overall && sB.overall.ok) {
     const oB = sB.overall;
     $("trendline").innerHTML =
       `<b>[A] ${d.region.name}:</b> ${o.per_decade > 0 ? "+" : ""}${num(o.per_decade, 2)} ${s.variable.unit}/dec (${o.direction.toUpperCase()}) · ` +
-      `<b>[B] ${d.compare.region.name}:</b> ${oB.per_decade > 0 ? "+" : ""}${num(oB.per_decade, 2)} ${sB.variable.unit}/dec (${oB.direction.toUpperCase()})`;
+      `<b>[B] ${d.compare.region.name}:</b> ${oB.per_decade > 0 ? "+" : ""}${num(oB.per_decade, 2)} ${sB.variable.unit}/dec (${oB.direction.toUpperCase()})` +
+      ciNote + tNote + partialNote;
   } else {
-    $("trendline").innerHTML = o.ok
+    $("trendline").innerHTML = (o.ok
       ? `<b>${s.variable.name}</b> ${o.direction === "rising" ? "rising" :
          o.direction === "falling" ? "falling" : "flat"} at
          <b>${o.per_decade > 0 ? "+" : ""}${num(o.per_decade, 3)}
          ${esc(s.variable.unit)}/decade</b> · MK z=<b>${num(o.z, 2)}</b>
          p=<b>${o.p < 0.001 ? "<0.001" : num(o.p, 3)}</b>
          ${o.significant ? "· SIGNIFICANT" : "· NOT SIGNIFICANT"}`
-      : "Insufficient data for trend estimation.";
+      : "Insufficient data for trend estimation.") + ciNote + tNote + partialNote;
   }
 }
 

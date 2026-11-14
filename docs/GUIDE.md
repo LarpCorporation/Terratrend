@@ -316,11 +316,68 @@ what we would add next." Never pretend the method is perfect.
 
 ---
 
+### 4.9 The t-test cross-check — why two tests beat one
+
+The brief names "a t-test, the Mann–Kendall test, or confidence intervals". We
+run **Mann–Kendall as the primary test and the t-test as a cross-check**, then
+display an explicit verdict: **AGREES** or **DISAGREES**.
+
+**What the t-test does here:** fits an ordinary straight line by least squares and
+asks whether its slope is distinguishable from zero, using the Student-t
+distribution (20 annual points is a small sample, so the normal approximation
+would be optimistic).
+
+**Why run both when they usually agree?** Because agreement is *evidence*, and
+disagreement is *information*:
+
+| Outcome | What it tells you |
+|---|---|
+| Both significant | The trend is robust to method choice — say so confidently |
+| MK significant, t-test not | The trend holds for most years, but a few extreme years bend the straight line — exactly what MK is designed for |
+| t-test significant, MK not | A straight-line fit is being carried by a few points; the data is not consistently ordered |
+
+**Say this if asked "why not just the t-test?"**
+> "The t-test assumes roughly normal, well-behaved residuals. Climate data breaks
+> both — one volcanic year or heatwave can dominate a least-squares fit.
+> Mann–Kendall is rank-based and resists that. We report the t-test because the
+> brief names it, but we lead with the test whose assumptions the data actually
+> satisfies, and we show the user when the two disagree."
+
+Live example — Ghana South air temperature, 2005–2026: **MK p = 0.037, t-test
+p = 0.027 → AGREES**. The headline does not depend on the choice of test.
+
+---
+
+### 4.10 Variable definitions — built for the stated audience
+
+The brief is direct: *"Providing simple definitions of the variables would help
+these users considerably"*, for an audience of high-school students, college
+students and scientifically-curious members of the public.
+
+Every variable carries two explanations, one click away under **ⓘ WHAT DO THESE
+VARIABLES MEAN?**:
+
+1. **What it physically is**, in words a 15-year-old can picture — e.g. soil
+   moisture: *"How much water is stored in the soil around plant roots, from 0
+   (bone dry) to 1 (saturated)."*
+2. **What a trend in it implies** — e.g. *"Falling is the signature of
+   agricultural drought — the water crops actually live on."*
+
+That second line is the differentiator: most tools define a variable and stop.
+A *data detective* needs to know what the **result** means, not only what was
+measured. It lives in a full-screen modal so the instrument panel stays clean —
+the brief warns against overwhelming the user, and the same logic applies to the
+interface itself.
+
+---
+
 ## 5. The interface — what every panel means
 
 | Panel | What it shows | How to describe it |
 |---|---|---|
-| **01 Variables** | 10 NASA variables, pick up to 3 | "Multiple variables can be overlaid, each with its own colour identity" |
+| **01 Variables** | 16 NASA variables in 3 themes, pick up to 3 | "Multiple variables can be overlaid, each with its own colour identity" |
+| **ⓘ Definitions** | Full-screen plain-English glossary | "The brief asks for simple definitions — this is that, one click from the picker" |
+| **SCAN ALL VARIABLES** | Ranks every variable by trend strength for the region | "This is the data-detective step: find out *which* variable is changing here" |
 | **02 Region** | 16 focus regions worldwide | "Tapping the globe auto-selects the nearest region" |
 | **03 Period** | Start/end year (min 9 years) | "Short windows are noisier — we let you see that" |
 | **REGIONAL SIGNAL dial** | The active variable's per-decade slope, arc = trend strength | "The number is the physical rate; the arc is how coherent the trend is" |

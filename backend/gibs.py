@@ -6,6 +6,12 @@ NASA Worldview deep-links for any bounding box and time period.
 """
 from urllib.parse import quote
 
+try:
+    from datetime import date
+    MAX_GIBS_YEAR = date.today().year
+except Exception:  # noqa: BLE001
+    MAX_GIBS_YEAR = 2026
+
 # NASA GIBS WMS endpoint (EPSG:4326 / WGS84)
 GIBS_WMS_BASE = "https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi"
 
@@ -123,9 +129,9 @@ def get_satellite_evidence(region, start_year, end_year, bbox=None, layer_key="t
     if not reg_bbox:
         raise ValueError("Bounding box is required for satellite imagery")
 
-    # Clamping: MODIS Terra began in year 2000
-    baseline_year = max(2000, min(start_year, 2024))
-    recent_year = max(2000, min(end_year, 2024))
+    # Clamping: MODIS Terra began in year 2000; imagery runs to the present
+    baseline_year = max(2000, min(start_year, MAX_GIBS_YEAR))
+    recent_year = max(2000, min(end_year, MAX_GIBS_YEAR))
 
     # Center latitude for seasonal fallback
     center_lat = (reg_bbox[1] + reg_bbox[3]) / 2.0

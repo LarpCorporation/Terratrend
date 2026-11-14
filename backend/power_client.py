@@ -1,4 +1,5 @@
 """NASA POWER data client with a robust on-disk cache."""
+import datetime
 import json
 import math
 import random
@@ -102,3 +103,79 @@ def prune_cache(max_age=CACHE_TTL):
                 f.unlink()
         except OSError:
             pass
+
+
+# ---------------------------------------------------------------------------
+# Availability probe
+#
+# POWER publishes monthly data with a lag of roughly 1-2 months, while its
+# daily product runs within about a day. This probe asks POWER directly (no
+# cache, so the answer is never stale) and the result is memoised for 6 hours.
+# ---------------------------------------------------------------------------
+_AVAIL = {"ts": 0.0, "data": None}
+AVAIL_TTL = 6 * 3600
+PROBE_POINT = (0.0, 14.0)  # Sahel: a long, continuous record
+
+
+def _raw_fetch(temporal, lon, lat, param, start, end):
+    url = (f"https://power.larc.nasa.gov/api/temporal/{temporal}/point"
+           f"?community=AG&longitude={lon:.4f}&latitude={lat:.4f}"
+           f"&start={start}&end={end}&parameters={param}&format=JSON")
+    req = urllib.request.Request(url, headers=UA)
+    with urllib.request.urlopen(req, timeout=60) as r:
+        d = json.loads(r.read())
+    return d.get("properties", {}).get("parameter", {}).get(param, {})
+
+
+def probe_availability(force=False):
+    """Report the newest month/day POWER can actually serve.
+
+    Never raises: on failure it returns ok=False plus the last good answer.
+    """
+    now = time.time()
+    if not force and _AVAIL["data"] and now - _AVAIL["ts"] < AVAIL_TTL:
+        return _AVAIL["data"]
+
+    today = datetime.date.today()
+    year = today.year
+    result = {"ok": False, "max_year": year}
+
+    try:
+        monthly = _raw_fetch("monthly", PROBE_POINT[0], PROBE_POINT[1],
+                             "T2M", year - 1, year)
+        valid_m = sorted(
+            k for k, v in monthly.items()
+            if len(k) == 6 and k[4:] != "13" and _clean(v) is not None
+        )
+        latest_month = valid_m[-1] if valid_m else None
+
+        recent = today - datetime.timedelta(days=140)
+        daily = _raw_fetch("daily", PROBE_POINT[0], PROBE_POINT[1],
+                           "T2M", recent.strftime("%Y%m%d"),
+                           today.strftime("%Y%m%d"))
+        valid_d = sorted(k for k, v in daily.items()
+                         if _clean(v) is not None)
+        latest_day = valid_d[-1] if valid_d else None
+
+        result = {
+            "ok": True,
+            "max_year": year,
+            "latest_month": latest_month,
+            "latest_month_label": (
+                f"{latest_month[:4]}-{latest_month[4:]}" if latest_month else None
+            ),
+            "latest_day": latest_day,
+            "latest_day_label": (
+                f"{latest_day[:4]}-{latest_day[4:6]}-{latest_day[6:]}"
+                if latest_day else None
+            ),
+            "probed_at": datetime.datetime.now().isoformat(timespec="seconds"),
+            "source": "NASA POWER",
+        }
+    except Exception as e:  # noqa: BLE001
+        result = {"ok": False, "max_year": year, "error": str(e)}
+        if _AVAIL["data"] and _AVAIL["data"].get("ok"):
+            return _AVAIL["data"]  # serve the last good answer
+
+    _AVAIL.update(ts=time.time(), data=result)
+    return result

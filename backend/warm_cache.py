@@ -7,10 +7,12 @@ import json
 import sys
 import time
 import urllib.request
+from datetime import date
 
 sys.path.insert(0, ".")
 
 BASE = "http://127.0.0.1:8517/api/analyze"
+END_YEAR = date.today().year
 
 # hero stories first, then the rest of the globe
 JOBS = [
@@ -38,7 +40,8 @@ JOBS = [
 def main():
     ok, fail = 0, 0
     for var, region in JOBS:
-        url = f"{BASE}?variables={var}&region={region}&start=2005&end=2024"
+        url = (f"{BASE}?variables={var}&region={region}"
+               f"&start=2005&end={END_YEAR}")
         t0 = time.time()
         try:
             with urllib.request.urlopen(url, timeout=600) as r:
