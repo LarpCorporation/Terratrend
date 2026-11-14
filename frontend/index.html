@@ -135,7 +135,7 @@
       <span class="cb-sep"></span>
       <span id="region-readout">NO REGION SELECTED</span>
       <span class="cb-sep" id="coord-sat-sep" hidden></span>
-      <button id="coord-sat-btn" class="cb-sat-btn" title="Inspect selected region or cell from orbit" hidden>🛰️ ORBITAL VIEW</button>
+      <button id="coord-sat-btn" class="cb-sat-btn" title="Inspect selected region or cell from orbit" hidden>ORBITAL VIEW</button>
       <span class="cb-sep"></span>
       <span id="proj-readout">ORTHOGRAPHIC</span>
     </div>
@@ -194,7 +194,7 @@
       </div>
       <div class="chart-box" id="chart-box-clickable" title="Click to expand full graph & statistics">
         <canvas id="chart"></canvas>
-        <span class="chart-expand-badge" id="chart-expand-badge">⛶ EXPAND</span>
+        <span class="chart-expand-badge" id="chart-expand-badge">EXPAND</span>
       </div>
       <div id="trendline" class="trend-note">—</div>
     </section>
@@ -271,29 +271,49 @@
 
       <div class="mt-group mt-years">
         <div class="year-pick-item">
-          <span class="mt-label">YEAR A (LEFT):</span>
+          <span class="mt-label">YEAR A:</span>
           <select id="modal-year-base" class="hud-select-mini"></select>
         </div>
         <span class="mt-vs">VS</span>
         <div class="year-pick-item">
-          <span class="mt-label">YEAR B (RIGHT):</span>
+          <span class="mt-label">YEAR B:</span>
           <select id="modal-year-recent" class="hud-select-mini"></select>
         </div>
         <div class="year-pick-item">
-          <span class="mt-label">SEASON (M-D):</span>
-          <input type="text" id="modal-date-picker" class="hud-input-mini" placeholder="MM-DD" value="08-15" maxlength="5" title="Month and day (e.g. 08-15) to minimize clouds">
-          <button id="modal-date-apply" class="hud-btn-mini" title="Apply date">SET</button>
+          <span class="mt-label">MONTH:</span>
+          <div class="month-stepper-wrap">
+            <button id="modal-month-prev" class="hud-btn-mini" title="Previous month">&lt;</button>
+            <select id="modal-month-select" class="hud-select-mini">
+              <option value="01">JAN</option>
+              <option value="02">FEB</option>
+              <option value="03">MAR</option>
+              <option value="04">APR</option>
+              <option value="05">MAY</option>
+              <option value="06">JUN</option>
+              <option value="07">JUL</option>
+              <option value="08" selected>AUG</option>
+              <option value="09">SEP</option>
+              <option value="10">OCT</option>
+              <option value="11">NOV</option>
+              <option value="12">DEC</option>
+            </select>
+            <button id="modal-month-next" class="hud-btn-mini" title="Next month">&gt;</button>
+          </div>
+        </div>
+        <div class="year-pick-item">
+          <span class="mt-label">DAY:</span>
+          <select id="modal-day-select" class="hud-select-mini"></select>
         </div>
         <div class="year-steppers">
-          <button id="modal-prev-year" class="hud-btn-mini" title="Step Year B backward">◀ YR</button>
-          <button id="modal-next-year" class="hud-btn-mini" title="Step Year B forward">YR ▶</button>
-          <button id="modal-swap-years" class="hud-btn-mini" title="Swap Year A and Year B">⇄ SWAP</button>
+          <button id="modal-prev-year" class="hud-btn-mini" title="Step Year B backward">&lt; YR</button>
+          <button id="modal-next-year" class="hud-btn-mini" title="Step Year B forward">YR &gt;</button>
+          <button id="modal-swap-years" class="hud-btn-mini" title="Swap Year A and Year B">SWAP</button>
         </div>
       </div>
 
       <div class="mt-group mt-links">
         <a id="modal-worldview-link" class="hud-btn-mini ext-btn" target="_blank" rel="noopener noreferrer" href="#">
-          NASA WORLDVIEW ↗
+          NASA WORLDVIEW
         </a>
       </div>
     </div>
@@ -350,16 +370,16 @@
             <div class="sh-line"></div>
             <div class="sh-tag" id="slider-handle-tag">2005 | 2024</div>
             <div class="sh-knob">
-              <span class="sh-arrow">◀</span>
-              <span class="sh-arrow">▶</span>
+              <span class="sh-arrow">&lt;</span>
+              <span class="sh-arrow">&gt;</span>
             </div>
             <div class="sh-line"></div>
           </div>
         </div>
         <div class="slider-status-bar">
-          <span class="ss-side-info left" id="slider-info-left">◀ LEFT: YEAR A</span>
+          <span class="ss-side-info left" id="slider-info-left">LEFT: YEAR A</span>
           <span class="slider-hint">Drag handle left/right to reveal change across coordinates</span>
-          <span class="ss-side-info right" id="slider-info-right">YEAR B: RIGHT ▶</span>
+          <span class="ss-side-info right" id="slider-info-right">YEAR B: RIGHT</span>
         </div>
       </div>
 
@@ -409,17 +429,17 @@
         <div class="cz-left">
           <span class="cz-label">ZOOM AXIS:</span>
           <div class="seg modal-seg" id="zoom-axis-seg">
-            <button class="seg-btn on" id="zoom-axis-x" data-axis="x" title="Zoom along time axis (widens data points)">↔ TIME (HORIZ)</button>
-            <button class="seg-btn" id="zoom-axis-y" data-axis="y" title="Zoom along value axis (magnifies variation)">↕ VALUE (VERT)</button>
-            <button class="seg-btn" id="zoom-axis-xy" data-axis="xy" title="Zoom both axes together">⤢ BOTH (X+Y)</button>
+            <button class="seg-btn on" id="zoom-axis-x" data-axis="x" title="Zoom along time axis (widens data points)">TIME (HORIZ)</button>
+            <button class="seg-btn" id="zoom-axis-y" data-axis="y" title="Zoom along value axis (magnifies variation)">VALUE (VERT)</button>
+            <button class="seg-btn" id="zoom-axis-xy" data-axis="xy" title="Zoom both axes together">BOTH (X+Y)</button>
           </div>
-          <button id="btn-zoom-in" class="hud-btn-mini" title="Zoom in to widen data points">🔍+ IN</button>
-          <button id="btn-zoom-out" class="hud-btn-mini" title="Zoom out">🔍- OUT</button>
-          <button id="btn-zoom-reset" class="hud-btn-mini" title="Reset zoom back to full period">↺ RESET</button>
+          <button id="btn-zoom-in" class="hud-btn-mini" title="Zoom in to widen data points">+ IN</button>
+          <button id="btn-zoom-out" class="hud-btn-mini" title="Zoom out">- OUT</button>
+          <button id="btn-zoom-reset" class="hud-btn-mini" title="Reset zoom back to full period">RESET</button>
         </div>
         <div class="cz-right">
           <span id="zoom-level-badge" class="cz-badge">ZOOM: 1.0x</span>
-          <span class="cz-hint">💡 2-finger scroll/wheel to zoom · Swipe/drag to pan · Double-click to reset</span>
+          <span class="cz-hint">Scroll / wheel to zoom · Swipe / drag to pan · Double-click to reset</span>
         </div>
       </div>
       <div class="expanded-chart-container">

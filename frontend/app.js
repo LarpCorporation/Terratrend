@@ -462,7 +462,7 @@ function renderSatellite(d) {
         COMPARE ORBITAL PASS
       </button>
       <a id="sat-worldview-direct" class="hud-link-ext" target="_blank" rel="noopener noreferrer" href="${esc(sat.recent.worldview_url)}">
-        WORLDVIEW ↗
+        WORLDVIEW
       </a>
     </div>
   `;
@@ -481,7 +481,7 @@ function renderSatellite(d) {
   const cbSep = $("coord-sat-sep");
   if (cbBtn) {
     cbBtn.hidden = false;
-    cbBtn.textContent = "🛰️ ORBITAL VIEW";
+    cbBtn.textContent = "ORBITAL VIEW";
     cbBtn.onclick = () => openSatelliteModal();
   }
   if (cbSep) cbSep.hidden = false;
@@ -533,16 +533,48 @@ function initSatModal() {
     });
   }
 
-  const applyBtn = $("modal-date-apply");
-  if (applyBtn) {
-    applyBtn.addEventListener("click", () => {
-      const val = ($("modal-date-picker").value || "").trim();
-      if (/^\d{2}-\d{2}$/.test(val)) {
-        state.satCustomDate = val;
-        reloadModalSatellite();
-      } else {
-        alert("Please enter a valid MM-DD date format (e.g. 08-15).");
-      }
+  // Populate day dropdown (01 to 31)
+  const selMonth = $("modal-month-select");
+  const selDay = $("modal-day-select");
+  if (selDay) {
+    selDay.innerHTML = "";
+    for (let d = 1; d <= 31; d++) {
+      const opt = document.createElement("option");
+      const dStr = String(d).padStart(2, "0");
+      opt.value = dStr;
+      opt.textContent = dStr;
+      if (d === 15) opt.selected = true;
+      selDay.appendChild(opt);
+    }
+  }
+
+  const triggerDateUpdate = () => {
+    const m = (selMonth && selMonth.value) ? selMonth.value : "08";
+    const d = (selDay && selDay.value) ? selDay.value : "15";
+    state.satCustomDate = `${m}-${d}`;
+    reloadModalSatellite();
+  };
+
+  if (selMonth) selMonth.addEventListener("change", triggerDateUpdate);
+  if (selDay) selDay.addEventListener("change", triggerDateUpdate);
+
+  const prevMonthBtn = $("modal-month-prev");
+  if (prevMonthBtn && selMonth) {
+    prevMonthBtn.addEventListener("click", () => {
+      let cur = parseInt(selMonth.value, 10);
+      cur = cur > 1 ? cur - 1 : 12;
+      selMonth.value = String(cur).padStart(2, "0");
+      triggerDateUpdate();
+    });
+  }
+
+  const nextMonthBtn = $("modal-month-next");
+  if (nextMonthBtn && selMonth) {
+    nextMonthBtn.addEventListener("click", () => {
+      let cur = parseInt(selMonth.value, 10);
+      cur = cur < 12 ? cur + 1 : 1;
+      selMonth.value = String(cur).padStart(2, "0");
+      triggerDateUpdate();
     });
   }
 
@@ -610,8 +642,10 @@ function openSatelliteModal(customBbox = null, customTitle = null) {
 
   if (state.satellite && state.satellite.seasonal_md) {
     state.satCustomDate = state.satellite.seasonal_md;
-    if ($("modal-date-picker")) $("modal-date-picker").value = state.satCustomDate;
   }
+  const [curM, curD] = (state.satCustomDate || "08-15").split("-");
+  if ($("modal-month-select")) $("modal-month-select").value = curM;
+  if ($("modal-day-select")) $("modal-day-select").value = curD;
 
   const targetBbox = customBbox || (state.result && state.result.region ? state.result.region.bbox : null);
   const targetTitle = customTitle || (state.result && state.result.region ? state.result.region.name : "Selected Region");
@@ -702,8 +736,8 @@ function loadSatelliteImages(sat) {
   if ($("slider-badge-base")) $("slider-badge-base").textContent = `LEFT: ${sat.baseline.year}`;
   if ($("slider-badge-comp")) $("slider-badge-comp").textContent = `RIGHT: ${sat.recent.year}`;
   if ($("slider-handle-tag")) $("slider-handle-tag").textContent = `${sat.baseline.year} | ${sat.recent.year}`;
-  if ($("slider-info-left")) $("slider-info-left").textContent = `◀ LEFT: ${sat.baseline.date}`;
-  if ($("slider-info-right")) $("slider-info-right").textContent = `RIGHT: ${sat.recent.date} ▶`;
+  if ($("slider-info-left")) $("slider-info-left").textContent = `LEFT: ${sat.baseline.date}`;
+  if ($("slider-info-right")) $("slider-info-right").textContent = `RIGHT: ${sat.recent.date}`;
 
   $("modal-worldview-link").href = sat.recent.worldview_url || "#";
 
@@ -968,20 +1002,19 @@ function updateZoomBadge() {
   if (!badge) return;
   if (!expandedChart) {
     badge.textContent = "ZOOM: 1.0x";
-    badge.style.color = "var(--muted)";
-    badge.style.borderColor = "var(--line-hot)";
+    badge.classList.remove("active");
     return;
   }
   try {
     const level = typeof expandedChart.getZoomLevel === "function" ? expandedChart.getZoomLevel() : 1;
     const isZoomed = typeof expandedChart.isZoomedOrPanned === "function"
       ? expandedChart.isZoomedOrPanned()
-      : (level > 1.05 || level < 0.95);
-    badge.textContent = `ZOOM: ${level.toFixed(1)}x${isZoomed ? " (ACTIVE)" : ""}`;
-    badge.style.color = isZoomed ? "var(--hi)" : "var(--muted)";
-    badge.style.borderColor = isZoomed ? "var(--hi)" : "var(--line-hot)";
+      : (level > 1.04 || level < 0.96);
+    badge.textContent = `ZOOM: ${level.toFixed(1)}x`;
+    badge.classList.toggle("active", isZoomed);
   } catch (err) {
     badge.textContent = "ZOOM: 1.0x";
+    badge.classList.remove("active");
   }
 }
 
@@ -1986,7 +2019,7 @@ function showCellDetail(hit) {
   const cbSep = $("coord-sat-sep");
   if (cbBtn) {
     cbBtn.hidden = false;
-    cbBtn.textContent = `🛰️ CELL (${c.lat.toFixed(1)}°, ${c.lon.toFixed(1)}°)`;
+    cbBtn.textContent = `CELL (${c.lat.toFixed(1)}°, ${c.lon.toFixed(1)}°)`;
     cbBtn.onclick = () => openSatelliteModal(cellBbox, `CELL [${c.lat.toFixed(1)}°, ${c.lon.toFixed(1)}°]`);
   }
   if (cbSep) cbSep.hidden = false;

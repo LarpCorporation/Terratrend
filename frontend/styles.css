@@ -636,6 +636,12 @@ body {
 .year-pick-item {
   display: flex; align-items: center; gap: 5px;
 }
+.month-stepper-wrap {
+  display: flex; align-items: center; gap: 2px;
+}
+.month-stepper-wrap .hud-btn-mini {
+  padding: 4px 6px; min-width: 20px; justify-content: center;
+}
 .mt-vs {
   font-family: var(--font); font-size: .52rem; letter-spacing: .12em;
   color: var(--muted-2); font-weight: 600;
@@ -865,11 +871,19 @@ body {
   font-family: var(--font);
   font-size: .48rem;
   letter-spacing: .12em;
-  color: var(--hi);
-  padding: 3px 7px;
+  color: var(--muted);
+  padding: 3px 8px;
   border: 1px solid var(--line-hot);
   background: #111418;
   font-weight: 600;
+  border-radius: 2px;
+  transition: all .2s ease;
+}
+.cz-badge.active {
+  color: #fff;
+  border-color: var(--hi);
+  background: #1e2229;
+  box-shadow: 0 0 8px rgba(255, 255, 255, .16);
 }
 .cz-hint {
   font-family: var(--font);
