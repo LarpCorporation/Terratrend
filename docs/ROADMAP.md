@@ -206,7 +206,54 @@ and mark the trailing partial year. Effort: **S** (with 3.1).
 
 ---
 
-## 4. Resource integrations (official list)
+## 3b. Ghana / El Niño verification (2026-11-13)
+
+Ghana is now in the catalog as three regions — **Ghana North**, **Ghana South**
+and **Lake Volta** — so the local demo runs through the real app.
+
+**The headline finding: the popular "El Niño dries Ghana" framing does NOT hold
+in the annual data. Do not build the demo on it.**
+
+What the data actually says (POWER + NOAA ONI, 1991–2025):
+
+| Test | Result |
+|---|---|
+| Current state | **2026 is a very strong El Niño** — ONI +2.46 (ASO), +1.80 (JJA) |
+| Annual precip vs ONI, Ghana North | r = **−0.04** (none) |
+| Annual precip vs ONI, Ghana South | r = **−0.12** (weak) |
+| El Niño (ONI≥0.8) vs La Niña years, North | 3.21 vs 3.26 mm/day — **0.05 mm/day difference** |
+| **JAS (main rainy season) vs ONI, both regions** | r = **−0.25** — the only consistent signal |
+| OND (minor season), North | r = +0.30 (slightly wetter) |
+| Lagged (previous-year ONI) | North +0.25, South −0.13 — inconsistent |
+
+So El Niño's fingerprint on Ghana is **seasonal and modest**: it nudges the
+main Jul–Sep rainy season drier, not the annual total. Southern Ghana's driest
+year (1998, 2.08 mm/day) came the year *after* the 1997–98 El Niño — a lag.
+
+What *is* strong and defensible in Ghana:
+
+| Region | Variable | Trend |
+|---|---|---|
+| **Ghana South** | Precipitation | **+0.688 mm/day/decade, p = 0.002**, CI [+0.262, +1.046] |
+| **Ghana South** | Air temperature | **+0.212 °C/decade, p = 0.003**, CI [+0.096, +0.324] |
+| **Ghana North** | Precipitation | **+0.332 mm/day/decade, p = 0.014**, 14/25 cells |
+| Ghana North | Air temperature | +0.093 °C/decade, p = 0.526 — not significant |
+
+**Recommended Ghana demo (defensible):**
+1. Open **Ghana South**, run the SCAN — the tool finds significant warming **and**
+   significant wetting. Two answers in one place.
+2. Show **Ghana North** precipitation (+0.33, p=0.014) — the Sahel-recovery
+   pattern reaching Ghana's north.
+3. Then say the honest thing about El Niño: *"We tested the El Niño hypothesis
+   directly against NOAA's ONI index. The annual correlation is essentially zero
+   — the effect is concentrated in the Jul–Sep rainy season (r = −0.25). We
+   report the seasonal signal and we do not overclaim a drought."*
+4. Close with the live hook: **2026 is one of the strongest El Niño events on
+   record (ONI +2.46)**, and this tool will measure what it does to Ghana.
+
+**Follow-up feature worth building (not done):** an **ENSO context strip** in the
+app — current ONI plus shading of El Niño years on the time-series chart, so the
+seasonal relationship is visible instead of asserted. Effort **M**.
 
 The challenge page lists these. None are drop-in APIs except CUAHSI; the honest
 integration is **prefilled deep links** — one click carries the region + period

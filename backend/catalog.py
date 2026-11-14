@@ -100,6 +100,19 @@ REGIONS = [
     {"id": "siberia", "name": "West Siberia", "bbox": [64.0, 56.0, 72.0, 62.0],
      "desc": "West Siberian wetland & methane zone", "surface": "land"},
 
+    # ---- Ghana (local demo, El Nino-sensitive) ---------------------------
+    {"id": "ghana_north", "name": "Ghana North", "bbox": [-2.5, 9.0, 0.5, 11.0],
+     "desc": "Northern Ghana — Savannah / Sahel transition, one rainy "
+             "season (May–Oct); the most drought-exposed zone",
+     "surface": "land"},
+    {"id": "ghana_south", "name": "Ghana South", "bbox": [-2.5, 5.0, 1.0, 7.0],
+     "desc": "Coastal Ghana — Accra & forest belt, two rainy seasons; "
+             "where most of the population and agriculture sit",
+     "surface": "land"},
+    {"id": "ghana_volta", "name": "Lake Volta", "bbox": [0.0, 6.4, 0.9, 8.3],
+     "desc": "Lake Volta basin — hydropower reservoir, inflows driven by "
+             "rainfall in the north", "surface": "land"},
+
     # ---- ocean -----------------------------------------------------------
     {"id": "pacific", "name": "Central Pacific", "bbox": [-165.0, -5.0, -155.0, 5.0],
      "desc": "ENSO central Pacific warm pool", "surface": "ocean"},
