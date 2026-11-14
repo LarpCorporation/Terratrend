@@ -62,13 +62,15 @@ def mk_test(ys):
     return z, p, tau, p < ALPHA
 
 
-def seasonal_mk(monthly_values, n_months=12):
+def seasonal_mk(monthly_values, n_months=12, period=None):
     """Hirsch-Slack seasonal Mann-Kendall on monthly data.
 
     Splits the series into calendar-month blocks, computes S per block,
     sums S and the variances, then tests the combined statistic. This
     removes the seasonal cycle's influence on significance.
     """
+    if period is not None:
+        n_months = period
     blocks = [[] for _ in range(n_months)]
     for i, v in enumerate(monthly_values):
         if v is not None:
@@ -272,27 +274,29 @@ def t_test_trend(ys, xs=None):
     else:
         t = slope / se
         p = 2.0 * (1.0 - t_cdf(abs(t), df))
-        p = min(1.0, max(0.0, p))
-        tcrit = _t_critical(0.975, df)
-        lo = slope - tcrit * se
-        hi = slope + tcrit * se
+        # 95% CI via critical t
+        target = 0.975
+        lo_t, hi_t = 0.0, 20.0
+        for _ in range(100):
+            mid_t = (lo_t + hi_t) / 2.0
+            if t_cdf(mid_t, df) < target:
+                lo_t = mid_t
+            else:
+                hi_t = mid_t
+        crit_t = (lo_t + hi_t) / 2.0
+        lo = slope - crit_t * se
+        hi = slope + crit_t * se
 
     return {
-        "slope": slope, "intercept": intercept, "se": se,
-        "t": t, "df": df, "p": p, "ci_low": lo, "ci_high": hi,
+        "slope": slope,
+        "intercept": intercept,
+        "se": se,
+        "t": t,
+        "df": df,
+        "p": max(0.0, min(1.0, p)),
+        "ci_low": lo,
+        "ci_high": hi,
     }
-
-
-def _t_critical(q, df):
-    """Inverse Student's t CDF by bisection (q in (0,1))."""
-    lo, hi = 0.0, 100.0
-    for _ in range(200):
-        mid = (lo + hi) / 2.0
-        if t_cdf(mid, df) < q:
-            lo = mid
-        else:
-            hi = mid
-    return (lo + hi) / 2.0
 
 
 def analyze_series(values, dt_per_step=1.0, dt_label="year"):
@@ -358,4 +362,172 @@ def analyze_series(values, dt_per_step=1.0, dt_label="year"):
         "dt_label": dt_label,
         "first": first,
         "last": last,
+    }
+
+
+def calculate_pearson(xs, ys):
+    """Compute Pearson correlation coefficient r between two numerical series."""
+    pairs = [(x, y) for x, y in zip(xs, ys) if x is not None and y is not None and not math.isnan(x) and not math.isnan(y)]
+    if len(pairs) < 4:
+        return 0.0
+    n = len(pairs)
+    mean_x = sum(p[0] for p in pairs) / n
+    mean_y = sum(p[1] for p in pairs) / n
+
+    cov = sum((p[0] - mean_x) * (p[1] - mean_y) for p in pairs)
+    var_x = sum((p[0] - mean_x) ** 2 for p in pairs)
+    var_y = sum((p[1] - mean_y) ** 2 for p in pairs)
+
+    denom = math.sqrt(var_x * var_y)
+    if denom <= 1e-12:
+        return 0.0
+    r = cov / denom
+    return max(-1.0, min(1.0, r))
+
+
+PHYSICAL_COUPLINGS = {
+    frozenset({"T2M", "RH2M"}): {
+        "title": "Vapor Pressure Deficit (VPD) Expansion",
+        "description": "As air temperature warms, Clausius-Clapeyron thermodynamics dictate an exponential increase in saturation vapor pressure (~7%/°C). A negative correlation with relative humidity indicates atmospheric drying demand is outstripping moisture replenishment, accelerating surface evapotranspiration and wildfire vulnerability.",
+    },
+    frozenset({"T2M", "ALLSKY_SFC_LW_DWN"}): {
+        "title": "Greenhouse Radiative Trapping Feedback",
+        "description": "Rising near-surface temperature coupled with increasing downward longwave flux reflects surface thermal re-radiation and greenhouse heat trapping by column water vapor and trace gases.",
+    },
+    frozenset({"T2M", "PRECTOTCORR"}): {
+        "title": "Hydrological Sensitivity Coupling",
+        "divergent": "Aridification regime shift: warming surface temperatures paired with reduced precipitation exacerbate soil moisture deficits and suppress local convective storm initiation.",
+        "in_phase": "Convective intensification: elevated thermal energy accelerates the atmospheric hydrological engine, driving higher precipitation volume and intense rainfall events.",
+        "description": "Coupling between thermal energy and precipitation characterizes regional hydrological sensitivity to climate shifts.",
+    },
+    frozenset({"T2M", "ALLSKY_SFC_SW_DNI"}): {
+        "title": "Surface Solar Forcing vs Cloud Albedo",
+        "description": "Co-trending solar irradiance and air temperature suggests reduced low-cloud optical thickness or aerosol clearing allowing greater direct shortwave penetration to heat the land surface.",
+    },
+    frozenset({"WS2M", "PS"}): {
+        "title": "Synoptic Baroclinic Dynamic Coupling",
+        "description": "Interconnection between surface pressure and wind velocities reflects regional baroclinic pressure gradient changes and synoptic storm-track migrations.",
+    },
+    frozenset({"QV2M", "RH2M"}): {
+        "title": "Thermodynamic Saturation Contrast",
+        "description": "Specific humidity measures absolute water mass in the air, while relative humidity measures saturation percentage. A divergence reveals air warming fast enough that humidity percentage drops even as absolute moisture rises.",
+    },
+    frozenset({"QV2M", "PRECTOTCORR"}): {
+        "title": "Moisture Transport Convergence",
+        "description": "Correlated specific humidity and precipitation rates diagnose regional atmospheric moisture advection and convective convergence efficiency.",
+    },
+    frozenset({"TS", "T2M"}): {
+        "title": "Radiometric Skin vs Air Thermal Coupling",
+        "description": "Direct coupling between satellite-observed surface skin temperature and 2m ambient air temperature. A widening divergence highlights amplified ground surface heating and sensible heat exchange.",
+    },
+    frozenset({"GWETROOT", "EVPTRNS"}): {
+        "title": "Root-Zone Transpiration Feedback",
+        "description": "Coupling between root-zone soil moisture and total evapotranspiration tracks vegetation water stress. Depleted root moisture suppresses plant transpiration, signaling agricultural drought.",
+    },
+    frozenset({"GWETTOP", "PRECTOTCORR"}): {
+        "title": "Surface Hydrological Recharge",
+        "description": "Topsoil wetness directly responds to precipitation events. Divergence indicates rapid runoff or high evaporative loss preventing rainfall infiltration into the soil layer.",
+    },
+    frozenset({"TS", "GWETTOP"}): {
+        "title": "Soil Moisture-Skin Temperature Evaporative Cooling",
+        "description": "Strong negative correlation between surface wetness and skin temperature confirms soil moisture evaporative cooling. When soil dries out, evaporative cooling ceases and radiant skin temperature spikes.",
+    },
+    frozenset({"GWETROOT", "T2M"}): {
+        "title": "Soil Moisture Deficit Heat Amplification",
+        "description": "Persistent root-zone drying partitions incoming radiant energy into sensible rather than latent heat, causing extreme afternoon air temperature spikes.",
+    },
+}
+
+
+def analyze_cross_coupling(var_a, var_b, series_a, series_b, stats_a=None, stats_b=None):
+    """Diagnose cross-variable / cross-sphere physical interaction."""
+    r = calculate_pearson(series_a, series_b)
+
+    if r >= 0.50:
+        phase = "in_phase"
+        phase_label = "COUPLED IN-PHASE (AMPLIFYING)"
+    elif r <= -0.50:
+        phase = "divergent"
+        phase_label = "COUPLED DIVERGENCE (OPPOSING)"
+    elif abs(r) >= 0.30:
+        phase = "moderate"
+        phase_label = "MODERATE COUPLING"
+    else:
+        phase = "decoupled"
+        phase_label = "DECOUPLED / INDEPENDENT"
+
+    pair_key = frozenset({var_a.get("id"), var_b.get("id")})
+    coupling_info = PHYSICAL_COUPLINGS.get(pair_key, {})
+    title = coupling_info.get("title", f"{var_a.get('name')} <-> {var_b.get('name')} Coupling")
+
+    desc = coupling_info.get("description", "")
+    if phase == "divergent" and "divergent" in coupling_info:
+        desc = coupling_info["divergent"]
+    elif phase == "in_phase" and "in_phase" in coupling_info:
+        desc = coupling_info["in_phase"]
+
+    if not desc:
+        desc = f"Observed correlation of r = {r:.2f} between {var_a.get('name')} and {var_b.get('name')} across the analyzed timeline."
+
+    sph_a = var_a.get("sphere_code", "ATM")
+    sph_b = var_b.get("sphere_code", "HYD")
+    same_sphere = sph_a == sph_b
+
+    return {
+        "var_a": var_a.get("id"),
+        "var_b": var_b.get("id"),
+        "var_a_name": var_a.get("name"),
+        "var_b_name": var_b.get("name"),
+        "sphere_a": var_a.get("sphere_name", "Atmosphere"),
+        "sphere_b": var_b.get("sphere_name", "Hydrosphere"),
+        "sphere_a_code": sph_a,
+        "sphere_b_code": sph_b,
+        "same_sphere": same_sphere,
+        "r": round(r, 3),
+        "phase": phase,
+        "phase_label": phase_label,
+        "title": title,
+        "description": desc,
+    }
+
+
+def analyze_regional_contrast(var, reg_a, reg_b, series_a, series_b, stats_a, stats_b):
+    """Compare how the same variable trends between two distinct geographical regions."""
+    ts_a = [p["value"] for p in series_a if p.get("value") is not None]
+    ts_b = [p["value"] for p in series_b if p.get("value") is not None]
+    r = calculate_pearson(ts_a, ts_b)
+
+    slope_a = (stats_a.get("slope") or 0.0) * 10.0
+    slope_b = (stats_b.get("slope") or 0.0) * 10.0
+    diff = slope_a - slope_b
+
+    dir_a = stats_a.get("direction", "flat")
+    dir_b = stats_b.get("direction", "flat")
+
+    if dir_a == dir_b and dir_a != "flat":
+        verdict = f"PARALLEL TREND ({dir_a.upper()})"
+        explanation = f"Both {reg_a.get('name')} and {reg_b.get('name')} exhibit {dir_a} {var.get('name')}. Regional co-trend r = {r:.2f}."
+    elif (dir_a == "rising" and dir_b == "falling") or (dir_a == "falling" and dir_b == "rising"):
+        verdict = "DIVERGENT / OPPOSING"
+        explanation = f"Contrasting Earth system response: {reg_a.get('name')} trends {dir_a} ({slope_a:+.2f} {var.get('unit')}/dec) while {reg_b.get('name')} trends {dir_b} ({slope_b:+.2f} {var.get('unit')}/dec)."
+    else:
+        verdict = "LOCALIZED SIGNAL"
+        explanation = f"Localized change: one region exhibits significant trend while the other remains climatologically stable."
+
+    return {
+        "var_id": var.get("id"),
+        "var_name": var.get("name"),
+        "unit": var.get("unit"),
+        "region_a": reg_a.get("name"),
+        "region_b": reg_b.get("name"),
+        "slope_a_decade": round(slope_a, 3),
+        "slope_b_decade": round(slope_b, 3),
+        "diff_decade": round(diff, 3),
+        "r": round(r, 3),
+        "p_a": round(stats_a.get("p", 1.0), 3),
+        "p_b": round(stats_b.get("p", 1.0), 3),
+        "sig_a": stats_a.get("significant", False),
+        "sig_b": stats_b.get("significant", False),
+        "verdict": verdict,
+        "explanation": explanation,
     }

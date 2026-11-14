@@ -25,6 +25,9 @@ const state = {
   result: null,
   mode: "yearly",
   activeVarIdx: 0,
+  activeSphere: "all",
+  compareMode: false,
+  preferredVar: null,
   satellite: null,
   selectedCellBbox: null,
   activeSatBbox: null,
@@ -34,9 +37,13 @@ const state = {
   satYearBase: 2005,
   satYearRecent: 2024,
   satCustomDate: "08-15",
+  expandedVarIdx: 0,
+  expandedMode: "yearly",
+  zoomAxis: "x",
 };
 
 let chart = null;
+let expandedChart = null;
 let clockTimer = null;
 
 /* ============================================================
@@ -55,16 +62,16 @@ async function boot() {
   renderVarList();
   renderRegionSelect();
 
-  // data currency comes from the server's live probe of NASA POWER
+  // Data currency readout from live availability probe
   const avail = state.catalog.availability || {};
   if (avail.ok && avail.latest_month_label) {
-    $("data-through").textContent = avail.latest_month_label;
-    $("data-through").title =
-      `NASA POWER monthly data valid through ${avail.latest_month_label}` +
-      (avail.latest_day_label ? ` (daily through ${avail.latest_day_label})` : "");
-  } else {
-    $("data-through").textContent = "—";
-    $("data-through").title = avail.error || "availability probe failed";
+    const el = $("data-through");
+    if (el) {
+      el.textContent = avail.latest_month_label;
+      el.title =
+        `NASA POWER monthly data valid through ${avail.latest_month_label}` +
+        (avail.latest_day_label ? ` (daily through ${avail.latest_day_label})` : "");
+    }
   }
 
   const maxYear = state.catalog.years.max;
@@ -72,7 +79,6 @@ async function boot() {
   $("start").max = maxYear - 8;
   $("end").min = state.catalog.years.min + 8;
   $("end").max = maxYear;
-  // default window ends at the newest data year
   if (+$("end").value < maxYear) $("end").value = maxYear;
   if (+$("start").value > maxYear - 8) $("start").value = maxYear - 8;
 
@@ -81,16 +87,22 @@ async function boot() {
   $("scan-close").addEventListener("click", closeScan);
   $("defs-open").addEventListener("click", openDefs);
   $("defs-close").addEventListener("click", closeDefs);
-  $("defs-modal").addEventListener("click", (e) => {
-    if (e.target === $("defs-modal")) closeDefs();
-  });
-  $("scan-modal").addEventListener("click", (e) => {
-    if (e.target === $("scan-modal")) closeScan();
-  });
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") { closeScan(); closeDefs(); }
-  });
+
+  const defsM = $("defs-modal");
+  if (defsM) defsM.addEventListener("click", (e) => { if (e.target === defsM) closeDefs(); });
+  const scanM = $("scan-modal");
+  if (scanM) scanM.addEventListener("click", (e) => { if (e.target === scanM) closeScan(); });
+
   $("region").addEventListener("change", onRegionChange);
+  const compToggle = $("toggle-compare-mode");
+  if (compToggle) compToggle.addEventListener("click", toggleCompareMode);
+  const compRegSel = $("compare-region");
+  if (compRegSel) compRegSel.addEventListener("change", onCompareRegionChange);
+
+  document.querySelectorAll(".sphere-tab").forEach((tab) => {
+    tab.addEventListener("click", () => setSphereFilter(tab.dataset.sphere));
+  });
+
   $("start").addEventListener("change", clampRange);
   $("end").addEventListener("change", clampRange);
   document.querySelectorAll(".chart-panel .seg-btn").forEach((b) =>
@@ -98,6 +110,17 @@ async function boot() {
   );
 
   initSatModal();
+  initDataModal();
+
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      closeSatelliteModal();
+      closeDataModal();
+      closeScan();
+      closeDefs();
+    }
+  });
+
   startClock();
   await initGlobe();
 }
@@ -115,8 +138,16 @@ function startClock() {
 }
 
 /* ============================================================
-   VARIABLE LIST
+   VARIABLE LIST & EARTH SYSTEM SPHERES
    ============================================================ */
+function setSphereFilter(sphere) {
+  state.activeSphere = sphere || "all";
+  document.querySelectorAll(".sphere-tab").forEach((tab) => {
+    tab.classList.toggle("active", tab.dataset.sphere === state.activeSphere);
+  });
+  renderVarList();
+}
+
 function renderVarList() {
   const box = $("var-list");
   box.innerHTML = "";
@@ -132,24 +163,30 @@ function renderVarList() {
     const el = document.createElement("div");
     el.className = "var-item" + (on ? " on" : "");
     el.style.setProperty("--vc", v.color);
-    el.title = v.desc;
+    el.title = v.desc || v.plain || "";
     el.innerHTML = `
       <i class="var-dot"></i>
       <span class="var-name">${esc(v.name)}</span>
+      <span class="var-sphere-badge">${esc(v.sphere_code || "ATM")}</span>
       <span class="var-unit">${esc(v.unit)}</span>`;
     el.addEventListener("click", () => toggleVar(v.id));
     box.appendChild(el);
   };
 
-  GROUPS.forEach(([gid, label]) => {
-    const vars = state.catalog.variables.filter((v) => v.group === gid);
-    if (!vars.length) return;
-    const head = document.createElement("div");
-    head.className = "var-group";
-    head.textContent = label;
-    box.appendChild(head);
-    vars.forEach(addItem);
-  });
+  if (state.activeSphere === "all") {
+    GROUPS.forEach(([gid, label]) => {
+      const vars = state.catalog.variables.filter((v) => v.group === gid);
+      if (!vars.length) return;
+      const head = document.createElement("div");
+      head.className = "var-group";
+      head.textContent = label;
+      box.appendChild(head);
+      vars.forEach(addItem);
+    });
+  } else {
+    const filtered = state.catalog.variables.filter((v) => v.sphere === state.activeSphere);
+    filtered.forEach(addItem);
+  }
 
   $("var-count").textContent = `${state.selected.length} / ${MAX_VARS}`;
 }
@@ -174,17 +211,66 @@ function toggleVar(id) {
   if (state.result) analyze();
 }
 
+/* ============================================================
+   REGION SELECTION & CONTRAST MODE
+   ============================================================ */
+function toggleCompareMode() {
+  state.compareMode = !state.compareMode;
+  const pill = $("toggle-compare-mode");
+  const grp = $("compare-region-group");
+  if (state.compareMode) {
+    if (pill) {
+      pill.classList.add("active");
+      pill.textContent = "MODE: CONTRAST (A vs B)";
+    }
+    if (grp) grp.style.display = "block";
+    const selA = $("region");
+    const selB = $("compare-region");
+    if (selA && selB && selA.value === selB.value) {
+      const alt = state.catalog.regions.find((r) => r.id !== selA.value);
+      if (alt) selB.value = alt.id;
+    }
+    onCompareRegionChange();
+  } else {
+    if (pill) {
+      pill.classList.remove("active");
+      pill.textContent = "MODE: SINGLE";
+    }
+    if (grp) grp.style.display = "none";
+    const contrastPanel = $("contrast-panel");
+    if (contrastPanel) contrastPanel.style.display = "none";
+    if (state.result && state.result.compare) {
+      delete state.result.compare;
+      render();
+    }
+  }
+  if (state.result) analyze();
+}
+
 function renderRegionSelect() {
   const sel = $("region");
+  const selB = $("compare-region");
   sel.innerHTML = "";
+  if (selB) selB.innerHTML = "";
+
   state.catalog.regions.forEach((r) => {
     const o = document.createElement("option");
     o.value = r.id;
     o.textContent = r.name;
     sel.appendChild(o);
+
+    if (selB) {
+      const oB = document.createElement("option");
+      oB.value = r.id;
+      oB.textContent = r.name;
+      selB.appendChild(oB);
+    }
   });
+
   sel.value = "sahel";
+  if (selB) selB.value = "amazon";
   onRegionChange();
+  if (selB) onCompareRegionChange();
 }
 
 function onRegionChange() {
@@ -195,6 +281,14 @@ function onRegionChange() {
     : "NO REGION SELECTED";
   updateGlobeOverlay();
   if (regionMesh) regionMesh.position.copy(bboxCenter(r.bbox, 1.005));
+  if (state.result) analyze();
+}
+
+function onCompareRegionChange() {
+  const r = currentCompareRegion();
+  const descEl = $("compare-region-desc");
+  if (descEl) descEl.textContent = r ? r.desc : "";
+  if (state.result && state.compareMode) analyze();
 }
 
 function currentRegion() {
@@ -202,14 +296,21 @@ function currentRegion() {
   return state.catalog.regions.find((r) => r.id === id) || null;
 }
 
+function currentCompareRegion() {
+  const id = $("compare-region") ? $("compare-region").value : null;
+  return state.catalog.regions.find((r) => r.id === id) || null;
+}
+
 function clampRange() {
   let s = +$("start").value;
   let e = +$("end").value;
+  const maxYear = (state.catalog && state.catalog.years) ? state.catalog.years.max : 2026;
+  const minYear = (state.catalog && state.catalog.years) ? state.catalog.years.min : 1985;
   if (e - s < 8) {
     if (document.activeElement === $("start")) {
-      e = Math.min(2024, s + 8);
+      e = Math.min(maxYear, s + 8);
     } else {
-      s = Math.max(1985, e - 8);
+      s = Math.max(minYear, e - 8);
     }
     $("start").value = s;
     $("end").value = e;
@@ -225,29 +326,12 @@ function setMode(m) {
 }
 
 /* ============================================================
-   STATUS
-   ============================================================ */
-function setStatus(kind, html) {
-  const el = $("status");
-  if (!html) {
-    el.hidden = true;
-    $("sys-status").textContent = "READY";
-    return;
-  }
-  el.hidden = false;
-  el.className = "hud-status" + (kind === "err" ? " err" : "");
-  el.innerHTML = html;
-  $("sys-status").textContent =
-    kind === "err" ? "ERROR" : kind === "busy" ? "ANALYZING" : "READY";
-}
-
-/* ============================================================
-   VARIABLE DEFINITIONS — plain English, for a student audience
+   VARIABLE DEFINITIONS & GLOSSARY MODAL
    ============================================================ */
 const DEF_GROUPS = [
-  ["temperature", "TEMPERATURE — how hot or cold"],
-  ["water", "WATER & MOISTURE — rain, humidity, soil, evaporation"],
-  ["energy", "ENERGY & ATMOSPHERE — sunlight, heat radiation, wind, pressure"],
+  ["temperature", "TEMPERATURE — Heat & Thermal Gradients"],
+  ["water", "WATER & MOISTURE — Precipitation, Humidity & Land Moisture"],
+  ["energy", "ENERGY & ATMOSPHERE — Radiant Flux, Pressure & Wind"],
 ];
 
 function openDefs() {
@@ -262,28 +346,26 @@ function openDefs() {
             <i class="def-dot" style="background:${v.color}"></i>
             <div>
               <div class="def-name">${esc(v.name)}</div>
-              <div class="def-meta">${esc(v.unit)} · ${esc(v.mission)}</div>
+              <div class="def-meta">${esc(v.unit)} · ${esc(v.sphere_name || v.mission)}</div>
             </div>
           </div>
           <div>
             <div class="def-plain">${esc(v.plain || v.desc)}</div>
-            ${v.trend_means ? `<div class="def-means"><b>A trend means:</b>
-              ${esc(v.trend_means)}</div>` : ""}
+            ${v.trend_means ? `<div class="def-means"><b>A trend means:</b> ${esc(v.trend_means)}</div>` : ""}
           </div>
         </div>`).join("");
     return `<div class="defs-group">${label}</div>${items}`;
   }).join("");
 
-  $("defs-modal").hidden = false;
+  showModal($("defs-modal"));
 }
 
 function closeDefs() {
-  const m = $("defs-modal");
-  if (m) m.hidden = true;
+  hideModal($("defs-modal"));
 }
 
 /* ============================================================
-   TREND SCAN — the "data detective" pass
+   TREND SCAN — Automated Multi-Variable Detective
    ============================================================ */
 async function scanAll() {
   const btn = $("scan");
@@ -299,15 +381,15 @@ async function scanAll() {
     `${reg ? reg.name.toUpperCase() : "—"} · ${windowLbl}`;
   $("scan-sub").textContent = "SCANNING…";
   $("scan-table").innerHTML =
-    `<div class="scan-note">Acquiring NASA POWER grid for ${total} variables…</div>`;
-  $("scan-modal").hidden = false;
+    `<div class="scan-note">Acquiring NASA POWER grid across ${total} Earth system variables…</div>`;
+  showModal($("scan-modal"));
 
   try {
     for (let i = 0; i < total; i += CHUNK) {
       const batch = ids.slice(i, i + CHUNK);
       setStatus("busy",
         `<span class="spin"></span>SCANNING ${Math.min(i + CHUNK, total)}/${total}` +
-        ` · ${batch.map((b) => b).join(", ")}`);
+        ` · ${batch.join(", ")}`);
       const params = new URLSearchParams({
         region: $("region").value,
         start: $("start").value,
@@ -328,7 +410,6 @@ async function scanAll() {
   }
 }
 
-/* server ranking rule, applied client-side so partial results sort correctly */
 function rankRows(rows) {
   return [...rows].sort((a, b) => {
     const sa = a.ok && a.significant ? 0 : 1;
@@ -370,8 +451,8 @@ function renderScan(rows, total) {
       </div>`;
     }
     const dir = r.significant ? r.direction : "flat";
-    const label = dir === "rising" ? "▲ RISING"
-      : dir === "falling" ? "▼ FALLING" : "◆ STABLE";
+    const label = dir === "rising" ? "RISING"
+      : dir === "falling" ? "FALLING" : "STABLE";
     const sign = r.slope_decade > 0 ? "+" : "";
     return `<div class="scan-row" data-var="${esc(r.id)}">
       <span class="sr-rank">${rank}</span>
@@ -392,8 +473,7 @@ function renderScan(rows, total) {
 }
 
 function closeScan() {
-  const m = $("scan-modal");
-  if (m) m.hidden = true;
+  hideModal($("scan-modal"));
 }
 
 function openFromScan(vid) {
@@ -406,6 +486,23 @@ function openFromScan(vid) {
   updateGlobeOverlay();
   closeScan();
   analyze();
+}
+
+/* ============================================================
+   STATUS
+   ============================================================ */
+function setStatus(kind, html) {
+  const el = $("status");
+  if (!html) {
+    el.hidden = true;
+    $("sys-status").textContent = "READY";
+    return;
+  }
+  el.hidden = false;
+  el.className = "hud-status" + (kind === "err" ? " err" : "");
+  el.innerHTML = html;
+  $("sys-status").textContent =
+    kind === "err" ? "ERROR" : kind === "busy" ? "ANALYZING" : "READY";
 }
 
 /* ============================================================
@@ -424,13 +521,19 @@ async function analyze() {
     end: $("end").value,
   });
 
+  if (state.compareMode && $("compare-region")) {
+    const compVal = $("compare-region").value;
+    if (compVal && compVal !== $("region").value) {
+      params.set("compare_region", compVal);
+    }
+  }
+
   try {
     const r = await fetch(`/api/analyze?${params}`);
     const data = await r.json();
     if (!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
     state.result = data;
-    // a variable chosen from the SCAN table wins; otherwise default to the
-    // most newsworthy one (first significant)
+    // a variable chosen from the SCAN table wins; otherwise default to first significant
     const pref = state.preferredVar;
     state.preferredVar = null;
     const prefIdx = pref
@@ -456,6 +559,8 @@ function render() {
   const d = state.result;
   renderHeader(d);
   renderSignals(d);
+  renderCouplings(d);
+  renderRegionalContrast(d);
   renderCells(d);
   renderLegend(d);
   renderSatellite(d);
@@ -463,6 +568,88 @@ function render() {
   drawChart();
   renderGlobeRegions(d);
   updateGlobeOverlay();
+}
+
+function renderCouplings(d) {
+  const panel = $("coupling-panel");
+  const list = $("coupling-list");
+  if (!panel || !list) return;
+
+  const couplings = d.couplings || [];
+  if (!couplings.length) {
+    panel.style.display = "none";
+    return;
+  }
+
+  panel.style.display = "block";
+  $("coupling-tag").textContent = `${couplings.length} DETECTED`;
+
+  list.innerHTML = couplings.map((c) => {
+    const rSign = c.r > 0 ? "+" : "";
+    return `
+      <div class="coupling-card ${c.phase}">
+        <div class="coupling-top">
+          <span class="coupling-title">${esc(c.title)}</span>
+          <span class="coupling-r">r = ${rSign}${num(c.r, 2)}</span>
+        </div>
+        <div class="coupling-spheres">
+          <span>[${esc(c.sphere_a_code)}] ${esc(c.var_a_name)}</span>
+          <span>&harr;</span>
+          <span>[${esc(c.sphere_b_code)}] ${esc(c.var_b_name)}</span>
+        </div>
+        <div class="coupling-phase-tag ${c.phase}">${esc(c.phase_label)}</div>
+        <p class="coupling-desc">${esc(c.description)}</p>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderRegionalContrast(d) {
+  const panel = $("contrast-panel");
+  const list = $("contrast-list");
+  if (!panel || !list) return;
+
+  if (!d.compare || !d.compare.contrasts || !d.compare.contrasts.length) {
+    panel.style.display = "none";
+    return;
+  }
+
+  panel.style.display = "block";
+  const comp = d.compare;
+  $("contrast-tag").textContent = `${d.region.name.toUpperCase()} VS ${comp.region.name.toUpperCase()}`;
+
+  list.innerHTML = comp.contrasts.map((c) => {
+    const diffSign = c.diff_decade > 0 ? "+" : "";
+    const sASign = c.slope_a_decade > 0 ? "+" : "";
+    const sBSign = c.slope_b_decade > 0 ? "+" : "";
+    let verdictCls = "localized";
+    if (c.verdict.includes("DIVERGENT")) verdictCls = "divergent";
+    else if (c.verdict.includes("PARALLEL")) verdictCls = "parallel";
+
+    return `
+      <div class="contrast-card">
+        <div class="contrast-head">
+          <span class="contrast-var-name">${esc(c.var_name)}</span>
+          <span class="contrast-verdict-pill ${verdictCls}">${esc(c.verdict)}</span>
+        </div>
+        <div class="contrast-rows">
+          <div class="contrast-row reg-a">
+            <span>A: ${esc(c.region_a)}</span>
+            <b>${sASign}${num(c.slope_a_decade, 2)} ${esc(c.unit)}/dec (p=${num(c.p_a, 3)})</b>
+          </div>
+          <div class="contrast-row reg-b">
+            <span>B: ${esc(c.region_b)}</span>
+            <b>${sBSign}${num(c.slope_b_decade, 2)} ${esc(c.unit)}/dec (p=${num(c.p_b, 3)})</b>
+          </div>
+        </div>
+        <div class="contrast-delta">
+          <span>Slope Delta: <b>${diffSign}${num(c.diff_decade, 2)} ${esc(c.unit)}/dec</b></span>
+          <span>Co-trend: <b>r = ${c.r > 0 ? "+" : ""}${num(c.r, 2)}</b></span>
+        </div>
+        <p class="contrast-desc">${esc(c.explanation)}</p>
+      </div>
+    `;
+  }).join("");
 }
 
 function renderLiterature(d) {
@@ -521,6 +708,15 @@ function renderLegend(d) {
     });
     box.appendChild(li);
   });
+
+  if (d.compare && d.compare.region) {
+    const liComp = document.createElement("li");
+    liComp.innerHTML = `
+      <i class="sw" style="background:#00e5ff;box-shadow:0 0 7px #00e5ff;"></i>
+      <span class="legend-var-name active">[B] ${esc(d.compare.region.name)}</span>
+      <span class="legend-chip active">CONTRAST</span>`;
+    box.appendChild(liComp);
+  }
 }
 
 function renderHeader(d) {
@@ -572,9 +768,9 @@ function renderSignals(d) {
     const o = s.overall;
     const dir = o.ok ? o.direction : "nodata";
     const dirTxt =
-      dir === "rising" ? "▲ RISING" :
-      dir === "falling" ? "▼ FALLING" :
-      dir === "flat" ? "◆ STABLE" : "— NODATA";
+      dir === "rising" ? "RISING" :
+      dir === "falling" ? "FALLING" :
+      dir === "flat" ? "STABLE" : "NODATA";
     const el = document.createElement("div");
     el.className = "signal";
     el.style.setProperty("--vc", v.color);
@@ -671,7 +867,7 @@ function renderSatellite(d) {
         COMPARE ORBITAL PASS
       </button>
       <a id="sat-worldview-direct" class="hud-link-ext" target="_blank" rel="noopener noreferrer" href="${esc(sat.recent.worldview_url)}">
-        WORLDVIEW ↗
+        WORLDVIEW
       </a>
     </div>
   `;
@@ -690,7 +886,7 @@ function renderSatellite(d) {
   const cbSep = $("coord-sat-sep");
   if (cbBtn) {
     cbBtn.hidden = false;
-    cbBtn.textContent = "🛰️ ORBITAL VIEW";
+    cbBtn.textContent = "ORBITAL VIEW";
     cbBtn.onclick = () => openSatelliteModal();
   }
   if (cbSep) cbSep.hidden = false;
@@ -742,16 +938,48 @@ function initSatModal() {
     });
   }
 
-  const applyBtn = $("modal-date-apply");
-  if (applyBtn) {
-    applyBtn.addEventListener("click", () => {
-      const val = ($("modal-date-picker").value || "").trim();
-      if (/^\d{2}-\d{2}$/.test(val)) {
-        state.satCustomDate = val;
-        reloadModalSatellite();
-      } else {
-        alert("Please enter a valid MM-DD date format (e.g. 08-15).");
-      }
+  // Populate day dropdown (01 to 31)
+  const selMonth = $("modal-month-select");
+  const selDay = $("modal-day-select");
+  if (selDay) {
+    selDay.innerHTML = "";
+    for (let d = 1; d <= 31; d++) {
+      const opt = document.createElement("option");
+      const dStr = String(d).padStart(2, "0");
+      opt.value = dStr;
+      opt.textContent = dStr;
+      if (d === 15) opt.selected = true;
+      selDay.appendChild(opt);
+    }
+  }
+
+  const triggerDateUpdate = () => {
+    const m = (selMonth && selMonth.value) ? selMonth.value : "08";
+    const d = (selDay && selDay.value) ? selDay.value : "15";
+    state.satCustomDate = `${m}-${d}`;
+    reloadModalSatellite();
+  };
+
+  if (selMonth) selMonth.addEventListener("change", triggerDateUpdate);
+  if (selDay) selDay.addEventListener("change", triggerDateUpdate);
+
+  const prevMonthBtn = $("modal-month-prev");
+  if (prevMonthBtn && selMonth) {
+    prevMonthBtn.addEventListener("click", () => {
+      let cur = parseInt(selMonth.value, 10);
+      cur = cur > 1 ? cur - 1 : 12;
+      selMonth.value = String(cur).padStart(2, "0");
+      triggerDateUpdate();
+    });
+  }
+
+  const nextMonthBtn = $("modal-month-next");
+  if (nextMonthBtn && selMonth) {
+    nextMonthBtn.addEventListener("click", () => {
+      let cur = parseInt(selMonth.value, 10);
+      cur = cur < 12 ? cur + 1 : 1;
+      selMonth.value = String(cur).padStart(2, "0");
+      triggerDateUpdate();
     });
   }
 
@@ -788,11 +1016,25 @@ function initSatModal() {
   initSplitSlider();
 }
 
+function showModal(modal) {
+  if (!modal) return;
+  modal.hidden = false;
+  void modal.offsetWidth; // force browser layout reflow for animation
+  modal.classList.add("open");
+}
+
+function hideModal(modal) {
+  if (!modal) return;
+  modal.classList.remove("open");
+  setTimeout(() => {
+    if (!modal.classList.contains("open")) modal.hidden = true;
+  }, 270);
+}
+
 function openSatelliteModal(customBbox = null, customTitle = null) {
   const modal = $("sat-modal");
   if (!modal) return;
 
-  modal.hidden = false;
   const startYr = Math.max(2000, parseInt($("start").value, 10) || 2005);
   const endYr = Math.max(2000, parseInt($("end").value, 10) || 2024);
   state.satYearBase = startYr;
@@ -805,8 +1047,10 @@ function openSatelliteModal(customBbox = null, customTitle = null) {
 
   if (state.satellite && state.satellite.seasonal_md) {
     state.satCustomDate = state.satellite.seasonal_md;
-    if ($("modal-date-picker")) $("modal-date-picker").value = state.satCustomDate;
   }
+  const [curM, curD] = (state.satCustomDate || "08-15").split("-");
+  if ($("modal-month-select")) $("modal-month-select").value = curM;
+  if ($("modal-day-select")) $("modal-day-select").value = curD;
 
   const targetBbox = customBbox || (state.result && state.result.region ? state.result.region.bbox : null);
   const targetTitle = customTitle || (state.result && state.result.region ? state.result.region.name : "Selected Region");
@@ -814,12 +1058,12 @@ function openSatelliteModal(customBbox = null, customTitle = null) {
   state.activeSatBbox = targetBbox;
   state.activeSatTitle = targetTitle;
 
+  showModal(modal);
   reloadModalSatellite();
 }
 
 function closeSatelliteModal() {
-  const modal = $("sat-modal");
-  if (modal) modal.hidden = true;
+  hideModal($("sat-modal"));
 }
 
 function setSatModalMode(mode) {
@@ -897,8 +1141,8 @@ function loadSatelliteImages(sat) {
   if ($("slider-badge-base")) $("slider-badge-base").textContent = `LEFT: ${sat.baseline.year}`;
   if ($("slider-badge-comp")) $("slider-badge-comp").textContent = `RIGHT: ${sat.recent.year}`;
   if ($("slider-handle-tag")) $("slider-handle-tag").textContent = `${sat.baseline.year} | ${sat.recent.year}`;
-  if ($("slider-info-left")) $("slider-info-left").textContent = `◀ LEFT: ${sat.baseline.date}`;
-  if ($("slider-info-right")) $("slider-info-right").textContent = `RIGHT: ${sat.recent.date} ▶`;
+  if ($("slider-info-left")) $("slider-info-left").textContent = `LEFT: ${sat.baseline.date}`;
+  if ($("slider-info-right")) $("slider-info-right").textContent = `RIGHT: ${sat.recent.date}`;
 
   $("modal-worldview-link").href = sat.recent.worldview_url || "#";
 
@@ -968,6 +1212,779 @@ function initSplitSlider() {
 }
 
 /* ============================================================
+   DATA & GRAPH OBSERVATORY MODAL (EXPANDED VIEW)
+   ============================================================ */
+function initDataModal() {
+  const modal = $("data-modal");
+  const closeBtn = $("data-modal-close");
+  if (!modal) return;
+
+  // Register ChartZoom plugin if needed
+  if (window.Chart && window.ChartZoom && window.Chart.registry && !window.Chart.registry.plugins.get("zoom")) {
+    try {
+      window.Chart.register(window.ChartZoom);
+    } catch (e) {
+      console.warn("ChartZoom registration notice:", e);
+    }
+  }
+
+  if (closeBtn) closeBtn.addEventListener("click", closeDataModal);
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) closeDataModal();
+  });
+
+  const expandChartBtn = $("btn-expand-chart");
+  if (expandChartBtn) {
+    expandChartBtn.addEventListener("click", () => openDataModal());
+  }
+
+  const expandSignalBtn = $("btn-expand-signal");
+  if (expandSignalBtn) {
+    expandSignalBtn.addEventListener("click", () => openDataModal());
+  }
+
+  const chartBox = $("chart-box-clickable");
+  if (chartBox) {
+    chartBox.addEventListener("click", () => openDataModal());
+  }
+
+  const yearlyBtn = $("data-mode-yearly");
+  const monthlyBtn = $("data-mode-monthly");
+  if (yearlyBtn && monthlyBtn) {
+    yearlyBtn.addEventListener("click", () => setDataModalMode("yearly"));
+    monthlyBtn.addEventListener("click", () => setDataModalMode("monthly"));
+  }
+
+  const exportBtn = $("data-export-csv");
+  if (exportBtn) {
+    exportBtn.addEventListener("click", exportDataCSV);
+  }
+
+  // Zoom toolbar axis buttons
+  const axisBtns = document.querySelectorAll("#zoom-axis-seg .seg-btn");
+  axisBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      axisBtns.forEach((b) => b.classList.remove("on"));
+      btn.classList.add("on");
+      state.zoomAxis = btn.dataset.axis || "x";
+      if (expandedChart && expandedChart.options && expandedChart.options.plugins && expandedChart.options.plugins.zoom) {
+        expandedChart.options.plugins.zoom.zoom.mode = state.zoomAxis;
+        expandedChart.options.plugins.zoom.pan.mode = state.zoomAxis;
+        expandedChart.update("none");
+      }
+    });
+  });
+
+  // Zoom toolbar buttons - smooth animated steps
+  const zoomInBtn = $("btn-zoom-in");
+  if (zoomInBtn) {
+    zoomInBtn.addEventListener("click", () => {
+      if (!expandedChart) return;
+      if (typeof expandedChart.zoom === "function") {
+        const factor = 1.15;
+        if (state.zoomAxis === "x") {
+          expandedChart.zoom({ x: factor, y: 1 }, "default");
+        } else if (state.zoomAxis === "y") {
+          expandedChart.zoom({ x: 1, y: factor }, "default");
+        } else {
+          expandedChart.zoom(factor, "default");
+        }
+        setTimeout(updateZoomBadge, 260);
+      }
+    });
+  }
+
+  const zoomOutBtn = $("btn-zoom-out");
+  if (zoomOutBtn) {
+    zoomOutBtn.addEventListener("click", () => {
+      if (!expandedChart) return;
+      if (typeof expandedChart.zoom === "function") {
+        const factor = 0.87;
+        if (state.zoomAxis === "x") {
+          expandedChart.zoom({ x: factor, y: 1 }, "default");
+        } else if (state.zoomAxis === "y") {
+          expandedChart.zoom({ x: 1, y: factor }, "default");
+        } else {
+          expandedChart.zoom(factor, "default");
+        }
+        setTimeout(updateZoomBadge, 260);
+      }
+    });
+  }
+
+  const zoomResetBtn = $("btn-zoom-reset");
+  if (zoomResetBtn) {
+    zoomResetBtn.addEventListener("click", () => {
+      if (!expandedChart) return;
+      if (typeof expandedChart.resetZoom === "function") {
+        expandedChart.resetZoom("default");
+        setTimeout(updateZoomBadge, 260);
+      }
+    });
+  }
+
+  // Expanded chart canvas events: double-click to reset, smooth calibrated 60fps wheel & pan
+  const expCanvas = $("chart-expanded");
+  if (expCanvas) {
+    expCanvas.addEventListener("dblclick", () => {
+      if (expandedChart && typeof expandedChart.resetZoom === "function") {
+        expandedChart.resetZoom("default");
+        setTimeout(updateZoomBadge, 260);
+      }
+    });
+
+    let wheelRafId = null;
+    let wheelZoomAccum = 0;
+    let wheelPanAccum = 0;
+    let wheelFocalPoint = null;
+
+    const flushWheel = () => {
+      wheelRafId = null;
+      if (!expandedChart) return;
+
+      // Handle horizontal swipe panning along timeline
+      if (Math.abs(wheelPanAccum) > 0.5) {
+        if (typeof expandedChart.pan === "function") {
+          expandedChart.pan({ x: -wheelPanAccum * 0.85 }, undefined, "none");
+        }
+        wheelPanAccum = 0;
+      }
+
+      // Handle vertical scroll / trackpad pinch zoom
+      if (Math.abs(wheelZoomAccum) > 0.2) {
+        // Calibrated exponential scaling: gentle trackpad tick (2px) -> ~0.3% zoom, solid mouse notch (20px) -> ~3% zoom
+        const factor = Math.exp(-wheelZoomAccum * 0.0015);
+        if (typeof expandedChart.zoom === "function") {
+          const fp = wheelFocalPoint;
+          if (state.zoomAxis === "x") {
+            expandedChart.zoom({ x: factor, y: 1, focalPoint: fp }, "none");
+          } else if (state.zoomAxis === "y") {
+            expandedChart.zoom({ x: 1, y: factor, focalPoint: fp }, "none");
+          } else {
+            expandedChart.zoom({ x: factor, y: factor, focalPoint: fp }, "none");
+          }
+        }
+        wheelZoomAccum = 0;
+      }
+
+      updateZoomBadge();
+    };
+
+    expCanvas.addEventListener("wheel", (e) => {
+      if (!expandedChart) return;
+      e.preventDefault();
+
+      let dx = e.deltaX;
+      let dy = e.deltaY;
+      if (e.deltaMode === 1) { dx *= 16; dy *= 16; }
+      else if (e.deltaMode === 2) { dx *= 300; dy *= 300; }
+
+      // Clamp individual events to avoid wild spikes from sudden flick inertia
+      dx = Math.max(-40, Math.min(40, dx));
+      dy = Math.max(-30, Math.min(30, dy));
+
+      const rect = expCanvas.getBoundingClientRect();
+      wheelFocalPoint = {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+      };
+
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 1.2) {
+        wheelPanAccum += dx;
+      } else if (Math.abs(dy) > 0.4) {
+        wheelZoomAccum += dy;
+      }
+
+      if (!wheelRafId) {
+        wheelRafId = requestAnimationFrame(flushWheel);
+      }
+    }, { passive: false });
+  }
+}
+
+function updateZoomBadge() {
+  const badge = $("zoom-level-badge");
+  if (!badge) return;
+  if (!expandedChart) {
+    badge.textContent = "ZOOM: 1.0x";
+    badge.classList.remove("active");
+    return;
+  }
+  try {
+    const level = typeof expandedChart.getZoomLevel === "function" ? expandedChart.getZoomLevel() : 1;
+    const isZoomed = typeof expandedChart.isZoomedOrPanned === "function"
+      ? expandedChart.isZoomedOrPanned()
+      : (level > 1.04 || level < 0.96);
+    badge.textContent = `ZOOM: ${level.toFixed(1)}x`;
+    badge.classList.toggle("active", isZoomed);
+  } catch (err) {
+    badge.textContent = "ZOOM: 1.0x";
+    badge.classList.remove("active");
+  }
+}
+
+function openDataModal(varIdx = null) {
+  const modal = $("data-modal");
+  if (!modal) return;
+  if (!state.result || !state.result.series || !state.result.series.length) {
+    flashHint("RUN AN ANALYSIS FIRST TO EXPAND DATA");
+    return;
+  }
+
+  if (varIdx !== null && varIdx >= 0) {
+    state.expandedVarIdx = Math.min(varIdx, state.result.series.length - 1);
+  } else {
+    state.expandedVarIdx = Math.min(state.activeVarIdx, state.result.series.length - 1);
+  }
+  state.expandedMode = state.mode || "yearly";
+
+  showModal(modal);
+  renderDataModal();
+}
+
+function closeDataModal() {
+  hideModal($("data-modal"));
+  if (expandedChart) {
+    expandedChart.destroy();
+    expandedChart = null;
+  }
+}
+
+function setDataModalMode(mode) {
+  state.expandedMode = mode;
+  const yearlyBtn = $("data-mode-yearly");
+  const monthlyBtn = $("data-mode-monthly");
+  if (yearlyBtn) yearlyBtn.classList.toggle("on", mode === "yearly");
+  if (monthlyBtn) monthlyBtn.classList.toggle("on", mode === "monthly");
+  drawExpandedChart();
+}
+
+function renderDataModal() {
+  const d = state.result;
+  if (!d) return;
+  const s = d.series[state.expandedVarIdx] || d.series[0];
+  const v = s.variable;
+  const o = s.overall || {};
+
+  $("data-modal-title").textContent = `${v.name.toUpperCase()} · ${d.region.name.toUpperCase()}`;
+  $("data-modal-sub").textContent =
+    `PERIOD: ${d.start} – ${d.end} · SENSOR/MODEL: ${v.mission} · SAMPLES: 25 CELLS · ALPHA: 0.05`;
+
+  const tabBox = $("data-modal-var-tabs");
+  if (tabBox) {
+    tabBox.innerHTML = "";
+    d.series.forEach((ser, idx) => {
+      const btn = document.createElement("button");
+      btn.className = `data-var-tab ${idx === state.expandedVarIdx ? "on" : ""}`;
+      btn.textContent = ser.variable.name;
+      btn.style.setProperty("--vc", ser.variable.color);
+      btn.addEventListener("click", () => {
+        state.expandedVarIdx = idx;
+        renderDataModal();
+      });
+      tabBox.appendChild(btn);
+    });
+  }
+
+  const yearlyBtn = $("data-mode-yearly");
+  const monthlyBtn = $("data-mode-monthly");
+  if (yearlyBtn) yearlyBtn.classList.toggle("on", state.expandedMode === "yearly");
+  if (monthlyBtn) monthlyBtn.classList.toggle("on", state.expandedMode === "monthly");
+
+  if (o.ok) {
+    const slopeDecade = o.slope * 10;
+    $("mc-slope").textContent = `${slopeDecade > 0 ? "+" : ""}${num(slopeDecade, 2)} ${v.unit}`;
+    $("mc-slope").style.color = o.direction === "falling" ? C.fall : (o.direction === "rising" ? C.rise : C.flat);
+    $("mc-slope-sub").textContent = `${o.slope > 0 ? "+" : ""}${num(o.slope, 3)} ${v.unit}/year`;
+
+    $("mc-change").textContent = `${o.change_total > 0 ? "+" : ""}${num(o.change_total, 2)} ${v.unit}`;
+    $("mc-change").style.color = o.direction === "falling" ? C.fall : (o.direction === "rising" ? C.rise : C.flat);
+    $("mc-change-sub").textContent = `Cumulative shift: ${o.change_pct > 0 ? "+" : ""}${num(o.change_pct, 1)}%`;
+
+    $("mc-mk").textContent = `p = ${num(o.p, 3)} · Z = ${o.z > 0 ? "+" : ""}${num(o.z, 2)}`;
+    $("mc-mk").style.color = o.significant ? (o.direction === "falling" ? C.fall : C.rise) : C.flat;
+    $("mc-mk-sub").textContent = o.significant
+      ? (o.direction === "rising" ? "STATISTICALLY SIGNIFICANT RISE" : "STATISTICALLY SIGNIFICANT FALL")
+      : "NO STATISTICALLY SIGNIFICANT TREND";
+
+    if (o.seasonal_p !== undefined && o.seasonal_p !== null) {
+      $("mc-seasonal").textContent = `p = ${num(o.seasonal_p, 3)} · Z = ${o.seasonal_z > 0 ? "+" : ""}${num(o.seasonal_z, 2)}`;
+      $("mc-seasonal-sub").textContent = o.seasonal_significant
+        ? "Seasonal cycle controlled: CONFIRMED"
+        : "Seasonality unverified";
+    } else {
+      $("mc-seasonal").textContent = "N/A";
+      $("mc-seasonal-sub").textContent = "Insufficient monthly data";
+    }
+  } else {
+    $("mc-slope").textContent = "NO DATA";
+    $("mc-change").textContent = "—";
+    $("mc-mk").textContent = "—";
+    $("mc-seasonal").textContent = "—";
+  }
+
+  const matrixBox = $("eg-cell-matrix");
+  if (matrixBox) {
+    matrixBox.innerHTML = "";
+    const cells = s.cells || [];
+    $("eg-cell-count").textContent = `${cells.length} OBSERVED CELLS`;
+
+    // Sort cells into geographic matrix order:
+    // Row 0 = North (highest lat) down to Row 4 = South (lowest lat)
+    // Col 0 = West (lowest lon) across to Col 4 = East (highest lon)
+    // This perfectly matches the 3D globe alignment (North at top, South at bottom)
+    const geoSortedCells = [...cells].sort((a, b) => {
+      if (Math.abs(b.lat - a.lat) > 0.0001) {
+        return b.lat - a.lat; // Latitude descending (North to South)
+      }
+      return a.lon - b.lon; // Longitude ascending (West to East)
+    });
+
+    geoSortedCells.forEach((c) => {
+      const chip = document.createElement("div");
+      chip.className = "eg-cell-chip";
+      const cColor = c.significant
+        ? (c.direction === "falling" ? C.fall : C.rise)
+        : C.flat;
+      const slopeStr = c.slope !== null && c.slope !== undefined
+        ? `${c.slope > 0 ? "+" : ""}${num(c.slope * 10, 2)}`
+        : "—";
+
+      chip.innerHTML = `
+        <span class="egc-coord">${c.lat.toFixed(1)}°, ${c.lon.toFixed(1)}°</span>
+        <span class="egc-slope" style="color:${cColor}">${slopeStr} ${v.unit}</span>
+      `;
+
+      chip.addEventListener("mouseenter", () => {
+        matrixBox.querySelectorAll(".eg-cell-chip").forEach((el) => el.classList.remove("active"));
+        chip.classList.add("active");
+        $("eg-cell-detail").innerHTML = `
+          <strong>Cell [${c.lat.toFixed(2)}°, ${c.lon.toFixed(2)}°]:</strong>
+          Slope: <span style="color:${cColor}">${slopeStr} ${v.unit}/decade</span> ·
+          Mann-Kendall p-value: <strong>${c.p !== undefined ? num(c.p, 3) : "—"}</strong> ·
+          Status: <strong>${c.significant ? (c.direction === "falling" ? "SIGNIFICANT FALL" : "SIGNIFICANT RISE") : "STABLE / NO TREND"}</strong>
+        `;
+      });
+
+      matrixBox.appendChild(chip);
+    });
+  }
+
+  // Render Earth System Couplings inside Expanded Modal
+  const coupSec = $("eg-coupling-section");
+  const coupGrid = $("eg-coupling-grid");
+  if (coupSec && coupGrid) {
+    const couplings = d.couplings || [];
+    if (couplings.length > 0) {
+      coupSec.style.display = "block";
+      $("eg-coupling-count").textContent = `${couplings.length} DETECTED`;
+      coupGrid.innerHTML = couplings.map((c) => {
+        const rSign = c.r > 0 ? "+" : "";
+        return `
+          <div class="coupling-card ${c.phase}">
+            <div class="coupling-top">
+              <span class="coupling-title">${esc(c.title)}</span>
+              <span class="coupling-r">r = ${rSign}${num(c.r, 2)}</span>
+            </div>
+            <div class="coupling-spheres">
+              <span>[${esc(c.sphere_a_code)}] ${esc(c.var_a_name)}</span>
+              <span>&harr;</span>
+              <span>[${esc(c.sphere_b_code)}] ${esc(c.var_b_name)}</span>
+            </div>
+            <div class="coupling-phase-tag ${c.phase}">${esc(c.phase_label)}</div>
+            <p class="coupling-desc">${esc(c.description)}</p>
+          </div>
+        `;
+      }).join("");
+    } else {
+      coupSec.style.display = "none";
+    }
+  }
+
+  // Render Regional Contrast inside Expanded Modal
+  const contSec = $("eg-contrast-section");
+  const contGrid = $("eg-contrast-grid");
+  if (contSec && contGrid) {
+    if (d.compare && d.compare.contrasts && d.compare.contrasts.length > 0) {
+      contSec.style.display = "block";
+      $("eg-contrast-badge").textContent = `${d.region.name.toUpperCase()} VS ${d.compare.region.name.toUpperCase()}`;
+      contGrid.innerHTML = d.compare.contrasts.map((c) => {
+        const diffSign = c.diff_decade > 0 ? "+" : "";
+        const sASign = c.slope_a_decade > 0 ? "+" : "";
+        const sBSign = c.slope_b_decade > 0 ? "+" : "";
+        let verdictCls = "localized";
+        if (c.verdict.includes("DIVERGENT")) verdictCls = "divergent";
+        else if (c.verdict.includes("PARALLEL")) verdictCls = "parallel";
+
+        return `
+          <div class="contrast-card">
+            <div class="contrast-head">
+              <span class="contrast-var-name">${esc(c.var_name)}</span>
+              <span class="contrast-verdict-pill ${verdictCls}">${esc(c.verdict)}</span>
+            </div>
+            <div class="contrast-rows">
+              <div class="contrast-row reg-a">
+                <span>A: ${esc(c.region_a)}</span>
+                <b>${sASign}${num(c.slope_a_decade, 2)} ${esc(c.unit)}/dec (p=${num(c.p_a, 3)})</b>
+              </div>
+              <div class="contrast-row reg-b">
+                <span>B: ${esc(c.region_b)}</span>
+                <b>${sBSign}${num(c.slope_b_decade, 2)} ${esc(c.unit)}/dec (p=${num(c.p_b, 3)})</b>
+              </div>
+            </div>
+            <div class="contrast-delta">
+              <span>Slope Delta: <b>${diffSign}${num(c.diff_decade, 2)} ${esc(c.unit)}/dec</b></span>
+              <span>Co-trend: <b>r = ${c.r > 0 ? "+" : ""}${num(c.r, 2)}</b></span>
+            </div>
+            <p class="contrast-desc">${esc(c.explanation)}</p>
+          </div>
+        `;
+      }).join("");
+    } else {
+      contSec.style.display = "none";
+    }
+  }
+
+  requestAnimationFrame(() => {
+    drawExpandedChart();
+  });
+}
+
+function drawExpandedChart() {
+  const d = state.result;
+  if (!d) return;
+  const s = d.series[state.expandedVarIdx] || d.series[0];
+  const canvas = $("chart-expanded");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  const isYear = state.expandedMode === "yearly";
+
+  let chartPoints = [];
+  let minX = 0;
+  let maxX = 0;
+
+  const partialFlags = isYear
+    ? s.yearly_timeseries.map((p) => !p.complete)
+    : [];
+  const partialYears = isYear
+    ? s.yearly_timeseries.filter((p) => !p.complete)
+    : [];
+
+  if (isYear) {
+    chartPoints = s.yearly_timeseries.map((p) => ({
+      x: Number(p.year),
+      y: p.complete === false ? null : p.value,
+    }));
+    minX = Number(s.yearly_timeseries[0].year);
+    maxX = Number(s.yearly_timeseries[s.yearly_timeseries.length - 1].year);
+  } else {
+    chartPoints = s.region_timeseries.map((v, i) => ({
+      x: i,
+      y: v,
+    }));
+    minX = 0;
+    maxX = Math.max(0, d.months.length - 1);
+  }
+
+  if (expandedChart) expandedChart.destroy();
+
+  const o = s.overall || {};
+  const accent = o.ok && o.direction === "falling" ? C.fall : (s.variable.color || C.rise);
+
+  const grad = ctx.createLinearGradient(0, 0, 0, 320);
+  grad.addColorStop(0, hexA(accent, 0.38));
+  grad.addColorStop(1, hexA(accent, 0.01));
+
+  const hasCompare = !!(d.compare && d.compare.series && d.compare.series[state.expandedVarIdx]);
+  const sB = hasCompare ? d.compare.series[state.expandedVarIdx] : null;
+
+  const datasets = [{
+    label: hasCompare ? `${d.region.name}: ${s.variable.name}` : s.variable.name,
+    data: chartPoints,
+    borderColor: accent,
+    backgroundColor: hasCompare ? "transparent" : grad,
+    fill: !hasCompare,
+    tension: 0.25,
+    pointRadius: isYear ? 3.5 : 1.2,
+    pointHoverRadius: 6,
+    pointBackgroundColor: accent,
+    borderWidth: 2,
+    spanGaps: true,
+  }];
+
+  if (partialYears.length > 0) {
+    datasets.push({
+      label: "Partial Year (Excluded from Trend)",
+      data: s.yearly_timeseries.map((p) => ({
+        x: Number(p.year),
+        y: p.complete === false ? p.value : null,
+      })),
+      showLine: false,
+      borderColor: "transparent",
+      backgroundColor: "#0c0e11",
+      borderWidth: 1.5,
+      pointBackgroundColor: "#0c0e11",
+      pointBorderColor: "#ffffff",
+      pointBorderWidth: 1.5,
+      pointRadius: 5.5,
+      pointHoverRadius: 7,
+      pointStyle: "rectRot",
+    });
+  }
+
+  const validPts = chartPoints.filter((p) => p.y !== null && Number.isFinite(p.y));
+  if (validPts.length > 2) {
+    let lineFn;
+    if (o.ok) {
+      const slopePerStep = o.slope * (isYear ? 1 : 1 / 12);
+      const midY = validPts.reduce((a, p) => a + p.y, 0) / validPts.length;
+      const midX = (minX + maxX) / 2;
+      lineFn = (x) => midY + slopePerStep * (x - midX);
+    } else {
+      const ptPairs = validPts.map((p) => [p.x, p.y]);
+      lineFn = fitLine(ptPairs);
+    }
+    datasets.push({
+      label: hasCompare ? `Trend (${d.region.name})` : "Theil-Sen Trend Line",
+      data: chartPoints.map((p) => ({ x: p.x, y: lineFn(p.x) })),
+      borderColor: "#ffffff",
+      borderDash: [6, 4],
+      borderWidth: 1.5,
+      pointRadius: 0,
+      fill: false,
+      tension: 0,
+    });
+  }
+
+  if (hasCompare && sB) {
+    let chartPointsB = [];
+    if (isYear) {
+      chartPointsB = sB.yearly_timeseries.map((p) => ({
+        x: Number(p.year),
+        y: p.complete === false ? null : p.value,
+      }));
+    } else {
+      chartPointsB = sB.region_timeseries.map((v, i) => ({
+        x: i,
+        y: v,
+      }));
+    }
+
+    datasets.push({
+      label: `${d.compare.region.name}: ${sB.variable.name}`,
+      data: chartPointsB,
+      borderColor: "#00e5ff",
+      borderDash: [5, 4],
+      backgroundColor: "transparent",
+      fill: false,
+      tension: 0.25,
+      pointRadius: isYear ? 3.5 : 1.2,
+      pointHoverRadius: 6,
+      pointBackgroundColor: "#00e5ff",
+      borderWidth: 2,
+      spanGaps: true,
+    });
+
+    const validPtsB = chartPointsB.filter((p) => p.y !== null && Number.isFinite(p.y));
+    if (validPtsB.length > 2) {
+      const oB = sB.overall || {};
+      let lineFnB;
+      if (oB.ok) {
+        const slopePerStepB = oB.slope * (isYear ? 1 : 1 / 12);
+        const midYB = validPtsB.reduce((a, p) => a + p.y, 0) / validPtsB.length;
+        const midXB = (minX + maxX) / 2;
+        lineFnB = (x) => midYB + slopePerStepB * (x - midXB);
+      } else {
+        const ptPairsB = validPtsB.map((p) => [p.x, p.y]);
+        lineFnB = fitLine(ptPairsB);
+      }
+      datasets.push({
+        label: `Trend (${d.compare.region.name})`,
+        data: chartPointsB.map((p) => ({ x: p.x, y: lineFnB(p.x) })),
+        borderColor: "rgba(0, 229, 255, 0.75)",
+        borderDash: [3, 3],
+        borderWidth: 1.5,
+        pointRadius: 0,
+        fill: false,
+        tension: 0,
+      });
+    }
+  }
+
+  expandedChart = new Chart(ctx, {
+    type: "line",
+    data: { datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: {
+        duration: 250,
+        easing: "easeOutCubic",
+      },
+      interaction: {
+        mode: "nearest",
+        axis: "x",
+        intersect: false,
+      },
+      plugins: {
+        zoom: {
+          pan: {
+            enabled: true,
+            mode: state.zoomAxis || "x",
+            modifierKey: null,
+            onPanComplete: updateZoomBadge,
+          },
+          zoom: {
+            wheel: {
+              enabled: false, // Handled by our normalized smooth wheel controller
+            },
+            pinch: {
+              enabled: true,
+            },
+            mode: state.zoomAxis || "x",
+            onZoomComplete: updateZoomBadge,
+          },
+          limits: {
+            x: {
+              min: minX,
+              max: maxX,
+              minRange: isYear ? 3 : 12,
+            },
+          },
+        },
+        legend: {
+          display: true,
+          position: "top",
+          labels: {
+            color: "#ffffff",
+            font: { family: "monospace", size: 11, weight: "600" },
+            boxWidth: 14,
+          },
+        },
+        tooltip: {
+          backgroundColor: "rgba(8,9,10,.95)",
+          borderColor: "#505663",
+          borderWidth: 1,
+          padding: 10,
+          titleFont: { family: "monospace", size: 12, weight: "bold" },
+          bodyFont: { family: "monospace", size: 12 },
+          titleColor: "#ffffff",
+          bodyColor: "#dbe0e6",
+          callbacks: {
+            title: (items) => {
+              if (!items || !items.length) return "";
+              const xVal = items[0].parsed.x;
+              if (isYear) return `YEAR: ${Math.round(xVal)}`;
+              const idx = Math.round(xVal);
+              return `MONTH: ${d.months[idx] || ""}`;
+            },
+            label: (c) => `${c.dataset.label}: ${num(c.parsed.y, 3)} ${s.variable.unit}`,
+          },
+        },
+      },
+      scales: {
+        x: {
+          type: "linear",
+          min: minX,
+          max: maxX,
+          ticks: {
+            color: "#b4bac2",
+            maxTicksLimit: isYear ? 12 : 10,
+            stepSize: isYear ? 1 : undefined,
+            font: { family: "monospace", size: 11, weight: "500" },
+            callback: (val) => {
+              if (!Number.isFinite(val)) return "";
+              if (isYear) {
+                if (Math.abs(val - Math.round(val)) < 0.05) {
+                  return String(Math.round(val));
+                }
+                return "";
+              } else {
+                const idx = Math.round(val);
+                if (Math.abs(val - idx) < 0.05 && idx >= 0 && idx < d.months.length) {
+                  return d.months[idx];
+                }
+                return "";
+              }
+            },
+          },
+          grid: { color: "#242830" },
+          border: { color: "#3d434d" },
+        },
+        y: {
+          ticks: {
+            color: "#b4bac2",
+            font: { family: "monospace", size: 11, weight: "500" },
+            callback: (v) => `${num(v, 2)} ${s.variable.unit}`,
+          },
+          grid: { color: "#242830" },
+          border: { color: "#3d434d" },
+        },
+      },
+    },
+  });
+
+  updateZoomBadge();
+
+  const expTrendEl = $("expanded-trendline");
+  if (expTrendEl) {
+    if (o.ok) {
+      const slopePerDec = o.slope * 10;
+      const stars = o.p < 0.001 ? "***" : (o.p < 0.01 ? "**" : (o.p < 0.05 ? "*" : ""));
+      const ciText = (o.ci_low_per_decade !== null && o.ci_low_per_decade !== undefined)
+        ? ` · 95% CI: <strong>[${o.ci_low_per_decade > 0 ? "+" : ""}${num(o.ci_low_per_decade, 3)}, ` +
+          `${o.ci_high_per_decade > 0 ? "+" : ""}${num(o.ci_high_per_decade, 3)}] ${s.variable.unit}/dec</strong>`
+        : "";
+      const tText = (o.t_p !== null && o.t_p !== undefined)
+        ? ` · OLS t-test (df=${o.t_df}) p=<strong>${o.t_p < 0.001 ? "<0.001" : num(o.t_p, 3)}</strong> ` +
+          `(${o.methods_agree ? "AGREES" : "DISAGREES"})`
+        : "";
+      const pText = partialYears.length
+        ? ` · PARTIAL: ${partialYears.map((p) => `${p.year} (${p.months}/12 mo)`).join(", ")} (excluded from slope)`
+        : "";
+
+      expTrendEl.innerHTML =
+        `THEIL-SEN ESTIMATOR: <strong>${o.slope > 0 ? "+" : ""}${num(slopePerDec, 2)} ${s.variable.unit}/decade</strong> · ` +
+        `MANN-KENDALL p = <strong>${num(o.p, 3)}${stars}</strong> (${o.significant ? "SIGNIFICANT" : "NOT SIGNIFICANT"}) · ` +
+        `CUMULATIVE SHIFT: <strong>${o.change_total > 0 ? "+" : ""}${num(o.change_total, 2)} ${s.variable.unit} (${o.change_pct > 0 ? "+" : ""}${num(o.change_pct, 1)}%)</strong>` +
+        ciText + tText + pText;
+    } else {
+      expTrendEl.textContent = "INSUFFICIENT DATA POINTS FOR STATISTICAL SIGNIFICANCE TESTING";
+    }
+  }
+}
+
+function exportDataCSV() {
+  const d = state.result;
+  if (!d) return;
+  const s = d.series[state.expandedVarIdx] || d.series[0];
+  const isYear = state.expandedMode === "yearly";
+
+  let csvContent = "";
+  if (isYear) {
+    csvContent = `Year,Annual_Mean_${s.variable.id}_${s.variable.unit}\n`;
+    s.yearly_timeseries.forEach((p) => {
+      csvContent += `${p.year},${p.value}\n`;
+    });
+  } else {
+    csvContent = `Month_YYYY_MM,Regional_Mean_${s.variable.id}_${s.variable.unit}\n`;
+    d.months.forEach((m, i) => {
+      csvContent += `${m},${s.region_timeseries[i]}\n`;
+    });
+  }
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `terratrend_${d.region.id}_${s.variable.id}_${d.start}_${d.end}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ============================================================
    CHART
    ============================================================ */
 function drawChart() {
@@ -983,8 +2000,7 @@ function drawChart() {
   const values = isYear
     ? s.yearly_timeseries.map((p) => p.value)
     : s.region_timeseries;
-  // partial years (e.g. the current year, still accumulating months) are drawn
-  // but excluded from every trend calculation — see _annualize() on the server
+
   const partialFlags = isYear
     ? s.yearly_timeseries.map((p) => !p.complete)
     : [];
@@ -1002,21 +2018,66 @@ function drawChart() {
   grad.addColorStop(0, hexA(accent, 0.34));
   grad.addColorStop(1, hexA(accent, 0.01));
 
+  const hasCompare = !!(d.compare && d.compare.series && d.compare.series[state.activeVarIdx]);
+  const sB = hasCompare ? d.compare.series[state.activeVarIdx] : null;
+
   const datasets = [{
-    // partial years are withheld from the connected line: a 9-month mean is not
-    // comparable to an annual mean, so it must not appear joined to the series
+    label: hasCompare ? `${d.region.name}: ${s.variable.name}` : s.variable.name,
     data: values.map((v, i) => (partialFlags[i] ? null : v)),
     borderColor: accent,
-    backgroundColor: grad,
-    fill: true,
+    backgroundColor: hasCompare ? "transparent" : grad,
+    fill: !hasCompare,
     tension: 0.3,
     pointRadius: isYear ? 0 : 0,
     pointHoverRadius: 4,
-    borderWidth: 1.6,
+    borderWidth: 1.8,
     spanGaps: true,
   }];
 
-  const pts = values.map((v, i) => [i, v]).filter((p) => p[1] !== null);
+  if (hasCompare && sB) {
+    const valsB = isYear
+      ? sB.yearly_timeseries.map((p) => p.value)
+      : sB.region_timeseries;
+    const partialFlagsB = isYear
+      ? sB.yearly_timeseries.map((p) => !p.complete)
+      : [];
+    datasets.push({
+      label: `${d.compare.region.name}: ${sB.variable.name}`,
+      data: valsB.map((v, i) => (partialFlagsB[i] ? null : v)),
+      borderColor: "#00e5ff",
+      borderDash: [5, 4],
+      backgroundColor: "transparent",
+      fill: false,
+      tension: 0.3,
+      pointRadius: isYear ? 0 : 0,
+      pointHoverRadius: 4,
+      borderWidth: 1.8,
+      spanGaps: true,
+    });
+  }
+
+  // Draw incomplete / trailing partial years as isolated points
+  if (partialFlags.some(Boolean)) {
+    datasets.push({
+      label: "Partial Year (Excluded from Trend)",
+      data: values.map((v, i) => (partialFlags[i] ? v : null)),
+      showLine: false,
+      borderColor: "transparent",
+      backgroundColor: "#0c0e11",
+      borderWidth: 1.5,
+      pointBackgroundColor: "#0c0e11",
+      pointBorderColor: "#ffffff",
+      pointBorderWidth: 1.5,
+      pointRadius: 4.5,
+      pointHoverRadius: 6,
+      pointStyle: "rectRot",
+    });
+  }
+
+  const pts = values
+    .map((v, i) => [i, v])
+    .filter((p, i) => p[1] !== null && !partialFlags[i]);
+
   if (pts.length > 2) {
     let line;
     if (o.ok) {
@@ -1028,6 +2089,7 @@ function drawChart() {
       line = fitLine(pts);
     }
     datasets.push({
+      label: hasCompare ? `Trend (${d.region.name})` : "Trend Line",
       data: values.map((_, i) => (partialFlags[i] ? null : line(i))),
       borderColor: "#e9ebed",
       borderDash: [5, 4],
@@ -1035,23 +2097,6 @@ function drawChart() {
       pointRadius: 0,
       fill: false,
       tension: 0,
-    });
-  }
-
-  // mark incomplete years: hollow diamonds, never part of the trend line
-  if (partialFlags.some(Boolean)) {
-    datasets.push({
-      data: values.map((v, i) => (partialFlags[i] ? v : null)),
-      showLine: false,
-      borderColor: "transparent",
-      backgroundColor: "#0b0c0d",
-      borderWidth: 1.5,
-      pointBackgroundColor: "#0b0c0d",
-      pointBorderColor: "#e9ebed",
-      pointBorderWidth: 1.5,
-      pointRadius: 4.5,
-      pointHoverRadius: 6,
-      pointStyle: "rectRot",
     });
   }
 
@@ -1067,12 +2112,12 @@ function drawChart() {
         legend: { display: false },
         tooltip: {
           backgroundColor: "rgba(8,9,10,.97)",
-          borderColor: "#3b3e44",
+          borderColor: "#505663",
           borderWidth: 1,
-          titleFont: { family: "monospace", size: 10 },
+          titleFont: { family: "monospace", size: 10, weight: "bold" },
           bodyFont: { family: "monospace", size: 10 },
-          titleColor: "#e9ebed",
-          bodyColor: "#b9bdc2",
+          titleColor: "#ffffff",
+          bodyColor: "#dbe0e6",
           displayColors: false,
           callbacks: {
             label: (c) =>
@@ -1083,62 +2128,68 @@ function drawChart() {
       scales: {
         x: {
           ticks: {
-            color: "#6d7276",
+            color: "#a6adb5",
             maxTicksLimit: isYear ? 8 : 6,
             maxRotation: 0,
-            font: { family: "monospace", size: 9 },
+            font: { family: "monospace", size: 10, weight: "500" },
             callback: function (val) {
               const raw = this.getLabelForValue(val);
               return isYear ? String(raw).slice(2) : String(raw).slice(0, 4);
             },
           },
-          grid: { color: "#1c1e21", tickLength: 3 },
-          border: { color: "#2a2d31" },
+          grid: { color: "#242830", tickLength: 3 },
+          border: { color: "#3d434d" },
         },
         y: {
           ticks: {
-            color: "#6d7276",
+            color: "#a6adb5",
             maxTicksLimit: 5,
-            font: { family: "monospace", size: 9 },
+            font: { family: "monospace", size: 10, weight: "500" },
           },
-          grid: { color: "#1c1e21", tickLength: 3 },
-          border: { color: "#2a2d31" },
+          grid: { color: "#242830", tickLength: 3 },
+          border: { color: "#3d434d" },
         },
       },
     },
   });
 
   const partialNote = partialYears.length
-    ? `<br><span style="color:#8c9297">◇ ${
-        partialYears.map((p) => `${p.year} partial (${p.months}/12 mo)`)
-          .join(" · ")} — shown, excluded from trend</span>`
+    ? `<br><span style="color:#a6adb5">PARTIAL YEAR: ${
+        partialYears.map((p) => `${p.year} (${p.months}/12 mo)`).join(" · ")
+      } — shown as points, excluded from trend slope</span>`
     : "";
 
-  const ciNote = o.ok && o.ci_low_per_decade !== null
-    && o.ci_low_per_decade !== undefined
-    ? `<br>95% CI <b>[${o.ci_low_per_decade > 0 ? "+" : ""}${num(o.ci_low_per_decade, 3)},
-        ${o.ci_high_per_decade > 0 ? "+" : ""}${num(o.ci_high_per_decade, 3)}]
-        ${esc(s.variable.unit)}/decade</b> — Sen slope confidence interval`
+  const ciNote = (o.ok && o.ci_low_per_decade !== null && o.ci_low_per_decade !== undefined)
+    ? `<br>95% CI: <b>[${o.ci_low_per_decade > 0 ? "+" : ""}${num(o.ci_low_per_decade, 3)}, ` +
+      `${o.ci_high_per_decade > 0 ? "+" : ""}${num(o.ci_high_per_decade, 3)}] ` +
+      `${esc(s.variable.unit)}/decade</b> · Theil-Sen Confidence Interval`
     : "";
 
-  const tNote = o.ok && o.t_p !== null && o.t_p !== undefined
-    ? `<br><span style="color:#8c9297">t-test</span> ` +
+  const tNote = (o.ok && o.t_p !== null && o.t_p !== undefined)
+    ? `<br><span style="color:#a6adb5">t-test</span> ` +
       `(OLS, df=${o.t_df}) p=<b>${o.t_p < 0.001 ? "<0.001" : num(o.t_p, 3)}</b>` +
-      ` · slope ${o.t_per_decade > 0 ? "+" : ""}${num(o.t_per_decade, 3)}` +
-      ` · <b style="color:${o.methods_agree ? "#9bd36a" : "#e3c265"}">` +
-      `${o.methods_agree ? "AGREES with Mann–Kendall" : "DISAGREES with Mann–Kendall"}` +
+      ` · slope <b>${o.t_per_decade > 0 ? "+" : ""}${num(o.t_per_decade, 3)}</b>` +
+      ` · <b style="color:${o.methods_agree ? "#00e5ff" : "#e3c265"}">` +
+      `${o.methods_agree ? "AGREES with Mann-Kendall" : "DISAGREES with Mann-Kendall"}` +
       `</b>`
     : "";
 
-  $("trendline").innerHTML = (o.ok
-    ? `<b>${s.variable.name}</b> ${o.direction === "rising" ? "rising" :
-       o.direction === "falling" ? "falling" : "flat"} at
-       <b>${o.per_decade > 0 ? "+" : ""}${num(o.per_decade, 3)}
-       ${esc(s.variable.unit)}/decade</b> · MK z=<b>${num(o.z, 2)}</b>
-       p=<b>${o.p < 0.001 ? "<0.001" : num(o.p, 3)}</b>
-       ${o.significant ? "· SIGNIFICANT" : "· NOT SIGNIFICANT"}
-       · n=<b>${o.n}</b> complete years`
-    : "Insufficient data for trend estimation.") + ciNote + tNote + partialNote;
+  if (hasCompare && sB && sB.overall && sB.overall.ok) {
+    const oB = sB.overall;
+    $("trendline").innerHTML =
+      `<b>[A] ${d.region.name}:</b> ${o.per_decade > 0 ? "+" : ""}${num(o.per_decade, 2)} ${s.variable.unit}/dec (${o.direction.toUpperCase()}) · ` +
+      `<b>[B] ${d.compare.region.name}:</b> ${oB.per_decade > 0 ? "+" : ""}${num(oB.per_decade, 2)} ${sB.variable.unit}/dec (${oB.direction.toUpperCase()})` +
+      ciNote + tNote + partialNote;
+  } else {
+    $("trendline").innerHTML = (o.ok
+      ? `<b>${s.variable.name}</b> ${o.direction === "rising" ? "rising" :
+         o.direction === "falling" ? "falling" : "flat"} at
+         <b>${o.per_decade > 0 ? "+" : ""}${num(o.per_decade, 3)}
+         ${esc(s.variable.unit)}/decade</b> · MK z=<b>${num(o.z, 2)}</b>
+         p=<b>${o.p < 0.001 ? "<0.001" : num(o.p, 3)}</b>
+         ${o.significant ? "· SIGNIFICANT" : "· NOT SIGNIFICANT"}`
+      : "Insufficient data for trend estimation.") + ciNote + tNote + partialNote;
+  }
 }
 
 function fitLine(pts) {
@@ -1444,6 +2495,51 @@ function renderGlobeRegions(d) {
   ring.userData = { pulsing: true };
   globeGroup.add(ring);
   regionMarkers.push(ring);
+
+  // If Regional Contrast Mode is active, render Region B markers and pulsing cyan ring
+  if (d.compare && d.compare.series && d.compare.region && d.compare.region.bbox) {
+    const sB = d.compare.series[state.activeVarIdx] || d.compare.series[0];
+    const bboxB = d.compare.region.bbox;
+    const cLatB = (Math.min(bboxB[1], bboxB[3]) + Math.max(bboxB[1], bboxB[3])) / 2;
+    const cLonB = (Math.min(bboxB[0], bboxB[2]) + Math.max(bboxB[0], bboxB[2])) / 2;
+
+    sB.cells.forEach((c) => {
+      if (c.slope === null) return;
+      const colour = !c.significant ? "#2a3d45" : (c.direction === "falling" ? "#29b6f6" : "#00e5ff");
+      const geo = new THREE.SphereGeometry(0.016, 8, 8);
+      const mat = new THREE.MeshBasicMaterial({
+        color: colour,
+        transparent: true,
+        opacity: c.significant ? 0.95 : 0.4,
+      });
+      const dot = new THREE.Mesh(geo, mat);
+      const pLat = cLatB + (c.lat - cLatB) * MAG;
+      const pLon = cLonB + (c.lon - cLonB) * MAG;
+      dot.position.copy(latLonToVec3(pLat, pLon, R * 1.055));
+      dot.userData = { cell: c, variable: sB.variable, compare: true };
+      dot.renderOrder = 8;
+      globeGroup.add(dot);
+      regionMarkers.push(dot);
+    });
+
+    const bwB = Math.abs(bboxB[2] - bboxB[0]) * MAG;
+    const bhB = Math.abs(bboxB[3] - bboxB[1]) * MAG;
+    const angRadB = (Math.max(bwB, bhB) / 2) * Math.PI / 180 * 1.15;
+    const ringGeoB = new THREE.RingGeometry(
+      Math.max(0.02, angRadB * 0.9), Math.max(0.024, angRadB), 64, 1);
+    const ringMatB = new THREE.MeshBasicMaterial({
+      color: 0x00e5ff, side: THREE.DoubleSide, transparent: true,
+      opacity: 0.85, depthWrite: false, depthTest: false,
+    });
+    const c0B = bboxCenter(bboxB, 1);
+    const ringB = new THREE.Mesh(ringGeoB, ringMatB);
+    ringB.position.copy(c0B.clone().multiplyScalar(1.014));
+    ringB.lookAt(c0B.clone().multiplyScalar(2));
+    ringB.renderOrder = 9;
+    ringB.userData = { pulsing: true };
+    globeGroup.add(ringB);
+    regionMarkers.push(ringB);
+  }
 }
 
 function updateGlobeOverlay() {
@@ -1505,7 +2601,7 @@ function bindGlobeEvents(host) {
         <div class="tt-row"><span>LON</span><b>${c.lon.toFixed(2)}°</b></div>
         <div class="tt-row"><span>SLOPE</span><b>${c.slope > 0 ? "+" : ""}${num(c.slope * 10, 3)} ${esc(v.unit)}/dec</b></div>
         <div class="tt-row"><span>p</span><b>${c.p === undefined ? "—" : num(c.p, 3)}</b></div>
-        <div class="tt-row"><span>TREND</span><b style="color:${c.significant ? (c.direction === "falling" ? C.fall : C.rise) : "#8c9297"}">${dir}</b></div>`;
+        <div class="tt-row"><span>TREND</span><b style="color:${c.significant ? (c.direction === "falling" ? C.fall : C.rise) : "#b4bac2"}">${dir}</b></div>`;
       tip.style.display = "block";
       tip.style.left = Math.min(window.innerWidth - 220, e.clientX + 14) + "px";
       tip.style.top = Math.min(window.innerHeight - 130, e.clientY + 14) + "px";
@@ -1641,7 +2737,7 @@ function showCellDetail(hit) {
   const cbSep = $("coord-sat-sep");
   if (cbBtn) {
     cbBtn.hidden = false;
-    cbBtn.textContent = `🛰️ CELL (${c.lat.toFixed(1)}°, ${c.lon.toFixed(1)}°)`;
+    cbBtn.textContent = `CELL (${c.lat.toFixed(1)}°, ${c.lon.toFixed(1)}°)`;
     cbBtn.onclick = () => openSatelliteModal(cellBbox, `CELL [${c.lat.toFixed(1)}°, ${c.lon.toFixed(1)}°]`);
   }
   if (cbSep) cbSep.hidden = false;

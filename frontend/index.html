@@ -62,17 +62,34 @@
         <span class="ph-label">01 · VARIABLES</span>
         <span class="ph-count" id="var-count">1 / 3</span>
       </div>
+      <div class="sphere-filter-bar" id="sphere-filter-bar">
+        <button class="sphere-tab active" data-sphere="all" type="button">ALL</button>
+        <button class="sphere-tab" data-sphere="atmosphere" type="button">ATM</button>
+        <button class="sphere-tab" data-sphere="hydrosphere" type="button">HYD</button>
+        <button class="sphere-tab" data-sphere="land" type="button">LND</button>
+        <button class="sphere-tab" data-sphere="energy" type="button">ENG</button>
+      </div>
       <div id="var-list" class="var-list"></div>
-      <p class="micro">Select up to 3 to overlay on the globe.</p>
-      <button id="defs-open" class="link-btn">ⓘ WHAT DO THESE VARIABLES MEAN?</button>
+      <p class="micro">Select up to 3 variables across Earth system spheres.</p>
+      <button id="defs-open" class="link-btn">WHAT DO THESE VARIABLES MEAN?</button>
     </section>
 
     <section class="panel">
       <div class="panel-head">
         <span class="ph-label">02 · REGION</span>
+        <button id="toggle-compare-mode" class="hud-mode-pill" type="button">MODE: SINGLE</button>
       </div>
-      <select id="region" class="hud-select"></select>
-      <p class="micro" id="region-desc">—</p>
+      <div class="region-select-group">
+        <label class="hud-field-lbl" for="region">PRIMARY REGION (A)</label>
+        <select id="region" class="hud-select"></select>
+        <p class="micro" id="region-desc">—</p>
+      </div>
+      <div class="region-select-group" id="compare-region-group" style="display: none;">
+        <div class="region-contrast-divider"></div>
+        <label class="hud-field-lbl" for="compare-region">CONTRAST REGION (B)</label>
+        <select id="compare-region" class="hud-select"></select>
+        <p class="micro" id="compare-region-desc">—</p>
+      </div>
     </section>
 
     <section class="panel">
@@ -141,7 +158,7 @@
       <span class="cb-sep"></span>
       <span id="region-readout">NO REGION SELECTED</span>
       <span class="cb-sep" id="coord-sat-sep" hidden></span>
-      <button id="coord-sat-btn" class="cb-sat-btn" title="Inspect selected region or cell from orbit" hidden>🛰️ ORBITAL VIEW</button>
+      <button id="coord-sat-btn" class="cb-sat-btn" title="Inspect selected region or cell from orbit" hidden>ORBITAL VIEW</button>
       <span class="cb-sep"></span>
       <span id="proj-readout">ORTHOGRAPHIC</span>
     </div>
@@ -153,7 +170,12 @@
     <section class="panel">
       <div class="panel-head">
         <span class="ph-label">REGIONAL SIGNAL</span>
-        <span class="ph-count" id="verdict-chip">—</span>
+        <div class="panel-head-actions">
+          <span class="ph-count" id="verdict-chip">—</span>
+          <button id="btn-expand-signal" class="panel-icon-btn" title="Expand Full Statistical Deep Dive" aria-label="Expand statistics">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+          </button>
+        </div>
       </div>
       <div class="threat">
         <div class="threat-dial">
@@ -183,15 +205,43 @@
     <section class="panel chart-panel">
       <div class="panel-head">
         <span class="ph-label">TREND SERIES</span>
-        <div class="seg">
-          <button class="seg-btn on" data-mode="yearly">YEAR</button>
-          <button class="seg-btn" data-mode="monthly">MONTH</button>
+        <div class="panel-head-actions">
+          <div class="seg">
+            <button class="seg-btn on" data-mode="yearly">YEAR</button>
+            <button class="seg-btn" data-mode="monthly">MONTH</button>
+          </div>
+          <button id="btn-expand-chart" class="panel-icon-btn" title="Expand High-Resolution Graph & Observatory" aria-label="Expand graph">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+          </button>
         </div>
       </div>
-      <div class="chart-box">
+      <div class="chart-box" id="chart-box-clickable" title="Click to expand full graph & statistics">
         <canvas id="chart"></canvas>
+        <span class="chart-expand-badge" id="chart-expand-badge">EXPAND</span>
       </div>
       <div id="trendline" class="trend-note">—</div>
+    </section>
+
+    <!-- EARTH SYSTEM COUPLING PANEL -->
+    <section class="panel" id="coupling-panel" style="display: none;">
+      <div class="panel-head">
+        <span class="ph-label">EARTH SYSTEM COUPLING</span>
+        <span class="ph-count" id="coupling-tag">CROSS-SPHERE</span>
+      </div>
+      <div id="coupling-list" class="coupling-list">
+        <p class="micro">Select 2+ variables across spheres to diagnose couplings.</p>
+      </div>
+    </section>
+
+    <!-- REGIONAL CONTRAST PANEL -->
+    <section class="panel" id="contrast-panel" style="display: none;">
+      <div class="panel-head">
+        <span class="ph-label">REGIONAL CONTRAST</span>
+        <span class="ph-count" id="contrast-tag">A VS B</span>
+      </div>
+      <div id="contrast-list" class="contrast-list">
+        <p class="micro">Select Contrast Mode to compare two geographic regions.</p>
+      </div>
     </section>
 
     <section class="panel">
@@ -266,29 +316,49 @@
 
       <div class="mt-group mt-years">
         <div class="year-pick-item">
-          <span class="mt-label">YEAR A (LEFT):</span>
+          <span class="mt-label">YEAR A:</span>
           <select id="modal-year-base" class="hud-select-mini"></select>
         </div>
         <span class="mt-vs">VS</span>
         <div class="year-pick-item">
-          <span class="mt-label">YEAR B (RIGHT):</span>
+          <span class="mt-label">YEAR B:</span>
           <select id="modal-year-recent" class="hud-select-mini"></select>
         </div>
         <div class="year-pick-item">
-          <span class="mt-label">SEASON (M-D):</span>
-          <input type="text" id="modal-date-picker" class="hud-input-mini" placeholder="MM-DD" value="08-15" maxlength="5" title="Month and day (e.g. 08-15) to minimize clouds">
-          <button id="modal-date-apply" class="hud-btn-mini" title="Apply date">SET</button>
+          <span class="mt-label">MONTH:</span>
+          <div class="month-stepper-wrap">
+            <button id="modal-month-prev" class="hud-btn-mini" title="Previous month">&lt;</button>
+            <select id="modal-month-select" class="hud-select-mini">
+              <option value="01">JAN</option>
+              <option value="02">FEB</option>
+              <option value="03">MAR</option>
+              <option value="04">APR</option>
+              <option value="05">MAY</option>
+              <option value="06">JUN</option>
+              <option value="07">JUL</option>
+              <option value="08" selected>AUG</option>
+              <option value="09">SEP</option>
+              <option value="10">OCT</option>
+              <option value="11">NOV</option>
+              <option value="12">DEC</option>
+            </select>
+            <button id="modal-month-next" class="hud-btn-mini" title="Next month">&gt;</button>
+          </div>
+        </div>
+        <div class="year-pick-item">
+          <span class="mt-label">DAY:</span>
+          <select id="modal-day-select" class="hud-select-mini"></select>
         </div>
         <div class="year-steppers">
-          <button id="modal-prev-year" class="hud-btn-mini" title="Step Year B backward">◀ YR</button>
-          <button id="modal-next-year" class="hud-btn-mini" title="Step Year B forward">YR ▶</button>
-          <button id="modal-swap-years" class="hud-btn-mini" title="Swap Year A and Year B">⇄ SWAP</button>
+          <button id="modal-prev-year" class="hud-btn-mini" title="Step Year B backward">&lt; YR</button>
+          <button id="modal-next-year" class="hud-btn-mini" title="Step Year B forward">YR &gt;</button>
+          <button id="modal-swap-years" class="hud-btn-mini" title="Swap Year A and Year B">SWAP</button>
         </div>
       </div>
 
       <div class="mt-group mt-links">
         <a id="modal-worldview-link" class="hud-btn-mini ext-btn" target="_blank" rel="noopener noreferrer" href="#">
-          NASA WORLDVIEW ↗
+          NASA WORLDVIEW
         </a>
       </div>
     </div>
@@ -345,16 +415,16 @@
             <div class="sh-line"></div>
             <div class="sh-tag" id="slider-handle-tag">2005 | 2024</div>
             <div class="sh-knob">
-              <span class="sh-arrow">◀</span>
-              <span class="sh-arrow">▶</span>
+              <span class="sh-arrow">&lt;</span>
+              <span class="sh-arrow">&gt;</span>
             </div>
             <div class="sh-line"></div>
           </div>
         </div>
         <div class="slider-status-bar">
-          <span class="ss-side-info left" id="slider-info-left">◀ LEFT: YEAR A</span>
+          <span class="ss-side-info left" id="slider-info-left">LEFT: YEAR A</span>
           <span class="slider-hint">Drag handle left/right to reveal change across coordinates</span>
-          <span class="ss-side-info right" id="slider-info-right">YEAR B: RIGHT ▶</span>
+          <span class="ss-side-info right" id="slider-info-right">YEAR B: RIGHT</span>
         </div>
       </div>
 
@@ -365,15 +435,131 @@
   </div>
 </div>
 
-<!-- ============ VARIABLE DEFINITIONS MODAL ============ -->
+<!-- ============ DATA & GRAPH OBSERVATORY MODAL ============ -->
+<div id="data-modal" class="modal-backdrop" hidden>
+  <div class="modal-window modal-window-wide">
+    <div class="modal-header">
+      <div class="mh-left">
+        <span class="mh-tag">TERRATREND · SCIENTIFIC OBSERVATORY DEEP DIVE</span>
+        <h2 id="data-modal-title">HIGH-RESOLUTION TREND ANALYSIS</h2>
+        <span class="mh-sub" id="data-modal-sub">REGION · SAMPLES · ALPHA: 0.05</span>
+      </div>
+      <button id="data-modal-close" class="modal-close-btn" aria-label="Close modal">&times;</button>
+    </div>
+
+    <div class="modal-toolbar">
+      <div class="mt-group" id="data-modal-var-tabs">
+        <!-- Dynamic variable tabs will be rendered here -->
+      </div>
+
+      <div class="mt-group">
+        <span class="mt-label">SERIES:</span>
+        <div class="seg modal-seg">
+          <button class="seg-btn on" id="data-mode-yearly" data-data-mode="yearly">ANNUAL (THEIL-SEN)</button>
+          <button class="seg-btn" id="data-mode-monthly" data-data-mode="monthly">MONTHLY (SEASONAL)</button>
+        </div>
+      </div>
+
+      <div class="mt-group mt-links">
+        <button id="data-export-csv" class="hud-btn-mini">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          EXPORT CSV
+        </button>
+      </div>
+    </div>
+
+    <div class="modal-body data-modal-body">
+      <!-- EXPANDED HIGH-RES CHART WITH ZOOM CONTROLS -->
+      <div class="chart-zoom-bar">
+        <div class="cz-left">
+          <span class="cz-label">ZOOM AXIS:</span>
+          <div class="seg modal-seg" id="zoom-axis-seg">
+            <button class="seg-btn on" id="zoom-axis-x" data-axis="x" title="Zoom along time axis (widens data points)">TIME (HORIZ)</button>
+            <button class="seg-btn" id="zoom-axis-y" data-axis="y" title="Zoom along value axis (magnifies variation)">VALUE (VERT)</button>
+            <button class="seg-btn" id="zoom-axis-xy" data-axis="xy" title="Zoom both axes together">BOTH (X+Y)</button>
+          </div>
+          <button id="btn-zoom-in" class="hud-btn-mini" title="Zoom in to widen data points">+ IN</button>
+          <button id="btn-zoom-out" class="hud-btn-mini" title="Zoom out">- OUT</button>
+          <button id="btn-zoom-reset" class="hud-btn-mini" title="Reset zoom back to full period">RESET</button>
+        </div>
+        <div class="cz-right">
+          <span id="zoom-level-badge" class="cz-badge">ZOOM: 1.0x</span>
+          <span class="cz-hint">Scroll / wheel to zoom · Swipe / drag to pan · Double-click to reset</span>
+        </div>
+      </div>
+      <div class="expanded-chart-container">
+        <canvas id="chart-expanded"></canvas>
+      </div>
+      <div id="expanded-trendline" class="trend-note expanded-trend-note">—</div>
+
+      <!-- 4-CARD STATISTICAL METRIC STRIP -->
+      <div class="stats-metric-strip" id="stats-metric-strip">
+        <div class="metric-card">
+          <span class="mc-label">THEIL–SEN SLOPE</span>
+          <div class="mc-val" id="mc-slope">—</div>
+          <span class="mc-sub" id="mc-slope-sub">Median rate of change</span>
+        </div>
+        <div class="metric-card">
+          <span class="mc-label">CUMULATIVE CHANGE</span>
+          <div class="mc-val" id="mc-change">—</div>
+          <span class="mc-sub" id="mc-change-sub">Total shift over period</span>
+        </div>
+        <div class="metric-card">
+          <span class="mc-label">MANN–KENDALL TEST</span>
+          <div class="mc-val" id="mc-mk">—</div>
+          <span class="mc-sub" id="mc-mk-sub">p-value & significance</span>
+        </div>
+        <div class="metric-card">
+          <span class="mc-label">HIRSCH–SLACK CROSS-CHECK</span>
+          <div class="mc-val" id="mc-seasonal">—</div>
+          <span class="mc-sub" id="mc-seasonal-sub">Seasonality-controlled test</span>
+        </div>
+      </div>
+
+      <!-- 5x5 SPATIAL CELL MATRIX -->
+      <div class="expanded-grid-section">
+        <div class="eg-header">
+          <span class="eg-title">SPATIAL GRID CONSENSUS (5x5 MATRIX · NORTH-ALIGNED)</span>
+          <div class="eg-header-right">
+            <span class="eg-orient-tag">TOP: NORTH · BOTTOM: SOUTH · LEFT: WEST · RIGHT: EAST</span>
+            <span class="eg-badge" id="eg-cell-count">25 CELLS</span>
+          </div>
+        </div>
+        <div class="eg-matrix" id="eg-cell-matrix">
+          <!-- 25 cell chips dynamically rendered -->
+        </div>
+        <div class="eg-detail" id="eg-cell-detail">Hover or click a cell chip in the 5x5 matrix to inspect coordinate-specific trends.</div>
+      </div>
+
+      <!-- EXPANDED EARTH SYSTEM COUPLING SECTION -->
+      <div class="expanded-coupling-section" id="eg-coupling-section" style="display: none;">
+        <div class="eg-header">
+          <span class="eg-title">EARTH SYSTEM COUPLING & MULTI-SPHERE FEEDBACK</span>
+          <span class="eg-badge" id="eg-coupling-count">0 DETECTED</span>
+        </div>
+        <div class="eg-coupling-grid" id="eg-coupling-grid"></div>
+      </div>
+
+      <!-- EXPANDED REGIONAL CONTRAST SECTION -->
+      <div class="expanded-contrast-section" id="eg-contrast-section" style="display: none;">
+        <div class="eg-header">
+          <span class="eg-title">REGIONAL CONTRAST DEEP DIVE (REGION A VS REGION B)</span>
+          <span class="eg-badge" id="eg-contrast-badge">CONTRAST ACTIVE</span>
+        </div>
+        <div class="eg-contrast-grid" id="eg-contrast-grid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ GLOSSARY / DEFINITIONS MODAL ============ -->
 <div id="defs-modal" class="modal-backdrop" hidden>
   <div class="modal-window defs-window">
     <div class="modal-header">
       <div class="mh-left">
         <span class="mh-tag">GLOSSARY · PLAIN ENGLISH</span>
         <h2>WHAT THESE VARIABLES MEAN</h2>
-        <span class="mh-sub">Every measurement explained without jargon — for
-          students, journalists and anyone new to Earth science</span>
+        <span class="mh-sub">Every measurement explained without jargon — for students, journalists and Earth observers</span>
       </div>
       <button id="defs-close" class="modal-close-btn" aria-label="Close">&times;</button>
     </div>
@@ -394,9 +580,9 @@
     </div>
     <div class="scan-table" id="scan-table"></div>
     <p class="scan-note">
-      Ranked by significance, then by trend coherence (|τ|). Uses the same 5×5
-      grid as the full analysis, so the p-values match when you open a row.
-      A cold scan takes ~45 s; results are cached, so repeat scans are fast.
+      Ranked by significance, then by trend coherence (|τ|). Uses the same 5x5
+      grid as the full analysis, so p-values match when you open a row.
+      Results are cached, so repeat scans are instant.
       Cells shown as significant / total.
     </p>
   </div>
@@ -404,6 +590,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

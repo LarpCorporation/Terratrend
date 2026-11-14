@@ -1,4 +1,4 @@
-"""TerraTrend server — zero-dependency stdlib HTTP server.
+"""TerraTrend backend HTTP server.
 
 Serves the JSON API under /api/* and the static frontend at /.
 Run:  python server.py  [port]
@@ -15,7 +15,10 @@ import catalog
 import gibs
 import literature
 import power_client
-from analysis import analyze_series, seasonal_mk
+from analysis import (
+    analyze_series, seasonal_mk,
+    analyze_cross_coupling, analyze_regional_contrast
+)
 
 BASE_DIR = Path(__file__).resolve().parent
 FRONTEND_DIR = BASE_DIR.parent / "frontend"
@@ -30,21 +33,19 @@ MIME = {
     ".css": "text/css; charset=utf-8",
     ".js": "application/javascript; charset=utf-8",
     ".json": "application/json; charset=utf-8",
-    ".png": "image/png",
     ".svg": "image/svg+xml",
+    ".png": "image/png",
     ".ico": "image/x-icon",
+    ".woff2": "font/woff2",
 }
 
 
-def _int(q, key, default):
-    try:
-        return int(q.get(key, [default])[0])
-    except (TypeError, ValueError):
-        return default
-
-
 def _month_labels(months):
-    return [f"{str(m)[:4]}-{str(m)[4:]}" for m in months]
+    out = []
+    for m in months:
+        s = str(m)
+        out.append(f"{s[:4]}-{s[4:]}")
+    return out
 
 
 def _annualize(month_labels, values):
@@ -77,6 +78,7 @@ def _complete_years(yearly_ts):
 
 
 def _region_series(grid, months):
+    """Area-average of the grid for each month."""
     out = []
     for m in months:
         vals = []
@@ -105,43 +107,59 @@ def analyze_variable(var, grid, months, month_labels):
             cell = {"lon": lo, "lat": la, "n": a.get("n", 0)}
             if a.get("ok"):
                 cell.update({
-                    "slope": a["slope"], "z": a["z"], "p": a["p"],
-                    "significant": a["significant"],
+                    "slope": a["slope"],
                     "direction": a["direction"],
-                    "change_pct": a["change_pct"],
+                    "significant": a["significant"],
+                    "p": a["p"],
+                    "per_decade": a["per_decade"],
+                    "stars": a["stars"],
+                    "ci_low_per_decade": a.get("ci_low_per_decade"),
+                    "ci_high_per_decade": a.get("ci_high_per_decade"),
+                    "t_p": a.get("t_p"),
+                    "methods_agree": a.get("methods_agree"),
                 })
             else:
-                cell.update({"slope": None, "significant": False,
-                             "direction": "nodata"})
+                cell.update({"slope": 0.0, "direction": "nodata",
+                            "significant": False, "p": 1.0,
+                            "per_decade": 0.0, "stars": ""})
             cells.append(cell)
 
     overall = analyze_series(annual_values)
-    sz, sp, _, sh = seasonal_mk(region_ts)
-    overall["seasonal_z"] = sz
-    overall["seasonal_p"] = sp
-    overall["seasonal_significant"] = sh
+    seasonal = seasonal_mk(region_ts, period=12)
 
     return {
         "variable": var,
-        "region_timeseries": region_ts,
+        "monthly_timeseries": [
+            {"month": m, "value": v} for m, v in zip(month_labels, region_ts)
+        ],
         "yearly_timeseries": yearly_ts,
-        "overall": overall,
         "cells": cells,
+        "overall": overall,
+        "seasonal": seasonal,
         "summary": _summarize(cells),
     }
 
 
 def _summarize(cells):
-    sig = [c for c in cells if c.get("significant")]
+    valid = [c for c in cells if c["direction"] != "nodata"]
+    sig = [c for c in valid if c["significant"]]
+    rising = [c for c in sig if c["direction"] == "rising"]
+    falling = [c for c in sig if c["direction"] == "falling"]
     return {
-        "significant_cells": len(sig),
         "total_cells": len(cells),
-        "rising": sum(1 for c in sig if c["direction"] == "rising"),
-        "falling": sum(1 for c in sig if c["direction"] == "falling"),
+        "valid_cells": len(valid),
+        "significant_cells": len(sig),
+        "rising_cells": len(rising),
+        "falling_cells": len(falling),
+        "consensus": (
+            "rising" if len(rising) > len(valid) * 0.4 else
+            "falling" if len(falling) > len(valid) * 0.4 else
+            "mixed" if sig else "none"
+        ),
     }
 
 
-def run_analysis(variables, region, start, end, nx=5, ny=5):
+def run_analysis(variables, region, start, end, nx=5, ny=5, compare_region=None):
     """Core analysis pipeline across one or more variables."""
     if end - start < 8:
         raise ValueError("Need at least 9 years of data (end - start >= 8)")
@@ -155,19 +173,20 @@ def run_analysis(variables, region, start, end, nx=5, ny=5):
     vars_ = []
     for vid in variables:
         v = next((x for x in catalog.CATALOG if x["id"] == vid), None)
-        if not v:
-            raise KeyError(f"Unknown variable {vid}")
-        vars_.append(v)
+        if v:
+            vars_.append(v)
     if not vars_:
-        raise ValueError("At least one variable required")
+        raise ValueError("No known variables requested")
 
+    series = []
     months = None
     month_labels = None
-    series = []
+    first_valid = None
+    last_valid = None
 
     for var in vars_:
-        grid = power_client.fetch_grid(var["id"], reg["bbox"],
-                                       start, end, nx, ny)
+        grid = power_client.fetch_grid(var["id"], reg["bbox"], start, end, nx, ny)
+
         if months is None:
             all_months = set()
             for lo in grid:
@@ -176,6 +195,9 @@ def run_analysis(variables, region, start, end, nx=5, ny=5):
             months = sorted(m for m in all_months
                             if len(str(m)) == 6 and str(m)[4:] != "13")
             month_labels = _month_labels(months)
+            if month_labels:
+                first_valid = month_labels[0]
+                last_valid = month_labels[-1]
 
         block = analyze_variable(var, grid, months, month_labels)
         try:
@@ -185,28 +207,59 @@ def run_analysis(variables, region, start, end, nx=5, ny=5):
             block["literature"] = {"ok": False, "error": str(e), "papers": []}
         series.append(block)
 
+    couplings = []
+    if len(series) >= 2:
+        for i in range(len(series)):
+            for j in range(i + 1, len(series)):
+                block_a = series[i]
+                block_b = series[j]
+                ts_a = [p["value"] for p in block_a["yearly_timeseries"]]
+                ts_b = [p["value"] for p in block_b["yearly_timeseries"]]
+                c = analyze_cross_coupling(
+                    block_a["variable"], block_b["variable"],
+                    ts_a, ts_b,
+                    block_a["overall"], block_b["overall"]
+                )
+                couplings.append(c)
+
+    compare_data = None
+    if compare_region and compare_region != region:
+        reg_b = next((r for r in catalog.REGIONS if r["id"] == compare_region), None)
+        if reg_b:
+            compare_series = []
+            contrasts = []
+            for i, var in enumerate(vars_):
+                grid_b = power_client.fetch_grid(var["id"], reg_b["bbox"], start, end, nx, ny)
+                block_b = analyze_variable(var, grid_b, months, month_labels)
+                compare_series.append(block_b)
+                contrast = analyze_regional_contrast(
+                    var, reg, reg_b,
+                    series[i]["yearly_timeseries"],
+                    block_b["yearly_timeseries"],
+                    series[i]["overall"],
+                    block_b["overall"]
+                )
+                contrasts.append(contrast)
+
+            compare_data = {
+                "region": reg_b,
+                "series": compare_series,
+                "contrasts": contrasts,
+            }
+
     satellite_data = None
     try:
         satellite_data = gibs.get_satellite_evidence(reg, start, end)
     except Exception as e:  # noqa: BLE001
         satellite_data = {"error": str(e)}
 
-    # last month that actually carries data (keys exist for the whole requested
-    # range, but trailing months come back as -999 / None)
-    first_valid = last_valid = None
-    if series and month_labels:
-        for lbl, v in zip(month_labels, series[0]["region_timeseries"]):
-            if v is not None:
-                if first_valid is None:
-                    first_valid = lbl
-                last_valid = lbl
-
-    return {
+    out = {
         "region": reg, "start": start, "end": end,
         "months": month_labels,
         "series": series,
         "grid": {"nx": nx, "ny": ny, "bbox": reg["bbox"]},
         "satellite": satellite_data,
+        "couplings": couplings,
         "window": {
             "first_month": first_valid,
             "last_month": last_valid,
@@ -218,6 +271,9 @@ def run_analysis(variables, region, start, end, nx=5, ny=5):
         },
         "sources": ["NASA POWER (MERRA-2 / GPCP / CERES)", "NASA GIBS (MODIS / VIIRS)", "OpenAlex"],
     }
+    if compare_data:
+        out["compare"] = compare_data
+    return out
 
 
 def run_scan(variables, region, start, end, nx=5, ny=5):
@@ -225,10 +281,8 @@ def run_scan(variables, region, start, end, nx=5, ny=5):
 
     This is the "which variable is actually trending here?" question the
     challenge opens with. It deliberately uses the *same* grid resolution as a
-    full analysis so the numbers agree when a user opens a row: a screen that
-    disagreed with the detail view would be worse than no screen at all.
-    POWER responses are cached, so a second scan is fast and opening any
-    individual variable afterwards is instant.
+    full analysis so the numbers agree when a user opens a row.
+    POWER responses are cached, so opening any individual variable afterwards is instant.
     """
     if end - start < 8:
         raise ValueError("Need at least 9 years of data (end - start >= 8)")
@@ -251,9 +305,6 @@ def run_scan(variables, region, start, end, nx=5, ny=5):
     month_labels = None
     rows_by_id = {}
 
-    # Two passes: a wide scan is 25 points x 16 variables, which can trip
-    # POWER's rate limiter partway through. Anything that failed is retried
-    # once after a pause rather than being reported as "no data".
     pending = list(vars_)
     for attempt in (0, 1):
         if not pending:
@@ -269,7 +320,9 @@ def run_scan(variables, region, start, end, nx=5, ny=5):
                     rows_by_id[var["id"]] = {
                         "id": var["id"], "name": var["name"],
                         "unit": var["unit"], "color": var["color"],
-                        "group": var["group"], "ok": False,
+                        "group": var.get("group", "temperature"),
+                        "sphere_code": var.get("sphere_code", "ATM"),
+                        "ok": False,
                         "error": str(e)[:120], "significant": False,
                         "direction": "nodata", "tau": 0.0,
                     }
@@ -289,7 +342,9 @@ def run_scan(variables, region, start, end, nx=5, ny=5):
             sm = block["summary"]
             rows_by_id[var["id"]] = {
                 "id": var["id"], "name": var["name"], "unit": var["unit"],
-                "color": var["color"], "group": var["group"],
+                "color": var["color"],
+                "group": var.get("group", "temperature"),
+                "sphere_code": var.get("sphere_code", "ATM"),
                 "ok": o.get("ok", False),
                 "slope_decade": o.get("per_decade"),
                 "p": o.get("p"),
@@ -378,6 +433,7 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/api/catalog":
                 return self._json(200, {
                     "variables": catalog.CATALOG,
+                    "spheres": catalog.SPHERES,
                     "regions": catalog.REGIONS,
                     "years": {"min": 1985, "max": MAX_YEAR},
                     "max_variables": MAX_VARS,
@@ -386,18 +442,18 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/api/satellite-imagery":
                 region_id = q.get("region", [""])[0]
                 reg = next((r for r in catalog.REGIONS if r["id"] == region_id), None)
-                bbox_raw = q.get("bbox", [""])[0]
                 custom_bbox = None
+                bbox_raw = q.get("bbox", [""])[0]
                 if bbox_raw:
                     try:
-                        custom_bbox = [float(x.strip()) for x in bbox_raw.split(",")]
-                        if len(custom_bbox) != 4:
-                            custom_bbox = None
-                    except ValueError:
-                        custom_bbox = None
+                        coords = [float(x.strip()) for x in bbox_raw.split(",")]
+                        if len(coords) == 4:
+                            custom_bbox = coords
+                    except Exception:  # noqa: BLE001
+                        pass
 
                 if not reg and not custom_bbox:
-                    return self._json(400, {"error": "Valid region or bbox parameter required"})
+                    return self._json(400, {"error": f"Unknown region {region_id} and no valid bbox"})
 
                 region_obj = reg if reg else {"id": "custom", "name": "Selected Area", "bbox": custom_bbox}
                 start_yr = _int(q, "start", 2005)
@@ -426,6 +482,7 @@ class Handler(BaseHTTPRequestHandler):
                 raw = q.get("variables", q.get("variable", [""]))[0]
                 variables = [v.strip() for v in raw.split(",") if v.strip()]
                 region = q.get("region", [""])[0]
+                compare_region = q.get("compare_region", [""])[0] or None
                 if not variables or not region:
                     return self._json(
                         400, {"error": "variables and region required"})
@@ -435,39 +492,55 @@ class Handler(BaseHTTPRequestHandler):
                     _int(q, "start", 2000), _int(q, "end", MAX_YEAR),
                     max(3, min(7, _int(q, "nx", 5))),
                     max(3, min(7, _int(q, "ny", 5))),
+                    compare_region=compare_region,
                 )
                 return self._json(200, result)
             return self._static(path)
         except KeyError as e:
-            return self._json(404, {"error": str(e).strip("'\"")})
+            return self._json(404, {"error": str(e)})
         except ValueError as e:
             return self._json(400, {"error": str(e)})
         except Exception as e:  # noqa: BLE001
-            return self._json(502, {"error": f"Analysis failed: {e}"})
+            import traceback
+            traceback.print_exc()
+            return self._json(500, {"error": str(e)})
 
     def _static(self, path):
         if path in ("/", ""):
             path = "/index.html"
         target = (FRONTEND_DIR / path.lstrip("/")).resolve()
-        try:
-            target.relative_to(FRONTEND_DIR.resolve())
-        except ValueError:
+        if not str(target).startswith(str(FRONTEND_DIR.resolve())):
             return self._json(403, {"error": "forbidden"})
         if not target.is_file():
             return self._json(404, {"error": "not found"})
-        ctype = MIME.get(target.suffix.lower(), "application/octet-stream")
-        return self._send(200, target.read_bytes(), ctype)
+        ext = target.suffix.lower()
+        ctype = MIME.get(ext, "application/octet-stream")
+        with open(target, "rb") as f:
+            data = f.read()
+        return self._send(200, data, ctype)
+
+
+def _int(q, key, default):
+    try:
+        return int(q.get(key, [default])[0])
+    except (ValueError, TypeError):
+        return default
 
 
 def main():
-    port = int(sys.argv[1]) if len(sys.argv) > 1 else 8517
-    server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
-    print(f"TerraTrend running at http://127.0.0.1:{port}")
-    print("Ctrl+C to stop")
+    port = 8517
+    if len(sys.argv) > 1:
+        try:
+            port = int(sys.argv[1])
+        except ValueError:
+            pass
+    server = ThreadingHTTPServer(("0.0.0.0", port), Handler)
+    print(f"TerraTrend running on http://127.0.0.1:{port}")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
         print("\nShutting down")
+        server.server_close()
 
 
 if __name__ == "__main__":
