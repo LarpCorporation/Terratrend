@@ -165,7 +165,21 @@ body {
 }
 
 /* ---------- variables ---------- */
-.var-list { display: flex; flex-direction: column; gap: 3px; }
+.var-list {
+  display: flex; flex-direction: column; gap: 3px;
+  max-height: 236px; overflow-y: auto; padding-right: 3px;
+  -webkit-mask-image: linear-gradient(to bottom, #000 88%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 88%, transparent 100%);
+}
+.var-list::-webkit-scrollbar { width: 4px; }
+.var-list::-webkit-scrollbar-thumb { background: var(--line-hot); }
+.var-list::-webkit-scrollbar-track { background: transparent; }
+.var-group {
+  font-family: var(--font); font-size: .45rem; letter-spacing: .16em;
+  color: var(--muted-2); margin: 5px 0 2px; padding-top: 4px;
+  border-top: 1px solid var(--line);
+}
+.var-group:first-child { border-top: 0; margin-top: 0; padding-top: 0; }
 .var-item {
   display: flex; align-items: center; gap: 9px;
   padding: 5px 8px; cursor: pointer;

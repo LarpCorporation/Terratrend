@@ -93,6 +93,13 @@ humidity, wind, radiation, pressure — the *simple* half.
 
 **3.4 Add 6 verified POWER variables** (all confirmed working):
 
+> **Status: DONE.** The catalog now holds **16 variables** in three groups
+> (temperature / water / atmosphere), each verified live via
+> `test_catalog.py` with `TERRATREND_NET=1` (all 16 return data).
+> First result from the new set: Sahel root-zone soil moisture is rising
+> **+0.015/decade, p = 0.024, 14/25 cells** — a coherent companion to the
+> documented rainfall recovery.
+
 | ID | Name | Unit | Why it matters |
 |---|---|---|---|
 | `EVPTRNS` | Evapotranspiration | mm/day | the brief's "evaporation" |
@@ -107,6 +114,12 @@ Effort: **S** (catalog entries only — pipeline is generic).
 **3.5 Ocean regions** — POWER works over water; add 3–4 ocean boxes (central
 Pacific ENSO, North Atlantic, Indian Ocean, Southern Ocean). Ship `TS` as the
 ocean-friendly variable. Effort: **S**.
+
+> **Status: DONE.** 4 ocean regions added (Central Pacific, North Atlantic,
+> Indian Ocean, Southern Ocean) and every region now carries
+> `surface: land|ocean`. Verified: `TS` over the North Atlantic returns a full
+> 21-complete-year series (+0.213 °C/decade, p = 0.264 — genuinely not
+> significant in that box, which is the honest answer).
 
 **3.6 Aerosol / vegetation / ocean-colour variables** — MODIS-derived (AOD,
 NDVI), OMI (absorbing aerosol), SeaWiFS/MODIS chlorophyll. **Not** in POWER;

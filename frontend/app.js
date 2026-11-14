@@ -107,18 +107,37 @@ function startClock() {
 function renderVarList() {
   const box = $("var-list");
   box.innerHTML = "";
-  state.catalog.variables.forEach((v) => {
+
+  const GROUPS = [
+    ["temperature", "TEMPERATURE"],
+    ["water", "WATER & MOISTURE"],
+    ["energy", "ENERGY & ATMOSPHERE"],
+  ];
+
+  const addItem = (v) => {
     const on = state.selected.includes(v.id);
     const el = document.createElement("div");
     el.className = "var-item" + (on ? " on" : "");
     el.style.setProperty("--vc", v.color);
+    el.title = v.desc;
     el.innerHTML = `
       <i class="var-dot"></i>
       <span class="var-name">${esc(v.name)}</span>
       <span class="var-unit">${esc(v.unit)}</span>`;
     el.addEventListener("click", () => toggleVar(v.id));
     box.appendChild(el);
+  };
+
+  GROUPS.forEach(([gid, label]) => {
+    const vars = state.catalog.variables.filter((v) => v.group === gid);
+    if (!vars.length) return;
+    const head = document.createElement("div");
+    head.className = "var-group";
+    head.textContent = label;
+    box.appendChild(head);
+    vars.forEach(addItem);
   });
+
   $("var-count").textContent = `${state.selected.length} / ${MAX_VARS}`;
 }
 
