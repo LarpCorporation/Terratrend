@@ -812,12 +812,79 @@ body {
 
 /* ---------- data & graph expanded observatory modal ---------- */
 .data-modal-body {
-  gap: 14px;
+  gap: 12px;
+}
+.chart-zoom-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #0d0f12;
+  border: 1px solid var(--line);
+  padding: 6px 12px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.cz-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.cz-label {
+  font-family: var(--font);
+  font-size: .5rem;
+  letter-spacing: .14em;
+  color: var(--muted);
+  font-weight: 600;
+}
+.modal-seg {
+  border-color: var(--line-hot);
+}
+.modal-seg .seg-btn {
+  padding: 3px 8px;
+  font-size: .48rem;
+  letter-spacing: .1em;
+  color: var(--muted);
+  transition: all .15s ease;
+}
+.modal-seg .seg-btn:hover {
+  color: var(--text-bright);
+}
+.modal-seg .seg-btn.on {
+  background: var(--text-bright);
+  color: #08090a;
+  font-weight: 700;
+}
+.cz-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.cz-badge {
+  font-family: var(--font);
+  font-size: .48rem;
+  letter-spacing: .12em;
+  color: var(--hi);
+  padding: 3px 7px;
+  border: 1px solid var(--line-hot);
+  background: #111418;
+  font-weight: 600;
+}
+.cz-hint {
+  font-family: var(--font);
+  font-size: .46rem;
+  letter-spacing: .06em;
+  color: var(--muted-2);
 }
 .expanded-chart-container {
   position: relative; width: 100%; height: 350px;
   background: #08090b; border: 1px solid var(--line);
   padding: 10px;
+  cursor: grab;
+}
+.expanded-chart-container:active {
+  cursor: grabbing;
 }
 .expanded-trend-note {
   font-size: .62rem; padding: 6px 12px;

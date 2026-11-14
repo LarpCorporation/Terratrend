@@ -36,6 +36,7 @@ const state = {
   satCustomDate: "08-15",
   expandedVarIdx: 0,
   expandedMode: "yearly",
+  zoomAxis: "x",
 };
 
 let chart = null;
@@ -779,6 +780,15 @@ function initDataModal() {
   const closeBtn = $("data-modal-close");
   if (!modal) return;
 
+  // Register ChartZoom plugin if needed
+  if (window.Chart && window.ChartZoom && window.Chart.registry && !window.Chart.registry.plugins.get("zoom")) {
+    try {
+      window.Chart.register(window.ChartZoom);
+    } catch (e) {
+      console.warn("ChartZoom registration notice:", e);
+    }
+  }
+
   if (closeBtn) closeBtn.addEventListener("click", closeDataModal);
   modal.addEventListener("click", (e) => {
     if (e.target === modal) closeDataModal();
@@ -809,6 +819,112 @@ function initDataModal() {
   const exportBtn = $("data-export-csv");
   if (exportBtn) {
     exportBtn.addEventListener("click", exportDataCSV);
+  }
+
+  // Zoom toolbar axis buttons
+  const axisBtns = document.querySelectorAll("#zoom-axis-seg .seg-btn");
+  axisBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      axisBtns.forEach((b) => b.classList.remove("on"));
+      btn.classList.add("on");
+      state.zoomAxis = btn.dataset.axis || "x";
+      if (expandedChart && expandedChart.options && expandedChart.options.plugins && expandedChart.options.plugins.zoom) {
+        expandedChart.options.plugins.zoom.zoom.mode = state.zoomAxis;
+        expandedChart.options.plugins.zoom.pan.mode = state.zoomAxis;
+        expandedChart.update("none");
+      }
+    });
+  });
+
+  // Zoom toolbar buttons
+  const zoomInBtn = $("btn-zoom-in");
+  if (zoomInBtn) {
+    zoomInBtn.addEventListener("click", () => {
+      if (!expandedChart) return;
+      if (typeof expandedChart.zoom === "function") {
+        if (state.zoomAxis === "x") {
+          expandedChart.zoom({ x: 1.3, y: 1 });
+        } else if (state.zoomAxis === "y") {
+          expandedChart.zoom({ x: 1, y: 1.3 });
+        } else {
+          expandedChart.zoom(1.3);
+        }
+        updateZoomBadge();
+      }
+    });
+  }
+
+  const zoomOutBtn = $("btn-zoom-out");
+  if (zoomOutBtn) {
+    zoomOutBtn.addEventListener("click", () => {
+      if (!expandedChart) return;
+      if (typeof expandedChart.zoom === "function") {
+        if (state.zoomAxis === "x") {
+          expandedChart.zoom({ x: 0.77, y: 1 });
+        } else if (state.zoomAxis === "y") {
+          expandedChart.zoom({ x: 1, y: 0.77 });
+        } else {
+          expandedChart.zoom(0.77);
+        }
+        updateZoomBadge();
+      }
+    });
+  }
+
+  const zoomResetBtn = $("btn-zoom-reset");
+  if (zoomResetBtn) {
+    zoomResetBtn.addEventListener("click", () => {
+      if (!expandedChart) return;
+      if (typeof expandedChart.resetZoom === "function") {
+        expandedChart.resetZoom();
+        updateZoomBadge();
+      }
+    });
+  }
+
+  // Expanded chart canvas events: double-click to reset, two-finger horizontal swipe to pan
+  const expCanvas = $("chart-expanded");
+  if (expCanvas) {
+    expCanvas.addEventListener("dblclick", () => {
+      if (expandedChart && typeof expandedChart.resetZoom === "function") {
+        expandedChart.resetZoom();
+        updateZoomBadge();
+      }
+    });
+
+    expCanvas.addEventListener("wheel", (e) => {
+      if (!expandedChart) return;
+      // When user swipes sideways (two-finger horizontal scroll on trackpad)
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY) && Math.abs(e.deltaX) > 2) {
+        e.preventDefault();
+        if (typeof expandedChart.pan === "function") {
+          expandedChart.pan({ x: -e.deltaX * 1.3 });
+          updateZoomBadge();
+        }
+      }
+    }, { passive: false });
+  }
+}
+
+function updateZoomBadge() {
+  const badge = $("zoom-level-badge");
+  if (!badge) return;
+  if (!expandedChart) {
+    badge.textContent = "ZOOM: 1.0x";
+    badge.style.color = "var(--muted)";
+    badge.style.borderColor = "var(--line-hot)";
+    return;
+  }
+  try {
+    const level = typeof expandedChart.getZoomLevel === "function" ? expandedChart.getZoomLevel() : 1;
+    const isZoomed = typeof expandedChart.isZoomedOrPanned === "function"
+      ? expandedChart.isZoomedOrPanned()
+      : (level > 1.05 || level < 0.95);
+    badge.textContent = `ZOOM: ${level.toFixed(1)}x${isZoomed ? " (ACTIVE)" : ""}`;
+    badge.style.color = isZoomed ? "var(--hi)" : "var(--muted)";
+    badge.style.borderColor = isZoomed ? "var(--hi)" : "var(--line-hot)";
+  } catch (err) {
+    badge.textContent = "ZOOM: 1.0x";
   }
 }
 
@@ -1024,6 +1140,25 @@ function drawExpandedChart() {
       animation: { duration: 350 },
       interaction: { mode: "index", intersect: false },
       plugins: {
+        zoom: {
+          pan: {
+            enabled: true,
+            mode: state.zoomAxis || "x",
+            modifierKey: null,
+            onPanComplete: updateZoomBadge,
+          },
+          zoom: {
+            wheel: {
+              enabled: true,
+              speed: 0.1,
+            },
+            pinch: {
+              enabled: true,
+            },
+            mode: state.zoomAxis || "x",
+            onZoomComplete: updateZoomBadge,
+          },
+        },
         legend: {
           display: true,
           position: "top",
@@ -1069,6 +1204,8 @@ function drawExpandedChart() {
       },
     },
   });
+
+  updateZoomBadge();
 
   const expTrendEl = $("expanded-trendline");
   if (expTrendEl) {

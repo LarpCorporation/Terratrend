@@ -404,7 +404,24 @@
     </div>
 
     <div class="modal-body data-modal-body">
-      <!-- EXPANDED HIGH-RES CHART -->
+      <!-- EXPANDED HIGH-RES CHART WITH ZOOM CONTROLS -->
+      <div class="chart-zoom-bar">
+        <div class="cz-left">
+          <span class="cz-label">ZOOM AXIS:</span>
+          <div class="seg modal-seg" id="zoom-axis-seg">
+            <button class="seg-btn on" id="zoom-axis-x" data-axis="x" title="Zoom along time axis (widens data points)">↔ TIME (HORIZ)</button>
+            <button class="seg-btn" id="zoom-axis-y" data-axis="y" title="Zoom along value axis (magnifies variation)">↕ VALUE (VERT)</button>
+            <button class="seg-btn" id="zoom-axis-xy" data-axis="xy" title="Zoom both axes together">⤢ BOTH (X+Y)</button>
+          </div>
+          <button id="btn-zoom-in" class="hud-btn-mini" title="Zoom in to widen data points">🔍+ IN</button>
+          <button id="btn-zoom-out" class="hud-btn-mini" title="Zoom out">🔍- OUT</button>
+          <button id="btn-zoom-reset" class="hud-btn-mini" title="Reset zoom back to full period">↺ RESET</button>
+        </div>
+        <div class="cz-right">
+          <span id="zoom-level-badge" class="cz-badge">ZOOM: 1.0x</span>
+          <span class="cz-hint">💡 2-finger scroll/wheel to zoom · Swipe/drag to pan · Double-click to reset</span>
+        </div>
+      </div>
       <div class="expanded-chart-container">
         <canvas id="chart-expanded"></canvas>
       </div>
@@ -451,6 +468,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

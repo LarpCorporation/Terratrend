@@ -38,7 +38,7 @@ TerraTrend does all four in one interactive observatory.
 | **Click a signal or color key** | The globe swaps to that variable's grid analysis |
 | **Hover a grid cell** | Tooltip with lat/lon, slope/decade, p-value, trend verdict |
 | **Click a grid cell** | Cell detail readout in the coordinate bar + orbital zoom action |
-| **Click mini-chart or expand icon ⛶** | Opens high-resolution time series deep-dive modal with 4-card statistics, 5×5 spatial consensus matrix, and CSV export |
+| **Click mini-chart or expand icon ⛶** | Opens high-resolution time series observatory modal with interactive 2-finger scroll/pinch zoom, trackpad swipe panning, horizontal/vertical axis toggles, 4-card statistics, 5×5 spatial consensus matrix, and CSV export |
 | **Click "Compare Orbital Pass"** | Opens NASA GIBS satellite evidence with interactive split-slider and multi-year comparisons |
 
 ---
