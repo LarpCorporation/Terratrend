@@ -5,15 +5,20 @@ user can see whether the scientific literature agrees.
 """
 import json
 import math
+import random
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
 
 BASE = "https://api.openalex.org/works"
-UA = "TerraTrend/0.1 (NASA Space Apps; mailto:terratrend@example.org)"
+CROSSREF_BASE = "https://api.crossref.org/works"
+UA = "TerraTrend/0.1 (NASA Space Apps Challenge; academic demo)"
 CACHE_DIR = Path(__file__).resolve().parent / "cache"
 CACHE_TTL = 30 * 24 * 3600
+MAX_RETRIES = 3
+RETRY_STATUS = {429, 500, 502, 503, 504}
 
 CONCEPT = {
     "T2M": "air temperature",
@@ -72,12 +77,41 @@ def search_papers(variable, region_name, limit=5):
     url = f"{BASE}?{urllib.parse.urlencode(params)}"
 
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": UA})
-        with urllib.request.urlopen(req, timeout=45) as r:
-            data = json.loads(r.read())
+        data = None
+        last_err = None
+        for attempt in range(MAX_RETRIES):
+            try:
+                req = urllib.request.Request(url, headers={"User-Agent": UA})
+                with urllib.request.urlopen(req, timeout=45) as r:
+                    data = json.loads(r.read())
+                last_err = None
+                break
+            except urllib.error.HTTPError as e:
+                last_err = e
+                if e.code in RETRY_STATUS and attempt < MAX_RETRIES - 1:
+                    time.sleep(1.5 * (attempt + 1) + random.random())
+                    continue
+                raise
+            except Exception as e:  # noqa: BLE001
+                last_err = e
+                if attempt < MAX_RETRIES - 1:
+                    time.sleep(1.0 * (attempt + 1))
+                    continue
+                raise
+        if data is None:
+            raise last_err or RuntimeError("empty response")
     except Exception as e:  # noqa: BLE001
-        return {"ok": False, "error": f"{type(e).__name__}: {e}", "papers": [],
-                "query": query}
+        # OpenAlex goes down service-wide now and then (HTTP 503). Crossref is a
+        # free, key-less fallback with the same basic metadata, so the panel
+        # stays useful instead of showing OFFLINE.
+        fb = _crossref(query, region_name, concept, limit)
+        if fb.get("ok"):
+            fb["degraded"] = True
+            fb["fallback_from"] = f"{type(e).__name__}: {e}"
+            _write_cache(cpath, fb)
+            return fb
+        return {"ok": False, "error": f"{type(e).__name__}: {e}",
+                "papers": [], "query": query, "retryable": True}
 
     region_words = [w.lower() for w in region_name.split() if len(w) > 3]
     concept_words = [w.lower() for w in concept.split() if len(w) > 3]
@@ -138,9 +172,73 @@ def search_papers(variable, region_name, limit=5):
     result = {"ok": True, "papers": papers, "query": query,
               "source": "OpenAlex"}
 
+    _write_cache(cpath, result)
+    return result
+
+
+def _write_cache(cpath, result):
     try:
         cpath.parent.mkdir(parents=True, exist_ok=True)
         cpath.write_text(json.dumps({"t": time.time(), "data": result}))
     except OSError:
         pass
-    return result
+
+
+def _crossref(query, region_name, concept, limit):
+    """Fallback literature source: Crossref (free, no API key)."""
+    params = {
+        "query": query,
+        "rows": "25",
+        "select": "title,author,issued,DOI,container-title,is-referenced-by-count",
+    }
+    url = f"{CROSSREF_BASE}?{urllib.parse.urlencode(params)}"
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": UA})
+        with urllib.request.urlopen(req, timeout=45) as r:
+            data = json.loads(r.read())
+    except Exception as e:  # noqa: BLE001
+        return {"ok": False, "papers": [], "query": query,
+                "source": "Crossref", "error": f"{type(e).__name__}: {e}"}
+
+    items = (data.get("message") or {}).get("items") or []
+    region_words = [w.lower() for w in region_name.split() if len(w) > 3]
+    concept_words = [w.lower() for w in concept.split() if len(w) > 3]
+
+    papers = []
+    for it in items:
+        titles = it.get("title") or []
+        title = (titles[0] if titles else "").strip()
+        if not title:
+            continue
+        parts = (it.get("issued") or {}).get("date-parts") or [[None]]
+        year = parts[0][0] if parts and parts[0] else None
+        authors = []
+        for a in (it.get("author") or [])[:3]:
+            nm = " ".join(x for x in (a.get("given"), a.get("family")) if x)
+            if nm:
+                authors.append(nm)
+        if len(it.get("author") or []) > 3:
+            authors.append("et al.")
+        venues = it.get("container-title") or []
+        doi = it.get("DOI", "")
+        papers.append({
+            "title": title,
+            "year": year,
+            "citations": it.get("is-referenced-by-count", 0),
+            "doi": doi,
+            "url": f"https://doi.org/{doi}" if doi else "",
+            "venue": venues[0] if venues else "",
+            "authors": authors,
+            "type": it.get("type", ""),
+        })
+
+    def score(p):
+        t = (p["title"] or "").lower()
+        s = sum(12.0 for w in region_words if w in t)
+        s += sum(6.0 for w in concept_words if w in t)
+        s += math.log10((p.get("citations") or 0) + 1) * 2.0
+        return s
+
+    papers.sort(key=score, reverse=True)
+    return {"ok": True, "papers": papers[:limit], "query": query,
+            "source": "Crossref"}

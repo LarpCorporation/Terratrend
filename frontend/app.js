@@ -654,7 +654,20 @@ function renderRegionalContrast(d) {
 
 function renderLiterature(d) {
   const box = $("lit-list");
-  const s = d.series[Math.min(state.activeVarIdx, d.series.length - 1)];
+  const active = Math.min(state.activeVarIdx, d.series.length - 1);
+
+  // OpenAlex occasionally returns 429/503 for one variable. Rather than showing
+  // OFFLINE while another variable has results, fall back to a series that has
+  // papers and say which one it is.
+  const hasPapers = (s) => s && s.literature && s.literature.ok
+    && (s.literature.papers || []).length;
+  let s = d.series[active];
+  let fallback = false;
+  if (!hasPapers(s)) {
+    const alt = d.series.find((x, i) => i !== active && hasPapers(x));
+    if (alt) { s = alt; fallback = true; }
+  }
+
   const lit = (s && s.literature) || { ok: false, papers: [] };
   if (!lit.ok) {
     $("lit-tag").textContent = "OFFLINE";
@@ -668,8 +681,10 @@ function renderLiterature(d) {
     box.innerHTML = `<div class="lit-empty">No close matches for this variable + region.</div>`;
     return;
   }
+  const srcTag = lit.degraded ? " · CROSSREF" : "";
   $("lit-tag").textContent =
-    `${papers.length} · ${s.variable.name.split(" ")[0].toUpperCase()}`;
+    `${papers.length} · ${s.variable.name.split(" ")[0].toUpperCase()}${srcTag}` +
+    (fallback ? " (ALT)" : "");
   box.innerHTML = papers.slice(0, 2).map((p) => {
     const href = p.doi
       ? `https://doi.org/${encodeURIComponent(p.doi)}` : "#";
