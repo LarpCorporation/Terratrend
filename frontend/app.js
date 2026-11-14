@@ -55,10 +55,26 @@ async function boot() {
   renderVarList();
   renderRegionSelect();
 
+  // data currency comes from the server's live probe of NASA POWER
+  const avail = state.catalog.availability || {};
+  if (avail.ok && avail.latest_month_label) {
+    $("data-through").textContent = avail.latest_month_label;
+    $("data-through").title =
+      `NASA POWER monthly data valid through ${avail.latest_month_label}` +
+      (avail.latest_day_label ? ` (daily through ${avail.latest_day_label})` : "");
+  } else {
+    $("data-through").textContent = "—";
+    $("data-through").title = avail.error || "availability probe failed";
+  }
+
+  const maxYear = state.catalog.years.max;
   $("start").min = state.catalog.years.min + 8;
-  $("start").max = state.catalog.years.max - 8;
+  $("start").max = maxYear - 8;
   $("end").min = state.catalog.years.min + 8;
-  $("end").max = state.catalog.years.max;
+  $("end").max = maxYear;
+  // default window ends at the newest data year
+  if (+$("end").value < maxYear) $("end").value = maxYear;
+  if (+$("start").value > maxYear - 8) $("start").value = maxYear - 8;
 
   $("run").addEventListener("click", analyze);
   $("region").addEventListener("change", onRegionChange);
@@ -761,6 +777,14 @@ function drawChart() {
   const values = isYear
     ? s.yearly_timeseries.map((p) => p.value)
     : s.region_timeseries;
+  // partial years (e.g. the current year, still accumulating months) are drawn
+  // but excluded from every trend calculation — see _annualize() on the server
+  const partialFlags = isYear
+    ? s.yearly_timeseries.map((p) => !p.complete)
+    : [];
+  const partialYears = isYear
+    ? s.yearly_timeseries.filter((p) => !p.complete)
+    : [];
 
   if (chart) chart.destroy();
 
@@ -773,7 +797,9 @@ function drawChart() {
   grad.addColorStop(1, hexA(accent, 0.01));
 
   const datasets = [{
-    data: values,
+    // partial years are withheld from the connected line: a 9-month mean is not
+    // comparable to an annual mean, so it must not appear joined to the series
+    data: values.map((v, i) => (partialFlags[i] ? null : v)),
     borderColor: accent,
     backgroundColor: grad,
     fill: true,
@@ -796,13 +822,30 @@ function drawChart() {
       line = fitLine(pts);
     }
     datasets.push({
-      data: values.map((_, i) => line(i)),
+      data: values.map((_, i) => (partialFlags[i] ? null : line(i))),
       borderColor: "#e9ebed",
       borderDash: [5, 4],
       borderWidth: 1,
       pointRadius: 0,
       fill: false,
       tension: 0,
+    });
+  }
+
+  // mark incomplete years: hollow diamonds, never part of the trend line
+  if (partialFlags.some(Boolean)) {
+    datasets.push({
+      data: values.map((v, i) => (partialFlags[i] ? v : null)),
+      showLine: false,
+      borderColor: "transparent",
+      backgroundColor: "#0b0c0d",
+      borderWidth: 1.5,
+      pointBackgroundColor: "#0b0c0d",
+      pointBorderColor: "#e9ebed",
+      pointBorderWidth: 1.5,
+      pointRadius: 4.5,
+      pointHoverRadius: 6,
+      pointStyle: "rectRot",
     });
   }
 
@@ -859,14 +902,21 @@ function drawChart() {
     },
   });
 
-  $("trendline").innerHTML = o.ok
+  const partialNote = partialYears.length
+    ? `<br><span style="color:#8c9297">◇ ${
+        partialYears.map((p) => `${p.year} partial (${p.months}/12 mo)`)
+          .join(" · ")} — shown, excluded from trend</span>`
+    : "";
+
+  $("trendline").innerHTML = (o.ok
     ? `<b>${s.variable.name}</b> ${o.direction === "rising" ? "rising" :
        o.direction === "falling" ? "falling" : "flat"} at
        <b>${o.per_decade > 0 ? "+" : ""}${num(o.per_decade, 3)}
        ${esc(s.variable.unit)}/decade</b> · MK z=<b>${num(o.z, 2)}</b>
        p=<b>${o.p < 0.001 ? "<0.001" : num(o.p, 3)}</b>
-       ${o.significant ? "· SIGNIFICANT" : "· NOT SIGNIFICANT"}`
-    : "Insufficient data for trend estimation.";
+       ${o.significant ? "· SIGNIFICANT" : "· NOT SIGNIFICANT"}
+       · n=<b>${o.n}</b> complete years`
+    : "Insufficient data for trend estimation.") + partialNote;
 }
 
 function fitLine(pts) {

@@ -3,6 +3,7 @@
 Serves the JSON API under /api/* and the static frontend at /.
 Run:  python server.py  [port]
 """
+import datetime
 import json
 import sys
 import time
@@ -20,6 +21,9 @@ BASE_DIR = Path(__file__).resolve().parent
 FRONTEND_DIR = BASE_DIR.parent / "frontend"
 BOOT = time.time()
 MAX_VARS = 3
+MIN_YEAR = 1981
+MAX_YEAR = datetime.date.today().year   # data currency follows the calendar
+MIN_MONTHS_PER_YEAR = 12               # a year must be complete to enter a trend
 
 MIME = {
     ".html": "text/html; charset=utf-8",
@@ -44,12 +48,32 @@ def _month_labels(months):
 
 
 def _annualize(month_labels, values):
+    """Group monthly values by year.
+
+    Each entry carries its month count and a `complete` flag. Only complete
+    years may enter a trend test: a partial year (e.g. Jan-Sep of the current
+    year) has a different seasonal composition and would bias the slope.
+    """
     yearly = {}
     for lbl, v in zip(month_labels, values):
         if v is not None:
             yearly.setdefault(int(lbl[:4]), []).append(v)
-    return [{"year": y, "value": round(sum(vs) / len(vs), 4)}
-            for y, vs in sorted(yearly.items()) if vs]
+
+    out = []
+    for y, vs in sorted(yearly.items()):
+        if not vs:
+            continue
+        out.append({
+            "year": y,
+            "value": round(sum(vs) / len(vs), 4),
+            "months": len(vs),
+            "complete": len(vs) >= MIN_MONTHS_PER_YEAR,
+        })
+    return out
+
+
+def _complete_years(yearly_ts):
+    return [p["value"] for p in yearly_ts if p["complete"]]
 
 
 def _region_series(grid, months):
@@ -69,13 +93,14 @@ def analyze_variable(var, grid, months, month_labels):
     """Build the per-variable analysis block (series, cells, summary)."""
     region_ts = _region_series(grid, months)
     yearly_ts = _annualize(month_labels, region_ts)
-    annual_values = [p["value"] for p in yearly_ts]
+    # trend uses complete years only (see _annualize)
+    annual_values = _complete_years(yearly_ts)
 
     cells = []
     for lo in sorted(grid):
         for la in sorted(grid[lo]):
             raw = [grid[lo][la].get(m) for m in months]
-            ann = [p["value"] for p in _annualize(month_labels, raw)]
+            ann = _complete_years(_annualize(month_labels, raw))
             a = analyze_series(ann)
             cell = {"lon": lo, "lat": la, "n": a.get("n", 0)}
             if a.get("ok"):
@@ -120,8 +145,8 @@ def run_analysis(variables, region, start, end, nx=5, ny=5):
     """Core analysis pipeline across one or more variables."""
     if end - start < 8:
         raise ValueError("Need at least 9 years of data (end - start >= 8)")
-    if end > 2024:
-        raise ValueError("Data available through 2024")
+    if end > MAX_YEAR:
+        raise ValueError(f"Data available through {MAX_YEAR}")
 
     reg = next((r for r in catalog.REGIONS if r["id"] == region), None)
     if not reg:
@@ -166,12 +191,31 @@ def run_analysis(variables, region, start, end, nx=5, ny=5):
     except Exception as e:  # noqa: BLE001
         satellite_data = {"error": str(e)}
 
+    # last month that actually carries data (keys exist for the whole requested
+    # range, but trailing months come back as -999 / None)
+    first_valid = last_valid = None
+    if series and month_labels:
+        for lbl, v in zip(month_labels, series[0]["region_timeseries"]):
+            if v is not None:
+                if first_valid is None:
+                    first_valid = lbl
+                last_valid = lbl
+
     return {
         "region": reg, "start": start, "end": end,
         "months": month_labels,
         "series": series,
         "grid": {"nx": nx, "ny": ny, "bbox": reg["bbox"]},
         "satellite": satellite_data,
+        "window": {
+            "first_month": first_valid,
+            "last_month": last_valid,
+            "partial_years": [
+                y["year"]
+                for y in (series[0]["yearly_timeseries"] if series else [])
+                if not y.get("complete", True)
+            ],
+        },
         "sources": ["NASA POWER (MERRA-2 / GPCP / CERES)", "NASA GIBS (MODIS / VIIRS)", "OpenAlex"],
     }
 
@@ -212,12 +256,15 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/api/health":
                 return self._json(200, {"ok": True,
                                         "uptime_s": round(time.time() - BOOT, 1)})
+            if path == "/api/availability":
+                return self._json(200, power_client.probe_availability())
             if path == "/api/catalog":
                 return self._json(200, {
                     "variables": catalog.CATALOG,
                     "regions": catalog.REGIONS,
-                    "years": {"min": 1985, "max": 2024},
+                    "years": {"min": 1985, "max": MAX_YEAR},
                     "max_variables": MAX_VARS,
+                    "availability": power_client.probe_availability(),
                 })
             if path == "/api/satellite-imagery":
                 region_id = q.get("region", [""])[0]
@@ -237,7 +284,7 @@ class Handler(BaseHTTPRequestHandler):
 
                 region_obj = reg if reg else {"id": "custom", "name": "Selected Area", "bbox": custom_bbox}
                 start_yr = _int(q, "start", 2005)
-                end_yr = _int(q, "end", 2024)
+                end_yr = _int(q, "end", MAX_YEAR)
                 layer = q.get("layer", ["true_color"])[0]
                 date_md = q.get("date", [""])[0]
                 ev = gibs.get_satellite_evidence(region_obj, start_yr, end_yr, bbox=custom_bbox, layer_key=layer, custom_date=date_md)
@@ -252,7 +299,7 @@ class Handler(BaseHTTPRequestHandler):
                 variables = list(dict.fromkeys(variables))[:MAX_VARS]
                 result = run_analysis(
                     variables, region,
-                    _int(q, "start", 2000), _int(q, "end", 2024),
+                    _int(q, "start", 2000), _int(q, "end", MAX_YEAR),
                     max(3, min(7, _int(q, "nx", 5))),
                     max(3, min(7, _int(q, "ny", 5))),
                 )

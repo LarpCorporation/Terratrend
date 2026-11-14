@@ -48,6 +48,14 @@ These numbers drive the whole roadmap:
 
 ### P0 — correctness first (must fix before extending the date range)
 
+> **Status: DONE (2026-11-13).** Implemented as `test_currency.py` (8 tests):
+> `_annualize()` now returns `{year, value, months, complete}`; only years with
+> 12 valid months enter any trend test. The reference probe confirms the trap
+> is real — Central Europe's 2026 partial mean is **11.96 °C** (Jan–Sep) vs
+> **9.39 °C** for full-year 2025; including it would have manufactured a
+> +2.6 °C jump. The UI draws partial years as an isolated hollow diamond,
+> joined to nothing, with the note "shown, excluded from trend".
+
 **3.1 Partial-year bias in annual means** — *blocking, subtle, important*
 
 Our `_annualize()` averages whatever months exist for a year. That is safe today
