@@ -134,6 +134,8 @@
       <span id="coord-readout">LAT — · LON —</span>
       <span class="cb-sep"></span>
       <span id="region-readout">NO REGION SELECTED</span>
+      <span class="cb-sep" id="coord-sat-sep" hidden></span>
+      <button id="coord-sat-btn" class="cb-sat-btn" title="Inspect selected region or cell from orbit" hidden>🛰️ ORBITAL VIEW</button>
       <span class="cb-sep"></span>
       <span id="proj-readout">ORTHOGRAPHIC</span>
     </div>
@@ -194,6 +196,16 @@
       <div id="cell-summary" class="cell-summary"></div>
     </section>
 
+    <section class="panel sat-panel">
+      <div class="panel-head">
+        <span class="ph-label">SATELLITE EVIDENCE</span>
+        <span class="ph-count" id="sat-tag">NASA GIBS</span>
+      </div>
+      <div id="sat-summary" class="sat-summary">
+        <p class="micro">Run an analysis to inspect orbital imagery.</p>
+      </div>
+    </section>
+
     <section class="panel">
       <div class="panel-head">
         <span class="ph-label">LITERATURE CHECK</span>
@@ -209,10 +221,143 @@
   <div class="foot-left">
     <span>NASA POWER · MERRA-2 / GPCP / CERES</span>
     <span class="fl-sep">/</span>
+    <span>NASA GIBS · MODIS / VIIRS</span>
+    <span class="fl-sep">/</span>
     <span>OPENALEX</span>
   </div>
   <div class="foot-right" id="foot-clock">—</div>
 </footer>
+
+<!-- ============ SATELLITE EVIDENCE MODAL ============ -->
+<div id="sat-modal" class="modal-backdrop" hidden>
+  <div class="modal-window">
+    <div class="modal-header">
+      <div class="mh-left">
+        <span class="mh-tag">NASA EOSDIS · ORBITAL GROUND TRUTH</span>
+        <h2 id="modal-region-title">SATELLITE EVIDENCE</h2>
+        <span class="mh-sub" id="modal-bbox-sub">COORDINATES —</span>
+      </div>
+      <button id="modal-close" class="modal-close-btn" aria-label="Close modal">&times;</button>
+    </div>
+
+    <div class="modal-toolbar">
+      <div class="mt-group">
+        <span class="mt-label">MODE:</span>
+        <div class="seg modal-seg">
+          <button class="seg-btn on" id="mode-sidebyside" data-sat-mode="side">SIDE-BY-SIDE</button>
+          <button class="seg-btn" id="mode-slider" data-sat-mode="slider">SPLIT SLIDER</button>
+        </div>
+      </div>
+
+      <div class="mt-group">
+        <span class="mt-label">LAYER:</span>
+        <select id="modal-layer-select" class="hud-select-mini">
+          <option value="true_color">MODIS True Color (Natural)</option>
+          <option value="false_color">MODIS False Color 7-2-1 (Vegetation / Water)</option>
+          <option value="viirs_true_color">VIIRS Suomi NPP (High-Res 2012+)</option>
+        </select>
+      </div>
+
+      <div class="mt-group mt-years">
+        <div class="year-pick-item">
+          <span class="mt-label">YEAR A (LEFT):</span>
+          <select id="modal-year-base" class="hud-select-mini"></select>
+        </div>
+        <span class="mt-vs">VS</span>
+        <div class="year-pick-item">
+          <span class="mt-label">YEAR B (RIGHT):</span>
+          <select id="modal-year-recent" class="hud-select-mini"></select>
+        </div>
+        <div class="year-pick-item">
+          <span class="mt-label">SEASON (M-D):</span>
+          <input type="text" id="modal-date-picker" class="hud-input-mini" placeholder="MM-DD" value="08-15" maxlength="5" title="Month and day (e.g. 08-15) to minimize clouds">
+          <button id="modal-date-apply" class="hud-btn-mini" title="Apply date">SET</button>
+        </div>
+        <div class="year-steppers">
+          <button id="modal-prev-year" class="hud-btn-mini" title="Step Year B backward">◀ YR</button>
+          <button id="modal-next-year" class="hud-btn-mini" title="Step Year B forward">YR ▶</button>
+          <button id="modal-swap-years" class="hud-btn-mini" title="Swap Year A and Year B">⇄ SWAP</button>
+        </div>
+      </div>
+
+      <div class="mt-group mt-links">
+        <a id="modal-worldview-link" class="hud-btn-mini ext-btn" target="_blank" rel="noopener noreferrer" href="#">
+          NASA WORLDVIEW ↗
+        </a>
+      </div>
+    </div>
+
+    <div class="modal-body">
+      <!-- SIDE-BY-SIDE VIEW CONTAINER -->
+      <div id="view-sidebyside" class="view-sidebyside">
+        <div class="side-card">
+          <div class="side-card-head">
+            <span class="sch-badge" id="side-badge-base">YEAR A · BASELINE</span>
+            <span class="sch-date" id="side-date-base">—</span>
+          </div>
+          <div class="side-img-wrap">
+            <img id="modal-img-base" alt="Baseline orbital pass" src="">
+            <div class="img-loading-overlay" id="loading-base"><span>LOADING NASA GIBS…</span></div>
+          </div>
+          <div class="side-card-foot">
+            <span id="side-sensor-base">Sensor: MODIS Terra (NASA EOSDIS)</span>
+          </div>
+        </div>
+
+        <div class="side-card">
+          <div class="side-card-head">
+            <span class="sch-badge highlight" id="side-badge-recent">YEAR B · COMPARISON</span>
+            <span class="sch-date" id="side-date-recent">—</span>
+          </div>
+          <div class="side-img-wrap">
+            <img id="modal-img-recent" alt="Recent orbital pass" src="">
+            <div class="img-loading-overlay" id="loading-recent"><span>LOADING NASA GIBS…</span></div>
+          </div>
+          <div class="side-card-foot">
+            <span id="side-sensor-recent">Sensor: MODIS Terra (NASA EOSDIS)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SPLIT SLIDER VIEW CONTAINER -->
+      <div id="view-slider" class="view-slider" hidden>
+        <div class="slider-wrapper" id="slider-wrapper">
+          <!-- RIGHT LAYER (UNDERNEATH): Year B / Comparison -->
+          <div class="slider-image-layer slider-comp" id="slider-layer-comp">
+            <img id="slider-img-comp" alt="Comparison orbital pass" src="">
+            <span class="slider-badge sb-right" id="slider-badge-comp">RIGHT: YEAR B</span>
+          </div>
+
+          <!-- LEFT LAYER (CLIPPED ON TOP): Year A / Baseline -->
+          <div class="slider-image-layer slider-base" id="slider-layer-base">
+            <img id="slider-img-base" alt="Baseline orbital pass" src="">
+            <span class="slider-badge sb-left" id="slider-badge-base">LEFT: YEAR A</span>
+          </div>
+
+          <!-- DRAGGABLE DIVIDER HANDLE WITH DYNAMIC YEAR TAG -->
+          <div class="slider-handle" id="slider-handle">
+            <div class="sh-line"></div>
+            <div class="sh-tag" id="slider-handle-tag">2005 | 2024</div>
+            <div class="sh-knob">
+              <span class="sh-arrow">◀</span>
+              <span class="sh-arrow">▶</span>
+            </div>
+            <div class="sh-line"></div>
+          </div>
+        </div>
+        <div class="slider-status-bar">
+          <span class="ss-side-info left" id="slider-info-left">◀ LEFT: YEAR A</span>
+          <span class="slider-hint">Drag handle left/right to reveal change across coordinates</span>
+          <span class="ss-side-info right" id="slider-info-right">YEAR B: RIGHT ▶</span>
+        </div>
+      </div>
+
+      <div class="modal-notes">
+        <p><strong>Physical Corroboration:</strong> NASA GIBS imagery is orthorectified and surface-reflectance calibrated. Comparing identical calendar dates across decades isolates multiannual environmental trends (such as vegetation expansion, aridification, or ice margin retreat) from regular seasonal cycles.</p>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>

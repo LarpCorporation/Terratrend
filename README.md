@@ -51,6 +51,7 @@ TerraTrend does all four in one interactive observatory.
 | Where it is changing | 5×5 gridded trend analysis rendered as colored cells on the globe |
 | How much it is changing | Slope/decade, total change, percent change — per region **and** per cell |
 | Is it significant | **Mann–Kendall** (p < 0.05), **Hirsch–Slack seasonal MK** cross-check, significance stars |
+| Visual ground truth | **NASA GIBS & Worldview** orbital imagery comparison (MODIS / VIIRS) via side-by-side & interactive split-slider |
 | Does the science agree? | Live **OpenAlex** literature lookup, relevance-ranked per variable + region |
 
 ---
@@ -171,16 +172,18 @@ terratrend/
 ├── backend/
 │   ├── server.py        # zero-dependency HTTP server + API + analysis pipeline
 │   ├── analysis.py      # Mann-Kendall, Theil-Sen, Hirsch-Slack seasonal MK
+│   ├── gibs.py          # NASA GIBS WMS & Worldview orbital comparison engine
 │   ├── power_client.py  # NASA POWER fetcher: parallel grid + disk cache
 │   ├── literature.py    # OpenAlex lookup with relevance re-ranking
 │   ├── catalog.py       # 10 variables · 16 regions
 │   ├── warm_cache.py    # pre-fetch demo regions before judging
 │   ├── test_analysis.py # 10 unit tests for the statistics
+│   ├── test_gibs.py     # 4 unit tests for GIBS & Worldview integration
 │   └── cache/           # auto-created; 30-day TTL
 └── frontend/
-    ├── index.html       # HUD shell
-    ├── styles.css       # monochrome observatory theme (black / white / grey)
-    ├── app.js           # three.js globe + chart + multi-variable UI
+    ├── index.html       # HUD shell + orbital evidence modal
+    ├── styles.css       # monochrome observatory theme + split-slider styling
+    ├── app.js           # three.js globe + chart + GIBS orbital comparator
     └── land_dots.json   # 6,550 Natural Earth land points
 ```
 
@@ -195,7 +198,10 @@ blue = falling), exactly like a mission-control display where hue carries meanin
 - `GET /api/catalog` → variables, regions, year bounds, max_variables
 - `GET /api/analyze?variables=T2M,PRECTOTCORR&region=europe&start=2005&end=2024`
   → for each variable: monthly + yearly series, per-cell trends, regional
-  summary, seasonal MK, literature
+  summary, seasonal MK, literature, and NASA GIBS satellite evidence
+- `GET /api/satellite-imagery?region=europe&start=2005&end=2024&layer=true_color`
+  → NASA GIBS WMS baseline and recent URLs, cloud-minimized seasonal dates,
+  and NASA Worldview deep links (supports custom `bbox=min_lon,min_lat,max_lon,max_lat`)
 
 ---
 
@@ -203,7 +209,8 @@ blue = falling), exactly like a mission-control display where hue carries meanin
 
 ```bash
 cd terratrend/backend
-python test_analysis.py      # ALL PASS (10 tests)
+python test_analysis.py      # ALL PASS (10 tests: MK, Sen, Hirsch-Slack)
+python test_gibs.py          # ALL PASS (4 tests: GIBS WMS & Worldview URL engine)
 ```
 
 Covers: strong rising/falling detection, flat-noise rejection, Theil–Sen on

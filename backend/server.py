@@ -11,6 +11,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 import catalog
+import gibs
 import literature
 import power_client
 from analysis import analyze_series, seasonal_mk
@@ -159,12 +160,19 @@ def run_analysis(variables, region, start, end, nx=5, ny=5):
             block["literature"] = {"ok": False, "error": str(e), "papers": []}
         series.append(block)
 
+    satellite_data = None
+    try:
+        satellite_data = gibs.get_satellite_evidence(reg, start, end)
+    except Exception as e:  # noqa: BLE001
+        satellite_data = {"error": str(e)}
+
     return {
         "region": reg, "start": start, "end": end,
         "months": month_labels,
         "series": series,
         "grid": {"nx": nx, "ny": ny, "bbox": reg["bbox"]},
-        "sources": ["NASA POWER (MERRA-2 / GPCP / CERES)", "OpenAlex"],
+        "satellite": satellite_data,
+        "sources": ["NASA POWER (MERRA-2 / GPCP / CERES)", "NASA GIBS (MODIS / VIIRS)", "OpenAlex"],
     }
 
 
@@ -211,6 +219,29 @@ class Handler(BaseHTTPRequestHandler):
                     "years": {"min": 1985, "max": 2024},
                     "max_variables": MAX_VARS,
                 })
+            if path == "/api/satellite-imagery":
+                region_id = q.get("region", [""])[0]
+                reg = next((r for r in catalog.REGIONS if r["id"] == region_id), None)
+                bbox_raw = q.get("bbox", [""])[0]
+                custom_bbox = None
+                if bbox_raw:
+                    try:
+                        custom_bbox = [float(x.strip()) for x in bbox_raw.split(",")]
+                        if len(custom_bbox) != 4:
+                            custom_bbox = None
+                    except ValueError:
+                        custom_bbox = None
+
+                if not reg and not custom_bbox:
+                    return self._json(400, {"error": "Valid region or bbox parameter required"})
+
+                region_obj = reg if reg else {"id": "custom", "name": "Selected Area", "bbox": custom_bbox}
+                start_yr = _int(q, "start", 2005)
+                end_yr = _int(q, "end", 2024)
+                layer = q.get("layer", ["true_color"])[0]
+                date_md = q.get("date", [""])[0]
+                ev = gibs.get_satellite_evidence(region_obj, start_yr, end_yr, bbox=custom_bbox, layer_key=layer, custom_date=date_md)
+                return self._json(200, ev)
             if path == "/api/analyze":
                 raw = q.get("variables", q.get("variable", [""]))[0]
                 variables = [v.strip() for v in raw.split(",") if v.strip()]

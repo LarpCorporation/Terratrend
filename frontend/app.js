@@ -25,6 +25,15 @@ const state = {
   result: null,
   mode: "yearly",
   activeVarIdx: 0,
+  satellite: null,
+  selectedCellBbox: null,
+  activeSatBbox: null,
+  activeSatTitle: null,
+  satModalMode: "side",
+  satModalLayer: "true_color",
+  satYearBase: 2005,
+  satYearRecent: 2024,
+  satCustomDate: "08-15",
 };
 
 let chart = null;
@@ -55,10 +64,11 @@ async function boot() {
   $("region").addEventListener("change", onRegionChange);
   $("start").addEventListener("change", clampRange);
   $("end").addEventListener("change", clampRange);
-  document.querySelectorAll(".seg-btn").forEach((b) =>
+  document.querySelectorAll(".chart-panel .seg-btn").forEach((b) =>
     b.addEventListener("click", () => setMode(b.dataset.mode))
   );
 
+  initSatModal();
   startClock();
   await initGlobe();
 }
@@ -160,7 +170,7 @@ function clampRange() {
 
 function setMode(m) {
   state.mode = m;
-  document.querySelectorAll(".seg-btn").forEach((b) =>
+  document.querySelectorAll(".chart-panel .seg-btn").forEach((b) =>
     b.classList.toggle("on", b.dataset.mode === m)
   );
   if (state.result) drawChart();
@@ -226,6 +236,7 @@ function render() {
   renderSignals(d);
   renderCells(d);
   renderLegend(d);
+  renderSatellite(d);
   renderLiterature(d);
   drawChart();
   renderGlobeRegions(d);
@@ -394,6 +405,344 @@ function renderCells(d) {
       <span class="cr-n" style="color:${color}">${n}</span>`;
     box.appendChild(row);
   });
+}
+
+/* ============================================================
+   SATELLITE EVIDENCE (NASA GIBS & WORLDVIEW)
+   ============================================================ */
+function renderSatellite(d) {
+  const box = $("sat-summary");
+  if (!box) return;
+  const sat = d.satellite;
+  if (!sat || sat.error) {
+    box.innerHTML = `<p class="micro">Satellite imagery unavailable for this region selection.</p>`;
+    $("sat-tag").textContent = "OFFLINE";
+    return;
+  }
+  state.satellite = sat;
+  state.activeSatBbox = sat.bbox;
+  state.activeSatTitle = sat.region_name;
+  $("sat-tag").textContent = `${sat.baseline.year} VS ${sat.recent.year}`;
+
+  box.innerHTML = `
+    <div class="sat-thumb-row">
+      <div class="sat-thumb-card" id="sat-card-baseline">
+        <span class="st-lbl">BASELINE (${sat.baseline.year})</span>
+        <div class="st-img-wrap">
+          <img id="sat-thumb-base" alt="Baseline orbital pass" src="${esc(sat.baseline.image_url)}" loading="lazy">
+          <div class="st-spinner" id="sat-spin-base"></div>
+        </div>
+        <span class="st-date">${esc(sat.baseline.date)}</span>
+      </div>
+      <div class="sat-thumb-card" id="sat-card-recent">
+        <span class="st-lbl">RECENT (${sat.recent.year})</span>
+        <div class="st-img-wrap">
+          <img id="sat-thumb-recent" alt="Recent orbital pass" src="${esc(sat.recent.image_url)}" loading="lazy">
+          <div class="st-spinner" id="sat-spin-recent"></div>
+        </div>
+        <span class="st-date">${esc(sat.recent.date)}</span>
+      </div>
+    </div>
+    <div class="sat-actions">
+      <button id="open-sat-modal" class="hud-btn-mini">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>
+        COMPARE ORBITAL PASS
+      </button>
+      <a id="sat-worldview-direct" class="hud-link-ext" target="_blank" rel="noopener noreferrer" href="${esc(sat.recent.worldview_url)}">
+        WORLDVIEW ↗
+      </a>
+    </div>
+  `;
+
+  const tb = $("sat-thumb-base");
+  const tr = $("sat-thumb-recent");
+  const sb = $("sat-spin-base");
+  const sr = $("sat-spin-recent");
+  if (tb && sb) tb.onload = () => { sb.style.display = "none"; };
+  if (tr && sr) tr.onload = () => { sr.style.display = "none"; };
+
+  $("open-sat-modal").addEventListener("click", () => openSatelliteModal());
+
+  // Show coordinate bar orbital button
+  const cbBtn = $("coord-sat-btn");
+  const cbSep = $("coord-sat-sep");
+  if (cbBtn) {
+    cbBtn.hidden = false;
+    cbBtn.textContent = "🛰️ ORBITAL VIEW";
+    cbBtn.onclick = () => openSatelliteModal();
+  }
+  if (cbSep) cbSep.hidden = false;
+}
+
+function initSatModal() {
+  const modal = $("sat-modal");
+  const closeBtn = $("modal-close");
+  if (!modal) return;
+
+  if (closeBtn) closeBtn.addEventListener("click", closeSatelliteModal);
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) closeSatelliteModal();
+  });
+
+  document.querySelectorAll("[data-sat-mode]").forEach((btn) => {
+    btn.addEventListener("click", () => setSatModalMode(btn.dataset.satMode));
+  });
+
+  const layerSel = $("modal-layer-select");
+  if (layerSel) {
+    layerSel.addEventListener("change", onModalLayerChange);
+  }
+
+  // Populate Year A and Year B dropdowns (2000 to 2024)
+  const selBase = $("modal-year-base");
+  const selRecent = $("modal-year-recent");
+  if (selBase && selRecent) {
+    selBase.innerHTML = "";
+    selRecent.innerHTML = "";
+    for (let yr = 2000; yr <= 2024; yr++) {
+      const o1 = document.createElement("option");
+      o1.value = yr;
+      o1.textContent = yr;
+      selBase.appendChild(o1);
+
+      const o2 = document.createElement("option");
+      o2.value = yr;
+      o2.textContent = yr;
+      selRecent.appendChild(o2);
+    }
+    selBase.addEventListener("change", () => {
+      state.satYearBase = parseInt(selBase.value, 10);
+      reloadModalSatellite();
+    });
+    selRecent.addEventListener("change", () => {
+      state.satYearRecent = parseInt(selRecent.value, 10);
+      reloadModalSatellite();
+    });
+  }
+
+  const applyBtn = $("modal-date-apply");
+  if (applyBtn) {
+    applyBtn.addEventListener("click", () => {
+      const val = ($("modal-date-picker").value || "").trim();
+      if (/^\d{2}-\d{2}$/.test(val)) {
+        state.satCustomDate = val;
+        reloadModalSatellite();
+      } else {
+        alert("Please enter a valid MM-DD date format (e.g. 08-15).");
+      }
+    });
+  }
+
+  const prevBtn = $("modal-prev-year");
+  if (prevBtn) {
+    prevBtn.addEventListener("click", () => {
+      state.satYearRecent = Math.max(2000, state.satYearRecent - 1);
+      if (selRecent) selRecent.value = state.satYearRecent;
+      reloadModalSatellite();
+    });
+  }
+
+  const nextBtn = $("modal-next-year");
+  if (nextBtn) {
+    nextBtn.addEventListener("click", () => {
+      state.satYearRecent = Math.min(2024, state.satYearRecent + 1);
+      if (selRecent) selRecent.value = state.satYearRecent;
+      reloadModalSatellite();
+    });
+  }
+
+  const swapBtn = $("modal-swap-years");
+  if (swapBtn) {
+    swapBtn.addEventListener("click", () => {
+      const temp = state.satYearBase;
+      state.satYearBase = state.satYearRecent;
+      state.satYearRecent = temp;
+      if (selBase) selBase.value = state.satYearBase;
+      if (selRecent) selRecent.value = state.satYearRecent;
+      reloadModalSatellite();
+    });
+  }
+
+  initSplitSlider();
+}
+
+function openSatelliteModal(customBbox = null, customTitle = null) {
+  const modal = $("sat-modal");
+  if (!modal) return;
+
+  modal.hidden = false;
+  const startYr = Math.max(2000, parseInt($("start").value, 10) || 2005);
+  const endYr = Math.max(2000, parseInt($("end").value, 10) || 2024);
+  state.satYearBase = startYr;
+  state.satYearRecent = endYr;
+
+  const selBase = $("modal-year-base");
+  const selRecent = $("modal-year-recent");
+  if (selBase) selBase.value = state.satYearBase;
+  if (selRecent) selRecent.value = state.satYearRecent;
+
+  if (state.satellite && state.satellite.seasonal_md) {
+    state.satCustomDate = state.satellite.seasonal_md;
+    if ($("modal-date-picker")) $("modal-date-picker").value = state.satCustomDate;
+  }
+
+  const targetBbox = customBbox || (state.result && state.result.region ? state.result.region.bbox : null);
+  const targetTitle = customTitle || (state.result && state.result.region ? state.result.region.name : "Selected Region");
+
+  state.activeSatBbox = targetBbox;
+  state.activeSatTitle = targetTitle;
+
+  reloadModalSatellite();
+}
+
+function closeSatelliteModal() {
+  const modal = $("sat-modal");
+  if (modal) modal.hidden = true;
+}
+
+function setSatModalMode(mode) {
+  state.satModalMode = mode;
+  document.querySelectorAll("[data-sat-mode]").forEach((btn) => {
+    btn.classList.toggle("on", btn.dataset.satMode === mode);
+  });
+  const sideView = $("view-sidebyside");
+  const sliderView = $("view-slider");
+  if (sideView) sideView.hidden = mode !== "side";
+  if (sliderView) sliderView.hidden = mode !== "slider";
+}
+
+async function onModalLayerChange() {
+  const layerSel = $("modal-layer-select");
+  if (!layerSel) return;
+  state.satModalLayer = layerSel.value;
+  reloadModalSatellite();
+}
+
+function reloadModalSatellite() {
+  const regId = $("region").value;
+  fetchSatelliteImagery(
+    regId,
+    state.activeSatBbox,
+    state.satYearBase,
+    state.satYearRecent,
+    state.satModalLayer,
+    state.activeSatTitle,
+    state.satCustomDate
+  );
+}
+
+async function fetchSatelliteImagery(regId, bbox, start, end, layer, title, customDate = null) {
+  const loadBase = $("loading-base");
+  const loadRecent = $("loading-recent");
+  if (loadBase) { loadBase.textContent = "LOADING NASA GIBS…"; loadBase.classList.remove("hidden"); }
+  if (loadRecent) { loadRecent.textContent = "LOADING NASA GIBS…"; loadRecent.classList.remove("hidden"); }
+
+  let url = `/api/satellite-imagery?start=${start}&end=${end}&layer=${encodeURIComponent(layer)}`;
+  if (customDate) url += `&date=${encodeURIComponent(customDate)}`;
+  if (bbox && bbox.length === 4) {
+    url += `&bbox=${bbox.join(",")}`;
+  } else if (regId) {
+    url += `&region=${encodeURIComponent(regId)}`;
+  }
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const sat = await res.json();
+    if (title) sat.region_name = title;
+    loadSatelliteImages(sat);
+  } catch (err) {
+    if (loadBase) { loadBase.textContent = "ORBITAL PASS UNAVAILABLE"; }
+    if (loadRecent) { loadRecent.textContent = "ORBITAL PASS UNAVAILABLE"; }
+  }
+}
+
+function loadSatelliteImages(sat) {
+  if (!sat || !sat.baseline || !sat.recent) return;
+
+  $("modal-region-title").textContent = (sat.region_name || "SATELLITE EVIDENCE").toUpperCase();
+  const b = sat.bbox || [];
+  $("modal-bbox-sub").textContent = b.length === 4
+    ? `BBOX: [${b[0].toFixed(2)}°, ${b[1].toFixed(2)}°] to [${b[2].toFixed(2)}°, ${b[3].toFixed(2)}°]`
+    : "COORDINATES —";
+
+  if ($("side-badge-base")) $("side-badge-base").textContent = `${sat.baseline.year} · BASELINE`;
+  if ($("side-badge-recent")) $("side-badge-recent").textContent = `${sat.recent.year} · COMPARISON`;
+  $("side-date-base").textContent = sat.baseline.date || "BASELINE";
+  $("side-date-recent").textContent = sat.recent.date || "RECENT";
+
+  // Split slider labels and status
+  if ($("slider-badge-base")) $("slider-badge-base").textContent = `LEFT: ${sat.baseline.year}`;
+  if ($("slider-badge-comp")) $("slider-badge-comp").textContent = `RIGHT: ${sat.recent.year}`;
+  if ($("slider-handle-tag")) $("slider-handle-tag").textContent = `${sat.baseline.year} | ${sat.recent.year}`;
+  if ($("slider-info-left")) $("slider-info-left").textContent = `◀ LEFT: ${sat.baseline.date}`;
+  if ($("slider-info-right")) $("slider-info-right").textContent = `RIGHT: ${sat.recent.date} ▶`;
+
+  $("modal-worldview-link").href = sat.recent.worldview_url || "#";
+
+  const layerName = sat.layer ? sat.layer.name : "MODIS Terra";
+  $("side-sensor-base").textContent = `Sensor: ${layerName} (NASA EOSDIS)`;
+  $("side-sensor-recent").textContent = `Sensor: ${layerName} (NASA EOSDIS)`;
+
+  const imgBase = $("modal-img-base");
+  const imgRecent = $("modal-img-recent");
+  const sliderBase = $("slider-img-base");
+  const sliderComp = $("slider-img-comp");
+  const loadBase = $("loading-base");
+  const loadRecent = $("loading-recent");
+
+  const bUrl = sat.baseline.image_url;
+  const rUrl = sat.recent.image_url;
+
+  if (imgBase) {
+    imgBase.onload = () => { if (loadBase) loadBase.classList.add("hidden"); };
+    imgBase.onerror = () => { if (loadBase) { loadBase.textContent = "ORBITAL PASS UNAVAILABLE"; } };
+    imgBase.src = bUrl;
+  }
+  if (sliderBase) sliderBase.src = bUrl;
+
+  if (imgRecent) {
+    imgRecent.onload = () => { if (loadRecent) loadRecent.classList.add("hidden"); };
+    imgRecent.onerror = () => { if (loadRecent) { loadRecent.textContent = "ORBITAL PASS UNAVAILABLE"; } };
+    imgRecent.src = rUrl;
+  }
+  if (sliderComp) sliderComp.src = rUrl;
+}
+
+let isDraggingSlider = false;
+
+function initSplitSlider() {
+  const wrapper = $("slider-wrapper");
+  if (!wrapper) return;
+
+  const updateSplit = (clientX) => {
+    const rect = wrapper.getBoundingClientRect();
+    if (rect.width <= 0) return;
+    const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
+    const pct = Math.max(2, Math.min(98, (x / rect.width) * 100));
+    wrapper.style.setProperty("--split-pos", `${pct}%`);
+  };
+
+  wrapper.addEventListener("pointerdown", (e) => {
+    isDraggingSlider = true;
+    wrapper.setPointerCapture(e.pointerId);
+    updateSplit(e.clientX);
+  });
+
+  wrapper.addEventListener("pointermove", (e) => {
+    if (!isDraggingSlider) return;
+    updateSplit(e.clientX);
+  });
+
+  const stopDrag = (e) => {
+    if (isDraggingSlider) {
+      isDraggingSlider = false;
+      try { wrapper.releasePointerCapture(e.pointerId); } catch (_) {}
+    }
+  };
+
+  wrapper.addEventListener("pointerup", stopDrag);
+  wrapper.addEventListener("pointercancel", stopDrag);
 }
 
 /* ============================================================
@@ -1013,6 +1362,17 @@ function showCellDetail(hit) {
       : "NO SIGNIFICANT TREND"}`;
   $("coord-readout").textContent =
     `LAT ${c.lat.toFixed(2)} · LON ${c.lon.toFixed(2)}`;
+
+  const cellBbox = [c.lon - 0.4, c.lat - 0.4, c.lon + 0.4, c.lat + 0.4];
+  state.selectedCellBbox = cellBbox;
+  const cbBtn = $("coord-sat-btn");
+  const cbSep = $("coord-sat-sep");
+  if (cbBtn) {
+    cbBtn.hidden = false;
+    cbBtn.textContent = `🛰️ CELL (${c.lat.toFixed(1)}°, ${c.lon.toFixed(1)}°)`;
+    cbBtn.onclick = () => openSatelliteModal(cellBbox, `CELL [${c.lat.toFixed(1)}°, ${c.lon.toFixed(1)}°]`);
+  }
+  if (cbSep) cbSep.hidden = false;
 }
 
 /* ---------- animation ---------- */
