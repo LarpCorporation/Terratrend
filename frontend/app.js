@@ -58,7 +58,8 @@ async function boot() {
     return;
   }
 
-  state.selected = ["T2M"];
+  // start with nothing selected - the user picks for themselves
+  state.selected = [];
   renderVarList();
   renderRegionSelect();
 
@@ -194,7 +195,7 @@ function renderVarList() {
 function toggleVar(id) {
   const i = state.selected.indexOf(id);
   if (i >= 0) {
-    if (state.selected.length === 1) return;
+    // allow an empty selection: the user should be able to start from nothing
     state.selected.splice(i, 1);
   } else {
     if (state.selected.length >= MAX_VARS) {
@@ -208,7 +209,48 @@ function toggleVar(id) {
   state.activeVarIdx = 0;
   renderVarList();
   updateGlobeOverlay();
+
+  // a selection clears the "pick a variable" warning
+  const st = $("status");
+  if (st && !st.hidden && /SELECT AT LEAST ONE/.test(st.textContent)) {
+    clearTimeout(state.warnTimer);
+    setStatus("ok", "");
+  }
+
+  if (!state.selected.length) {
+    // nothing to analyse any more: clear stale results rather than keep them
+    clearResults();
+    return;
+  }
   if (state.result) analyze();
+}
+
+/* Wipe the analysis state when the selection becomes empty. */
+function clearResults() {
+  state.result = null;
+  state.satellite = null;
+  if (chart) {
+    chart.destroy();
+    chart = null;
+  }
+  const list = $("signal-list");
+  if (list) {
+    list.innerHTML =
+      '<p class="micro">Run an analysis to populate.</p>';
+  }
+  ["cell-summary", "lit-list", "sat-summary"].forEach((id) => {
+    const el = $(id);
+    if (el) el.innerHTML = "";
+  });
+  ["cell-tag", "lit-tag", "verdict-chip"].forEach((id) => {
+    const el = $(id);
+    if (el) el.textContent = "—";
+  });
+  const trend = $("trendline");
+  if (trend) trend.textContent = "—";
+  const threat = $("threat-val");
+  if (threat) threat.textContent = "—";
+  if (typeof renderGlobeRegions === "function") renderGlobeRegions(null);
 }
 
 /* ============================================================
@@ -499,10 +541,14 @@ function setStatus(kind, html) {
     return;
   }
   el.hidden = false;
-  el.className = "hud-status" + (kind === "err" ? " err" : "");
+  // "warn" is for user-input problems (nothing selected) - red text, but it
+  // must not flip the whole system readout to ERROR
+  el.className = "hud-status" + (kind === "err" || kind === "warn" ? " err" : "");
   el.innerHTML = html;
   $("sys-status").textContent =
-    kind === "err" ? "ERROR" : kind === "busy" ? "ANALYZING" : "READY";
+    kind === "err" ? "ERROR"
+      : kind === "warn" ? "CHECK INPUT"
+        : kind === "busy" ? "ANALYZING" : "READY";
 }
 
 /* ============================================================
@@ -510,6 +556,20 @@ function setStatus(kind, html) {
    ============================================================ */
 async function analyze() {
   const btn = $("run");
+
+  // guard: an analysis needs at least one variable
+  if (!state.selected.length) {
+    setStatus("warn", "SELECT AT LEAST ONE VARIABLE FIRST");
+    const list = $("var-list");
+    if (list) {
+      list.classList.add("needs-selection");
+      setTimeout(() => list.classList.remove("needs-selection"), 1600);
+    }
+    clearTimeout(state.warnTimer);
+    state.warnTimer = setTimeout(() => setStatus("ok", ""), 4000);
+    return;
+  }
+
   btn.disabled = true;
   setStatus("busy",
     `<span class="spin"></span>ACQUIRING NASA POWER GRID · TESTING TRENDS…`);
@@ -2566,7 +2626,11 @@ function renderGlobeRegions(d) {
 function updateGlobeOverlay() {
   const n = state.selected.length;
   const g = $("globe-title");
-  if (n === 1) {
+  if (n === 0) {
+    g.querySelector(".gt-main").textContent = "EARTH";
+    g.querySelector(".gt-sub").textContent =
+      "NO VARIABLE SELECTED · PICK ONE TO BEGIN";
+  } else if (n === 1) {
     const v = state.catalog.variables.find((x) => x.id === state.selected[0]);
     g.querySelector(".gt-main").textContent = v ? v.name.toUpperCase() : "EARTH";
     g.querySelector(".gt-sub").textContent =

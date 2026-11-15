@@ -177,6 +177,14 @@ body {
 .var-list::-webkit-scrollbar-thumb { background: var(--line-hot); }
 .var-list::-webkit-scrollbar-track { background: transparent; }
 
+/* nothing selected and RUN was pressed: nudge the picker */
+.var-list.needs-selection { animation: nudge .42s ease-in-out 2; }
+@keyframes nudge {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
 .var-group {
   font-family: var(--font); font-size: .52rem; letter-spacing: .16em;
   color: #a6adb5; margin: 7px 0 3px; padding-top: 5px;
