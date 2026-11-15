@@ -1173,6 +1173,27 @@ class Handler(BaseHTTPRequestHandler):
         except KeyError as e:
             return self._json(404,{"error":str(e)})
 
+    def do_HEAD(self):
+        parsed = urlparse(self.path)
+        path = parsed.path
+        if path in ("/", ""):
+            path = "/index.html"
+        root = FRONTEND_DIR.resolve()
+        target = (root / path.lstrip("/")).resolve()
+        if target != root and root not in target.parents:
+            self.send_response(403)
+            self.end_headers()
+            return
+        if not target.is_file():
+            self.send_response(404)
+            self.end_headers()
+            return
+        ctype = MIME.get(target.suffix.lower(), "application/octet-stream")
+        self.send_response(200)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(target.stat().st_size))
+        self.end_headers()
+
     def do_GET(self):
         parsed = urlparse(self.path)
         path = parsed.path

@@ -1,0 +1,14 @@
+.git
+.venv
+venv
+backend/cache/
+*.MOV
+sessions/
+tests/
+docs/
+*.json.tmp
+_probe.py
+_smoke.py
+_timing.py
+_check.py
+_check2.py
