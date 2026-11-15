@@ -9,6 +9,7 @@ import hashlib
 import io
 import json
 import math
+import os
 import re
 import threading
 import time
@@ -33,7 +34,7 @@ _LOCK=threading.RLock()
 
 
 def token():
-    with _LOCK:return _TOKEN or service_credentials.load('appeears')
+    with _LOCK:return _TOKEN or os.environ.get("APPEEARS_TOKEN", "").strip() or service_credentials.load('appeears')
 
 
 def status():
