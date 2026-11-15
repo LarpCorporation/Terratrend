@@ -260,8 +260,6 @@ function clearResults() {
     const el = $(id);
     if (el) el.textContent = "—";
   });
-  const trend = $("trendline");
-  if (trend) trend.textContent = "—";
   const threat = $("threat-val");
   if (threat) threat.textContent = "—";
   if (typeof renderGlobeRegions === "function") renderGlobeRegions(null);
@@ -2312,23 +2310,66 @@ function drawExpandedChart() {
     if (o.ok) {
       const slopePerDec = o.slope * 10;
       const stars = o.p < 0.001 ? "***" : (o.p < 0.01 ? "**" : (o.p < 0.05 ? "*" : ""));
-      const ciText = (o.ci_low_per_decade !== null && o.ci_low_per_decade !== undefined)
-        ? ` · 95% CI: <strong>[${o.ci_low_per_decade > 0 ? "+" : ""}${num(o.ci_low_per_decade, 3)}, ` +
-          `${o.ci_high_per_decade > 0 ? "+" : ""}${num(o.ci_high_per_decade, 3)}] ${s.variable.unit}/dec</strong>`
-        : "";
-      const tText = (o.t_p !== null && o.t_p !== undefined)
-        ? ` · OLS t-test (df=${o.t_df}) p=<strong>${o.t_p < 0.001 ? "<0.001" : num(o.t_p, 3)}</strong> ` +
-          `(${o.methods_agree ? "AGREES" : "DISAGREES"})`
-        : "";
-      const pText = partialYears.length
-        ? ` · PARTIAL: ${partialYears.map((p) => `${p.year} (${p.months}/12 mo)`).join(", ")} (excluded from slope)`
-        : "";
+      const dirColor = o.direction === "falling" ? C.fall
+        : (o.direction === "rising" ? C.rise : C.flat);
+      const dirLabel = o.direction === "rising" ? "RISING"
+        : (o.direction === "falling" ? "FALLING" : "FLAT");
 
-      expTrendEl.innerHTML =
-        `THEIL-SEN ESTIMATOR: <strong>${o.slope > 0 ? "+" : ""}${num(slopePerDec, 2)} ${s.variable.unit}/decade</strong> · ` +
-        `MANN-KENDALL p = <strong>${num(o.p, 3)}${stars}</strong> (${o.significant ? "SIGNIFICANT" : "NOT SIGNIFICANT"}) · ` +
-        `CUMULATIVE SHIFT: <strong>${o.change_total > 0 ? "+" : ""}${num(o.change_total, 2)} ${s.variable.unit} (${o.change_pct > 0 ? "+" : ""}${num(o.change_pct, 1)}%)</strong>` +
-        ciText + tText + pText;
+      const rows = [];
+
+      rows.push(
+        `<div class="tn-row"><span class="tn-key">THEIL–SEN</span><span class="tn-val">` +
+        `<b style="color:${dirColor}">${o.slope > 0 ? "+" : ""}${num(slopePerDec, 3)} ${esc(s.variable.unit)}/decade</b> ` +
+        `(${dirLabel}) · CUMULATIVE SHIFT ` +
+        `<b>${o.change_total > 0 ? "+" : ""}${num(o.change_total, 2)} ${esc(s.variable.unit)} ` +
+        `(${o.change_pct > 0 ? "+" : ""}${num(o.change_pct, 1)}%)</b></span></div>`
+      );
+
+      rows.push(
+        `<div class="tn-row"><span class="tn-key">MANN–KENDALL</span><span class="tn-val">` +
+        `Z = <b>${o.z > 0 ? "+" : ""}${num(o.z, 2)}</b> · p = <b>${o.p < 0.001 ? "<0.001" : num(o.p, 3)}${stars}</b> · ` +
+        `<b style="color:${o.significant ? dirColor : "#a6adb5"}">${o.significant ? "STATISTICALLY SIGNIFICANT" : "NOT SIGNIFICANT"}</b>` +
+        `</span></div>`
+      );
+
+      if (o.ci_low_per_decade !== null && o.ci_low_per_decade !== undefined) {
+        rows.push(
+          `<div class="tn-row"><span class="tn-key">95% CI</span><span class="tn-val">` +
+          `[<b>${o.ci_low_per_decade > 0 ? "+" : ""}${num(o.ci_low_per_decade, 3)}, ` +
+          `${o.ci_high_per_decade > 0 ? "+" : ""}${num(o.ci_high_per_decade, 3)}</b>] ` +
+          `${esc(s.variable.unit)}/decade · Theil-Sen confidence interval</span></div>`
+        );
+      }
+
+      if (o.t_p !== null && o.t_p !== undefined) {
+        rows.push(
+          `<div class="tn-row"><span class="tn-key">OLS CROSS-CHECK</span><span class="tn-val">` +
+          `t-test (df=${o.t_df}) p = <b>${o.t_p < 0.001 ? "<0.001" : num(o.t_p, 3)}</b> · ` +
+          `slope <b>${o.t_per_decade > 0 ? "+" : ""}${num(o.t_per_decade, 3)} ${esc(s.variable.unit)}/decade</b> · ` +
+          `<b style="color:${o.methods_agree ? "#00e5ff" : "#e3c265"}">` +
+          `${o.methods_agree ? "AGREES with Mann–Kendall" : "DISAGREES with Mann–Kendall"}</b></span></div>`
+        );
+      }
+
+      if (partialYears.length) {
+        rows.push(
+          `<div class="tn-row"><span class="tn-key">PARTIAL YEAR</span><span class="tn-val">` +
+          `${partialYears.map((p) => `${p.year} (${p.months}/12 mo)`).join(" · ")} ` +
+          `— shown as points, excluded from the trend slope</span></div>`
+        );
+      }
+
+      if (hasCompare && sB && sB.overall && sB.overall.ok) {
+        const oB = sB.overall;
+        rows.push(
+          `<div class="tn-row"><span class="tn-key">CONTRAST A vs B</span><span class="tn-val">` +
+          `<b>[A] ${esc(d.region.name)}:</b> ${o.per_decade > 0 ? "+" : ""}${num(o.per_decade, 2)} ${esc(s.variable.unit)}/dec (${o.direction.toUpperCase()}) · ` +
+          `<b>[B] ${esc(d.compare.region.name)}:</b> ${oB.per_decade > 0 ? "+" : ""}${num(oB.per_decade, 2)} ${esc(sB.variable.unit)}/dec (${oB.direction.toUpperCase()})` +
+          `</span></div>`
+        );
+      }
+
+      expTrendEl.innerHTML = rows.join("");
     } else {
       expTrendEl.textContent = "INSUFFICIENT DATA POINTS FOR STATISTICAL SIGNIFICANCE TESTING";
     }
@@ -2385,10 +2426,6 @@ function drawChart() {
   const partialFlags = isYear
     ? s.yearly_timeseries.map((p) => !p.complete)
     : [];
-  const partialYears = isYear
-    ? s.yearly_timeseries.filter((p) => !p.complete)
-    : [];
-
   if (chart) chart.destroy();
 
   const o = s.overall;
@@ -2534,43 +2571,6 @@ function drawChart() {
     },
   });
 
-  const partialNote = partialYears.length
-    ? `<br><span style="color:#a6adb5">PARTIAL YEAR: ${
-        partialYears.map((p) => `${p.year} (${p.months}/12 mo)`).join(" · ")
-      } — shown as points, excluded from trend slope</span>`
-    : "";
-
-  const ciNote = (o.ok && o.ci_low_per_decade !== null && o.ci_low_per_decade !== undefined)
-    ? `<br>95% CI: <b>[${o.ci_low_per_decade > 0 ? "+" : ""}${num(o.ci_low_per_decade, 3)}, ` +
-      `${o.ci_high_per_decade > 0 ? "+" : ""}${num(o.ci_high_per_decade, 3)}] ` +
-      `${esc(s.variable.unit)}/decade</b> · Theil-Sen Confidence Interval`
-    : "";
-
-  const tNote = (o.ok && o.t_p !== null && o.t_p !== undefined)
-    ? `<br><span style="color:#a6adb5">t-test</span> ` +
-      `(OLS, df=${o.t_df}) p=<b>${o.t_p < 0.001 ? "<0.001" : num(o.t_p, 3)}</b>` +
-      ` · slope <b>${o.t_per_decade > 0 ? "+" : ""}${num(o.t_per_decade, 3)}</b>` +
-      ` · <b style="color:${o.methods_agree ? "#00e5ff" : "#e3c265"}">` +
-      `${o.methods_agree ? "AGREES with Mann-Kendall" : "DISAGREES with Mann-Kendall"}` +
-      `</b>`
-    : "";
-
-  if (hasCompare && sB && sB.overall && sB.overall.ok) {
-    const oB = sB.overall;
-    $("trendline").innerHTML =
-      `<b>[A] ${d.region.name}:</b> ${o.per_decade > 0 ? "+" : ""}${num(o.per_decade, 2)} ${s.variable.unit}/dec (${o.direction.toUpperCase()}) · ` +
-      `<b>[B] ${d.compare.region.name}:</b> ${oB.per_decade > 0 ? "+" : ""}${num(oB.per_decade, 2)} ${sB.variable.unit}/dec (${oB.direction.toUpperCase()})` +
-      ciNote + tNote + partialNote;
-  } else {
-    $("trendline").innerHTML = (o.ok
-      ? `<b>${s.variable.name}</b> ${o.direction === "rising" ? "rising" :
-         o.direction === "falling" ? "falling" : "flat"} at
-         <b>${o.per_decade > 0 ? "+" : ""}${num(o.per_decade, 3)}
-         ${esc(s.variable.unit)}/decade</b> · MK z=<b>${num(o.z, 2)}</b>
-         p=<b>${o.p < 0.001 ? "<0.001" : num(o.p, 3)}</b>
-         ${o.significant ? "· SIGNIFICANT" : "· NOT SIGNIFICANT"}`
-      : "Insufficient data for trend estimation.") + ciNote + tNote + partialNote;
-  }
 }
 
 function fitLine(pts) {

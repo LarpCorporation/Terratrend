@@ -249,7 +249,6 @@
         <canvas id="chart"></canvas>
         <span class="chart-expand-badge" id="chart-expand-badge">EXPAND</span>
       </div>
-      <div id="trendline" class="trend-note">—</div>
     </section>
 
     <!-- EARTH SYSTEM COUPLING PANEL -->
@@ -533,61 +532,75 @@
       </div>
       <div id="expanded-trendline" class="trend-note expanded-trend-note">—</div>
 
-      <!-- 4-CARD STATISTICAL METRIC STRIP -->
-      <div class="stats-metric-strip" id="stats-metric-strip">
-        <div class="metric-card">
-          <span class="mc-label">THEIL–SEN SLOPE</span>
-          <div class="mc-val" id="mc-slope">—</div>
-          <span class="mc-sub" id="mc-slope-sub">Median rate of change</span>
-        </div>
-        <div class="metric-card">
-          <span class="mc-label">CUMULATIVE CHANGE</span>
-          <div class="mc-val" id="mc-change">—</div>
-          <span class="mc-sub" id="mc-change-sub">Total shift over period</span>
-        </div>
-        <div class="metric-card">
-          <span class="mc-label">MANN–KENDALL TEST</span>
-          <div class="mc-val" id="mc-mk">—</div>
-          <span class="mc-sub" id="mc-mk-sub">p-value & significance</span>
-        </div>
-        <div class="metric-card">
-          <span class="mc-label">HIRSCH–SLACK CROSS-CHECK</span>
-          <div class="mc-val" id="mc-seasonal">—</div>
-          <span class="mc-sub" id="mc-seasonal-sub">Seasonality-controlled test</span>
-        </div>
-      </div>
-
-      <!-- 5x5 SPATIAL CELL MATRIX -->
-      <div class="expanded-grid-section">
-        <div class="eg-header">
-          <span class="eg-title">SPATIAL GRID CONSENSUS (5x5 MATRIX · NORTH-ALIGNED)</span>
-          <div class="eg-header-right">
-            <span class="eg-orient-tag">TOP: NORTH · BOTTOM: SOUTH · LEFT: WEST · RIGHT: EAST</span>
-            <span class="eg-badge" id="eg-cell-count">25 CELLS</span>
+      <!-- COLLAPSIBLE: 4-CARD STATISTICAL METRIC STRIP -->
+      <details class="hud-collapse" id="collapse-stats">
+        <summary>
+          <span class="hc-title">STATISTICAL TESTS</span>
+          <span class="hc-hint">THEIL–SEN · MANN–KENDALL · HIRSCH–SLACK · CUMULATIVE CHANGE</span>
+          <span class="hc-chev" aria-hidden="true">▸</span>
+        </summary>
+        <div class="stats-metric-strip" id="stats-metric-strip">
+          <div class="metric-card">
+            <span class="mc-label">THEIL–SEN SLOPE</span>
+            <div class="mc-val" id="mc-slope">—</div>
+            <span class="mc-sub" id="mc-slope-sub">Median rate of change</span>
+          </div>
+          <div class="metric-card">
+            <span class="mc-label">CUMULATIVE CHANGE</span>
+            <div class="mc-val" id="mc-change">—</div>
+            <span class="mc-sub" id="mc-change-sub">Total shift over period</span>
+          </div>
+          <div class="metric-card">
+            <span class="mc-label">MANN–KENDALL TEST</span>
+            <div class="mc-val" id="mc-mk">—</div>
+            <span class="mc-sub" id="mc-mk-sub">p-value & significance</span>
+          </div>
+          <div class="metric-card">
+            <span class="mc-label">HIRSCH–SLACK CROSS-CHECK</span>
+            <div class="mc-val" id="mc-seasonal">—</div>
+            <span class="mc-sub" id="mc-seasonal-sub">Seasonality-controlled test</span>
           </div>
         </div>
-        <div class="eg-matrix" id="eg-cell-matrix">
-          <!-- 25 cell chips dynamically rendered -->
+      </details>
+
+      <!-- COLLAPSIBLE: 5x5 SPATIAL CELL MATRIX -->
+      <details class="hud-collapse" id="collapse-grid">
+        <summary>
+          <span class="hc-title">SPATIAL GRID CONSENSUS</span>
+          <span class="hc-hint">5x5 MATRIX · TOP: NORTH · BOTTOM: SOUTH · LEFT: WEST · RIGHT: EAST</span>
+          <span class="eg-badge" id="eg-cell-count">25 CELLS</span>
+          <span class="hc-chev" aria-hidden="true">▸</span>
+        </summary>
+        <div class="expanded-grid-section">
+          <div class="eg-matrix" id="eg-cell-matrix">
+            <!-- 25 cell chips dynamically rendered -->
+          </div>
+          <div class="eg-detail" id="eg-cell-detail">Hover or click a cell chip in the 5x5 matrix to inspect coordinate-specific trends.</div>
         </div>
-        <div class="eg-detail" id="eg-cell-detail">Hover or click a cell chip in the 5x5 matrix to inspect coordinate-specific trends.</div>
-      </div>
+      </details>
 
       <!-- EXPANDED EARTH SYSTEM COUPLING SECTION -->
       <div class="expanded-coupling-section" id="eg-coupling-section" style="display: none;">
-        <div class="eg-header">
-          <span class="eg-title">EARTH SYSTEM COUPLING & MULTI-SPHERE FEEDBACK</span>
-          <span class="eg-badge" id="eg-coupling-count">0 DETECTED</span>
-        </div>
-        <div class="eg-coupling-grid" id="eg-coupling-grid"></div>
+        <details class="hud-collapse" id="collapse-coupling">
+          <summary>
+            <span class="hc-title">EARTH SYSTEM COUPLING & MULTI-SPHERE FEEDBACK</span>
+            <span class="eg-badge" id="eg-coupling-count">0 DETECTED</span>
+            <span class="hc-chev" aria-hidden="true">▸</span>
+          </summary>
+          <div class="eg-coupling-grid" id="eg-coupling-grid"></div>
+        </details>
       </div>
 
       <!-- EXPANDED REGIONAL CONTRAST SECTION -->
       <div class="expanded-contrast-section" id="eg-contrast-section" style="display: none;">
-        <div class="eg-header">
-          <span class="eg-title">REGIONAL CONTRAST DEEP DIVE (REGION A VS REGION B)</span>
-          <span class="eg-badge" id="eg-contrast-badge">CONTRAST ACTIVE</span>
-        </div>
-        <div class="eg-contrast-grid" id="eg-contrast-grid"></div>
+        <details class="hud-collapse" id="collapse-contrast">
+          <summary>
+            <span class="hc-title">REGIONAL CONTRAST DEEP DIVE (REGION A VS REGION B)</span>
+            <span class="eg-badge" id="eg-contrast-badge">CONTRAST ACTIVE</span>
+            <span class="hc-chev" aria-hidden="true">▸</span>
+          </summary>
+          <div class="eg-contrast-grid" id="eg-contrast-grid"></div>
+        </details>
       </div>
     </div>
   </div>
