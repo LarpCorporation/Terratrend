@@ -251,7 +251,8 @@
     </div>
     <form id="selection-bounds-form" class="bounds-controls" hidden>
       <div class="bounds-grid"><label>WEST · LONGITUDE<input id="bound-west" type="number" min="-180" max="180" step="any" value="-3" required></label><label>EAST · LONGITUDE<input id="bound-east" type="number" min="-180" max="180" step="any" value="1" required></label><label>SOUTH · LATITUDE<input id="bound-south" type="number" min="-90" max="90" step="any" value="4" required></label><label>NORTH · LATITUDE<input id="bound-north" type="number" min="-90" max="90" step="any" value="11" required></label></div>
-      <p class="micro">Decimal degrees: west/south are negative. West greater than east crosses the 180° meridian.</p><button class="bounds-preview" type="submit">PREVIEW BOUNDS</button>
+      <p class="micro">Decimal degrees: west/south are negative. West greater than east crosses the 180° meridian.</p>
+      <p class="micro">Faster when supported: with Automatic processing, temperature and humidity can use compact rectangle summaries. Other measurements may need more data. For comparisons, both areas must be rectangles.</p><button class="bounds-preview" type="submit">PREVIEW BOUNDS</button>
     </form>
     <div id="selection-draft-summary" class="selection-draft-summary" hidden><span>SELECTED SURFACE AREA · APPROX.</span><strong id="selection-area-value">—</strong><p id="selection-center-value"></p></div>
     <p id="selection-tool-status" class="selection-tool-status" role="status" aria-live="polite"></p>

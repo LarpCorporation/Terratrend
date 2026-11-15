@@ -512,6 +512,7 @@
 
   /* The static tour is retired; the interactive tutorial lives in onboarding.js. */
   function startTour(){
+    if(window.TerraTour?.openLessons){window.TerraTour.openLessons();return;}
     if(window.TerraTour?.start){window.TerraTour.start();return;}
     setStatus('warn','The interactive tour could not load. Reload TerraTrend to try again.');
   }

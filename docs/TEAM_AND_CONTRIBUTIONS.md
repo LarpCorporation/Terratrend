@@ -10,7 +10,7 @@
 1. [Team Roster & Core Responsibilities](#1-team-roster--core-responsibilities)
 2. [Architectural Ownership Breakdown](#2-architectural-ownership-breakdown)
    - [2.1 Geospatial & 3D Visualization Engineering (Kwame Brown)](#21-geospatial--3d-visualization-engineering-kwame-brown)
-   - [2.2 Backend Architecture & Scientific Computing (Anthony Owusu-Ansah / holmes1560)](#22-backend-architecture--scientific-computing-anthony-owusu-ansah--holmes1560)
+   - [2.2 Backend Architecture & Scientific Computing (Asenso Owusu Ansah / holmes1560)](#22-backend-architecture--scientific-computing-asenso-owusu-ansah--holmes1560)
 3. [Joint Team Accomplishments](#3-joint-team-accomplishments)
 4. [Synergy with AI: Human Vision vs. AI Acceleration](#4-synergy-with-ai-human-vision-vs-ai-acceleration)
 5. [Project Evolution & Milestones](#5-project-evolution--milestones)
@@ -32,7 +32,7 @@ TerraTrend was developed by a focused, multidisciplinary team of engineers and d
             ┌──────────────────┴───────────────────┐
             │                                      │
             ▼                                      ▼
-     KWAME BROWN                      ANTHONY OWUSU-ANSAH (holmes1560)
+     KWAME BROWN                       ASENSO OWUSU ANSAH (holmes1560)
   Lead Geospatial & 3D             Lead Backend Systems & Climate
  Visualization Engineer                  Data Architect
 - Three.js 3D Photoreal Globe      - Statistical Engine (MK / Theil-Sen)
@@ -58,7 +58,7 @@ TerraTrend was developed by a focused, multidisciplinary team of engineers and d
   - Built frontend contract verification suites (`tests/*.test.cjs`) guaranteeing seamless API-to-UI data binding.
   - Integrated resilient fallback mechanisms for external bibliographic lookups (OpenAlex with Crossref failover).
 
-### 2.2 Backend Architecture & Scientific Computing (Anthony Owusu-Ansah / holmes1560)
+### 2.2 Backend Architecture & Scientific Computing (Asenso Owusu Ansah / holmes1560)
 - **Core Statistical & Mathematical Engine**:
   - Engineered the non-parametric trend detection pipeline in `backend/analysis.py`, implementing the Mann-Kendall test with exact tie corrections, AR(1) serial correlation variance inflation on detrended residuals, and the Theil–Sen robust median slope estimator.
   - Implemented Gilbert (1987) non-parametric confidence intervals and Lentz continued fractions for incomplete beta functions.

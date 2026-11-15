@@ -27,7 +27,7 @@
    with action values area-selected, measurement-checked, dates-changed,
    run-clicked, analysis-complete, result-restored, navigate, chart-point,
    compare-mode, measurement-panel, remote-run, result-saved,
-   measurement-filtered, event-selected, event-pathway-open,
+     measurement-filtered, selection-mode, event-selected, event-pathway-open,
    event-explanation-opened.
 
    Progress persists under localStorage['terratrend-onboarding-v2'] as
@@ -245,6 +245,22 @@
       screen: 'map',
       anchor: ['#selection-dock', '#selection-dock-tools', '#selection-breadcrumb'],
       body: 'Draw a lasso, enter latitude/longitude bounds, or place a circle or square. Each shape stays exact for that area, A and B can use different methods.'
+    },
+    {
+      id: 'faster-rectangles',
+      chapter: 'advanced',
+      task: 'TIP · FASTER DATA',
+      title: 'Get data faster with a rectangle',
+      kind: 'action',
+      screen: 'map',
+      anchor: ['#selection-dock'],
+      nextOnAction: true,
+      body: 'Open Selection tools here, then choose Latitude / longitude. With Automatic processing, temperature and humidity can use compact monthly summaries, reducing data transfer and local processing. Rectangular Presets work too. A rectangle includes everything inside the box; other measurements and exact country borders may need more data. For a comparison, both areas must be rectangles to use this shortcut.',
+      action: {
+        event: 'selection-mode',
+        match: function (detail) { return detail.mode === 'bounds'; },
+        require: 'Waiting for you to click Latitude / longitude in the selection toolbar.'
+      }
     },
     {
       id: 'two-variables',
@@ -980,10 +996,21 @@
     var title = make('h2', '', 'Welcome to TerraTrend');
     title.id = 'tt-welcome-title';
     var lead = make('p', 'tt-welcome-lead',
-      'TerraTrend shows how a measurement has changed over time in a place you choose. A trend is how one measurement changes over time in one area; a relationship asks whether two measurements move together, which is an association, not proof of a cause. The tour walks through a real example.');
+      'Choose a place, a measurement and a period to see what has changed. Explore trends or test whether measurements move together. The interactive tour walks through a real example.');
     lead.id = 'tt-welcome-lead';
     var note = make('p', 'tt-welcome-note',
       'It waits for you to do each step yourself. Press Escape to leave at any time, or replay a lesson from HELP.');
+
+    var speedTip = make('section', 'tt-speed-tip');
+    var speedTitle = make('h3', '', 'Try a rectangle for faster data');
+    speedTitle.id = 'tt-speed-title';
+    speedTip.setAttribute('aria-labelledby', speedTitle.id);
+    var speedBody = make('p', '', 'With Automatic processing, Latitude / longitude boxes and rectangular Presets can retrieve compact monthly temperature and humidity summaries. That can use less data and reduce local processing.');
+    var speedLimit = make('p', 'tt-note', 'Other measurements may still need larger downloads. A box covers its whole extent, including places beyond country borders.');
+    var speedButton = make('button', 'tt-btn ghost', 'Show the rectangle selector');
+    speedButton.type = 'button';
+    speedButton.dataset.ttWelcome = 'faster-rectangles';
+    speedTip.append(speedTitle, speedBody, speedLimit, speedButton);
 
     var actionsRow = make('div', 'tt-welcome-actions');
     var startButton = make('button', 'tt-btn primary', 'Start interactive tour');
@@ -1003,7 +1030,7 @@
     advancedLink.dataset.ttWelcome = 'advanced';
     foot.append(lessonsLink, advancedLink);
 
-    windowEl.append(kicker, title, lead, note, actionsRow, foot);
+    windowEl.append(kicker, title, lead, speedTip, note, actionsRow, foot);
     wrapper.append(windowEl);
     wrapper.addEventListener('click', function (event) {
       if (event.target === wrapper) closeModal();
@@ -1025,6 +1052,10 @@
       if (choice === 'advanced') {
         closeModal();
         start({ chapter: 'advanced' });
+        return;
+      }
+      if (choice === 'faster-rectangles') {
+        start({ lesson: 'faster-rectangles' });
         return;
       }
       closeModal();
@@ -1056,6 +1087,9 @@
     title.id = 'tt-lessons-title';
     var note = make('p', 'tt-note',
       'Each lesson is short. Action lessons wait for the real app event and never mark a skipped action as completed.');
+    var rectangleButton = make('button', 'tt-btn ghost', 'Show the rectangle selector for faster data');
+    rectangleButton.type = 'button';
+    rectangleButton.dataset.ttLesson = 'faster-rectangles';
     var body = make('div', 'tt-lessons-body');
     var foot = make('div', 'tt-window-foot');
     var resumeButton = make('button', 'tt-btn ghost', 'Resume last lesson');
@@ -1069,7 +1103,7 @@
     closeButton.dataset.ttLessons = 'close';
     foot.append(resumeButton, restartButton, closeButton);
 
-    windowEl.append(kicker, title, note, body, foot);
+    windowEl.append(kicker, title, note, rectangleButton, body, foot);
     wrapper.append(windowEl);
     wrapper.addEventListener('click', function (event) {
       if (event.target === wrapper) closeModal();
@@ -1542,6 +1576,9 @@
     var step = currentLesson(session);
     if (!step) { finishRun(); return; }
     stepToken += 1;
+    // Replaying this tip from another page only opens Map; the learner still
+    // chooses the selector and enters every boundary themselves.
+    if (step.id === 'faster-rectangles' && typeof root.showInvestigationScreen === 'function') root.showInvestigationScreen('map');
     if (step.screen && (step.kind !== 'action' || step.id.indexOf('event-')===0)) announceScreen(step);
     currentTarget = resolveTarget(step);
     currentHole = null;

@@ -55,7 +55,7 @@ function setSelectionTool(mode){
   $('selection-shape-controls').hidden=!['circle','square'].includes(mode);$('selection-bounds-form').hidden=mode!=='bounds';$('selection-lasso-controls').hidden=mode!=='lasso';
   $('selection-size-label').textContent=mode==='square'?'SIDE LENGTH':'RADIUS';
   $('selection-size').setAttribute('aria-label',mode==='square'?'Square side length in kilometres':'Circle radius in kilometres');
-  $('selection-help').textContent=({boundary:'Choose a geographic level above, then click a whole area. The Country menu loads regions worldwide when available.',lasso:'Drag an outline and release to close it. Or click vertices, then Finish outline. Shift-drag moves the map; scroll to zoom.',circle:'Click anywhere on the Earth to place a centre dot. Adjust the radius below, preview the covered area, then choose Use.',square:'Click anywhere on the Earth to place a centre dot. Adjust the side length below, preview the covered area, then choose Use.',bounds:'Enter west/east longitude and south/north latitude. Preview the bounds on the map, then choose Use.'})[mode];
+  $('selection-help').textContent=({boundary:'Choose a geographic level above, then click a whole area. The Country menu loads regions worldwide when available.',lasso:'Drag an outline and release to close it. Or click vertices, then Finish outline. Shift-drag moves the map; scroll to zoom.',circle:'Click anywhere on the Earth to place a centre dot. Adjust the radius below, preview the covered area, then choose Use.',square:'Click anywhere on the Earth to place a centre dot. Adjust the side length below, preview the covered area, then choose Use. This square follows curved Earth edges; use Latitude / longitude for a coordinate rectangle and compact temperature/humidity summaries when supported.',bounds:'Enter west/east longitude and south/north latitude. Preview the bounds on the map, then choose Use.'})[mode];
   if(mode==='bounds'){
     const meta=investigation.slot==='a'?currentRegion():currentCompareRegion(),b=meta?.bbox;
     if(b)for(const [id,value] of [['bound-west',b[0]],['bound-south',b[1]],['bound-east',b[2]],['bound-north',b[3]]])$(id).value=value.toFixed(4);
@@ -126,7 +126,10 @@ function showAnalysisEvidence(mode){
 function wireSelectionTools(){
   for(const [id,slot] of [['pick-area-a','a'],['pick-area-b','b'],['drawer-pick-a','a'],['drawer-pick-b','b']])$(id).onclick=()=>activateSelectionSlot(slot);
   document.querySelectorAll('[data-selection-slot]').forEach(b=>b.onclick=()=>activateSelectionSlot(b.dataset.selectionSlot));
-  document.querySelectorAll('[data-selection-mode]').forEach(b=>b.onclick=()=>setSelectionTool(b.dataset.selectionMode));
+  document.querySelectorAll('[data-selection-mode]').forEach(b=>b.onclick=()=>{
+    setSelectionTool(b.dataset.selectionMode);
+    if(typeof announceAction==='function')announceAction('selection-mode',{mode:b.dataset.selectionMode});
+  });
   $('selection-dock-toggle').onclick=()=>toggleSelectionDock($('selection-dock-tools').hidden);
   $('selection-close').onclick=closeSelectionTools;$('selection-reset').onclick=clearSelectionDraft;$('selection-apply').onclick=applySelectionDraft;
   $('selection-clear-slot').onclick=$('dock-clear-area').onclick=()=>clearSelectionArea();

@@ -88,6 +88,11 @@ test('the App event envelope and completion matchers follow the agreed contract'
   const measurement = P.lessonById('pick-measurement');
   assert.equal(P.matchAction(measurement, { action: 'measurement-checked', checked: true, count: 1 }), true);
   assert.equal(P.matchAction(measurement, { action: 'measurement-checked', checked: false, count: 0 }), false);
+
+  const rectangle = P.lessonById('faster-rectangles');
+  assert.equal(P.matchAction(rectangle, { action: 'selection-mode', mode: 'bounds' }), true);
+  assert.equal(P.matchAction(rectangle, { action: 'selection-mode', mode: 'square' }), false);
+  assert.equal(P.matchAction(rectangle, { action: 'area-selected', mode: 'bounds' }), false);
 });
 
 test('skipping, exiting and restarting behave without recording a required action', () => {
@@ -325,7 +330,7 @@ test('the lesson set covers the required topics and only agreed action events', 
     'area-selected', 'measurement-checked', 'dates-changed', 'run-clicked',
     'analysis-complete', 'result-restored', 'navigate', 'chart-point',
     'compare-mode', 'measurement-panel', 'remote-run', 'result-saved',
-    'measurement-filtered','event-selected','event-pathway-open','event-explanation-opened'
+    'measurement-filtered','selection-mode','event-selected','event-pathway-open','event-explanation-opened'
   ]);
   const ids = new Set();
   for (const lesson of lessons) {

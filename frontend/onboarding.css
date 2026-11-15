@@ -439,6 +439,27 @@
 
 .tt-welcome-actions .tt-btn { flex: 1 1 200px; }
 
+.tt-speed-tip {
+  margin: 18px 0;
+  padding: 16px;
+  border: 1px solid #678d78;
+  border-left: 3px solid #92d9b2;
+  border-radius: 10px;
+  background: #1b3529;
+}
+
+.tt-window .tt-speed-tip h3 {
+  margin: 0 0 10px;
+  font-size: 18px;
+  line-height: 1.35;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #f1fff5;
+}
+
+.tt-window .tt-speed-tip p { color: #e1f1e6; }
+.tt-speed-tip .tt-btn { width: 100%; }
+
 .tt-welcome-foot {
   display: flex;
   flex-wrap: wrap;

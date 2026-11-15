@@ -164,7 +164,7 @@ To keep this primary showcase accessible while providing complete scientific and
 - 🤖 **[Human-in-the-Loop AI Collaboration & System Attribution](docs/AI_COLLABORATION_AND_ATTRIBUTION.md)**  
   *Transparent disclosure on how human domain expertise drove the scientific formulation, while AI tools served as code scaffolding and design velocity accelerators. Details the in-product Zero-Hallucination Explainer architecture.*
 - 👥 **[Team, Roles & Contributions](docs/TEAM_AND_CONTRIBUTIONS.md)**  
-  *Roster of team members (Kwame Brown & Anthony Owusu-Ansah), individual architectural ownership, project milestones, and NASA Space Apps Challenge context.*
+  *Roster of team members (Kwame Brown & Asenso Owusu Ansah), individual architectural ownership, project milestones, and NASA Space Apps Challenge context.*
 - 🛰️ **[Data Sources, Presets & Ingestion Mechanics](docs/SOURCES_AND_PRESETS.md)**  
   *Complete mapping of 20 live environmental variables, unit conversion formulas, OPeNDAP byte-range subsetting, AppEEARS token authorization, and caching protocols.*
 - 🧪 **[Local Verification & Empirical Evidence](docs/LOCAL_VERIFICATION.md)**  
@@ -277,7 +277,7 @@ TerraTrend was engineered for the **NASA Space Apps Challenge 2026** by:
 
 - **Kwame Brown** ([@brownkwame323](https://github.com/brownkwame323)): Lead Geospatial & 3D Visualization Engineer  
   *Three.js planetary rendering, photoreal Earth shaders, day/night terminators, Cybermap UI, and frontend contracts.*
-- **Anthony Owusu-Ansah** ([@holmes1560](https://github.com/holmes1560)): Lead Backend Systems & Climate Data Architect  
+- **Asenso Owusu Ansah** ([@holmes1560](https://github.com/holmes1560)): Lead Backend Systems & Climate Data Architect  
   *Statistical computing engine (Mann-Kendall, Theil-Sen), Earth-system teleconnection pipeline, NASA OPeNDAP integration, and cloud containerization.*
 
 Read the full story in **[Team, Roles & Contributions](docs/TEAM_AND_CONTRIBUTIONS.md)**.
