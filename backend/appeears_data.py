@@ -34,7 +34,25 @@ _LOCK=threading.RLock()
 
 
 def token():
-    with _LOCK:return _TOKEN or os.environ.get("APPEEARS_TOKEN", "").strip() or service_credentials.load('appeears')
+    global _TOKEN
+    with _LOCK:
+        if _TOKEN:
+            return _TOKEN
+        env_tok = os.environ.get("APPEEARS_TOKEN", "").strip()
+        if env_tok:
+            return env_tok
+        saved = service_credentials.load('appeears')
+        if saved:
+            return saved
+        u = os.environ.get("APPEEARS_USERNAME", "").strip() or os.environ.get("EARTHDATA_USERNAME", "").strip()
+        p = os.environ.get("APPEEARS_PASSWORD", "").strip() or os.environ.get("EARTHDATA_PASSWORD", "").strip()
+        if u and p:
+            try:
+                connect(u, p, remember=False)
+                return _TOKEN
+            except Exception:
+                pass
+        return ''
 
 
 def status():
@@ -69,7 +87,17 @@ def _request(route,method='GET',body=None,bearer='',auth=None,raw=False):
                             jobs.check_cancelled();result.extend(part)
                             if len(result)>2_000_000:raise ValueError('AppEEARS summary exceeds 2 MB')
                         return bytes(result)
-                if r.status_code in {401,403}:raise ValueError('AppEEARS authorization is missing or expired. Connect AppEEARS in Data & Methods; your Earthdata key remains separate.')
+                if r.status_code in {401,403}:
+                    u = os.environ.get("APPEEARS_USERNAME", "").strip() or os.environ.get("EARTHDATA_USERNAME", "").strip()
+                    p = os.environ.get("APPEEARS_PASSWORD", "").strip() or os.environ.get("EARTHDATA_PASSWORD", "").strip()
+                    if u and p and auth is None and not route.startswith('login'):
+                        try:
+                            connect(u, p, remember=False)
+                            if _TOKEN and _TOKEN != bearer:
+                                return _request(route, method=method, body=body, bearer=_TOKEN, auth=auth, raw=raw)
+                        except Exception:
+                            pass
+                    raise ValueError('AppEEARS authorization is missing or expired. Connect AppEEARS in Data & Methods; your Earthdata key remains separate.')
                 if r.status_code not in {200,201,202,204}:raise ValueError(f'AppEEARS returned HTTP {r.status_code}; no raster fallback was used.')
                 data=bytearray()
                 for part in r.iter_content(64000):
