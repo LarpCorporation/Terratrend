@@ -23,6 +23,9 @@ const state = {
   catalog: null,
   selected: ["T2M"],
   result: null,
+  // incremented per analysis so a slow, superseded response cannot repaint
+  // the globe over a newer click
+  analyzeSeq: 0,
   mode: "yearly",
   activeVarIdx: 0,
   activeSphere: "all",
@@ -328,13 +331,7 @@ function renderRegionSelect() {
 }
 
 function onRegionChange() {
-  const r = currentRegion();
-  $("region-desc").textContent = r ? r.desc : "";
-  $("region-readout").textContent = r
-    ? r.name.toUpperCase()
-    : "NO REGION SELECTED";
-  updateGlobeOverlay();
-  if (regionMesh) regionMesh.position.copy(bboxCenter(r.bbox, 1.005));
+  applyRegionSelection(currentRegion());
   if (state.result) analyze();
 }
 
@@ -868,6 +865,7 @@ async function analyze() {
     return;
   }
 
+  const seq = ++state.analyzeSeq;
   btn.disabled = true;
   setStatus("busy",
     `<span class="spin"></span>ACQUIRING NASA POWER GRID · TESTING TRENDS…`);
@@ -890,6 +888,9 @@ async function analyze() {
     const r = await fetch(`/api/analyze?${params}`);
     const data = await r.json();
     if (!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
+    // a region click that landed while this request was in flight has already
+    // drawn its own selection; do not let this stale answer overwrite it
+    if (seq !== state.analyzeSeq) return;
     state.result = data;
     // a variable chosen from the SCAN table wins; otherwise default to first significant
     const pref = state.preferredVar;
@@ -904,9 +905,11 @@ async function analyze() {
     render();
     setStatus("ok", "");
   } catch (e) {
-    setStatus("err", `ANALYSIS FAILED: ${esc(e.message)}`);
+    if (seq === state.analyzeSeq) {
+      setStatus("err", `ANALYSIS FAILED: ${esc(e.message)}`);
+    }
   } finally {
-    btn.disabled = false;
+    if (seq === state.analyzeSeq) btn.disabled = false;
   }
 }
 
@@ -2610,6 +2613,8 @@ const R = 1;
 let renderer, scene, camera, globeGroup;
 let teleconArcsGroup;
 let landPoints, gridLines, regionMesh, haloMesh, atmosphere, pickSphere;
+// ring drawn for a region click that has not finished analysing yet
+let previewRing = null;
 let dragState = null;
 let autoRotate = true;
 let regionMarkers = [];
@@ -2676,9 +2681,11 @@ async function initGlobe() {
   // dots while the texture is still loading; skip if it already landed
   if (textureState !== "ready") applyGlobeStyle();
 
-  // invisible sphere used to convert a click into a lat/lon
+  // invisible sphere used to convert a click into a lat/lon.
+  // Radius matches the visible surface (0.999): at 0.995 its silhouette fell
+  // just inside the planet's, leaving a thin unclickable band at the limb.
   pickSphere = new THREE.Mesh(
-    new THREE.SphereGeometry(0.995, 32, 32),
+    new THREE.SphereGeometry(1.0, 32, 32),
     new THREE.MeshBasicMaterial({ visible: false })
   );
   globeGroup.add(pickSphere);
@@ -3115,10 +3122,40 @@ function makeSphericalRing(center, angRad, thickness, radius, segments = 96) {
   return g;
 }
 
+const REGION_MAG = 2.8; // visually amplify the small region so cells are readable
+
+/* The selection ring around a lat/lon bbox. The analysed result and the
+   optimistic preview both draw through here, so the ring does not jump when
+   the response lands. */
+function makeSelectionRingMesh(bbox, color = 0xf0f2f4, opacity = 0.7) {
+  const bw = Math.abs(bbox[2] - bbox[0]) * REGION_MAG;
+  const bh = Math.abs(bbox[3] - bbox[1]) * REGION_MAG;
+  // The amplified grid reaches to the CORNERS of the box, so the radius must
+  // come from the half-diagonal, and the ring follows the sphere so it keeps
+  // enclosing the cells even when the region sits near the limb.
+  const angRad = Math.hypot(bw / 2, bh / 2) * Math.PI / 180 * 1.12;
+  const c0 = bboxCenter(bbox, 1);
+  const geo = makeSphericalRing(
+    c0, angRad, Math.max(0.006, angRad * 0.08), 1.06);
+  const mat = new THREE.MeshBasicMaterial({
+    color, side: THREE.DoubleSide, transparent: true,
+    opacity, depthWrite: false,
+    // depth-tested: the ring is a curve on the sphere, so it must be hidden
+    // by the planet when the region rotates round the back. Disabling this
+    // made it float across the face as the globe turned.
+    depthTest: true,
+  });
+  const ring = new THREE.Mesh(geo, mat);
+  ring.renderOrder = 9;
+  ring.userData = { pulsing: true };
+  return ring;
+}
+
 /* ---------- interactive region markers ---------- */
 function renderGlobeRegions(d) {
   regionMarkers.forEach((m) => globeGroup.remove(m));
   regionMarkers = [];
+  previewRing = null;
 
   if (!d) return;
 
@@ -3140,7 +3177,7 @@ function renderGlobeRegions(d) {
   const lat0 = Math.min(bbox[1], bbox[3]);
   const lat1 = Math.max(bbox[1], bbox[3]);
 
-  const MAG = 2.8; // visually amplify the small region so cells are readable
+  const MAG = REGION_MAG; // visually amplify the small region so cells are readable
   const cLat0 = (Math.min(bbox[1], bbox[3]) + Math.max(bbox[1], bbox[3])) / 2;
   const cLon0 = (Math.min(bbox[0], bbox[2]) + Math.max(bbox[0], bbox[2])) / 2;
 
@@ -3176,27 +3213,8 @@ function renderGlobeRegions(d) {
     });
   });
 
-  // pulsing ring bounding the analyzed region.
-  // The amplified grid reaches to the CORNERS of the box, so the radius must
-  // come from the half-diagonal, and the ring follows the sphere so it keeps
-  // enclosing the cells even when the region sits near the limb.
-  const bw = Math.abs(d.grid.bbox[2] - d.grid.bbox[0]) * MAG;
-  const bh = Math.abs(d.grid.bbox[3] - d.grid.bbox[1]) * MAG;
-  const angRad = Math.hypot(bw / 2, bh / 2) * Math.PI / 180 * 1.12;
-  const c0 = bboxCenter(d.grid.bbox, 1);
-  const ringGeo = makeSphericalRing(
-    c0, angRad, Math.max(0.006, angRad * 0.08), 1.06);
-  const ringMat = new THREE.MeshBasicMaterial({
-    color: 0xf0f2f4, side: THREE.DoubleSide, transparent: true,
-    opacity: 0.7, depthWrite: false,
-    // depth-tested: the ring is a curve on the sphere, so it must be hidden
-    // by the planet when the region rotates round the back. Disabling this
-    // made it float across the face as the globe turned.
-    depthTest: true,
-  });
-  const ring = new THREE.Mesh(ringGeo, ringMat);
-  ring.renderOrder = 9;
-  ring.userData = { pulsing: true };
+  // pulsing ring bounding the analyzed region
+  const ring = makeSelectionRingMesh(d.grid.bbox);
   globeGroup.add(ring);
   regionMarkers.push(ring);
 
@@ -3226,20 +3244,8 @@ function renderGlobeRegions(d) {
       regionMarkers.push(dot);
     });
 
-    const bwB = Math.abs(bboxB[2] - bboxB[0]) * MAG;
-    const bhB = Math.abs(bboxB[3] - bboxB[1]) * MAG;
-    // same half-diagonal fix as region A, so contrast mode agrees
-    const angRadB = Math.hypot(bwB / 2, bhB / 2) * Math.PI / 180 * 1.12;
-    const c0B = bboxCenter(bboxB, 1);
-    const ringGeoB = makeSphericalRing(
-      c0B, angRadB, Math.max(0.006, angRadB * 0.08), 1.06);
-    const ringMatB = new THREE.MeshBasicMaterial({
-      color: 0x00e5ff, side: THREE.DoubleSide, transparent: true,
-      opacity: 0.85, depthWrite: false, depthTest: true,
-    });
-    const ringB = new THREE.Mesh(ringGeoB, ringMatB);
-    ringB.renderOrder = 9;
-    ringB.userData = { pulsing: true };
+    // same geometry path as region A, so contrast mode agrees
+    const ringB = makeSelectionRingMesh(bboxB, 0x00e5ff, 0.85);
     globeGroup.add(ringB);
     regionMarkers.push(ringB);
   }
@@ -3391,7 +3397,60 @@ function pickLatLon(e) {
   return { lat: 90 - phi * 180 / Math.PI, lon };
 }
 
-/* Tap the globe -> analyze the nearest preset region. */
+/* The ring drawn for a pick that has not finished analysing yet. */
+function clearPreviewRing() {
+  if (!previewRing) return;
+  if (previewRing.parent) previewRing.parent.remove(previewRing);
+  const i = regionMarkers.indexOf(previewRing);
+  if (i >= 0) regionMarkers.splice(i, 1);
+  previewRing = null;
+}
+
+/* Answer a region pick immediately: ring on the sphere and a camera turn,
+   both before /api/analyze resolves, so the globe never feels unresponsive. */
+function previewRegionSelection(region) {
+  if (!globeGroup || !region || !region.bbox) return;
+  clearPreviewRing();
+
+  // If this region is already analysed its real ring is on the sphere; drawing
+  // a preview on top would just double the outline.
+  const alreadyDrawn = state.result && state.result.region
+    && state.result.region.id === region.id
+    && regionMarkers.some((m) => m.userData && m.userData.pulsing && !m.userData.optimistic);
+
+  if (!alreadyDrawn) {
+    const ring = makeSelectionRingMesh(region.bbox, 0xf0f2f4, 0.55);
+    ring.userData.optimistic = true;
+    globeGroup.add(ring);
+    regionMarkers.push(ring);
+    previewRing = ring;
+  }
+
+  const bbox = region.bbox;
+  const lon = (bbox[0] + bbox[2]) / 2;
+  const lat = (bbox[1] + bbox[3]) / 2;
+  // same maths renderGlobeRegions uses, so the camera does not jump later
+  animateGlobeTo(lat * Math.PI / 180, -(lon * Math.PI / 180) - Math.PI / 2);
+}
+
+/* Update every piece of region UI that does not depend on the analysis. */
+function applyRegionSelection(region) {
+  const desc = $("region-desc");
+  const readout = $("region-readout");
+  if (!region) {
+    if (desc) desc.textContent = "";
+    if (readout) readout.textContent = "NO REGION SELECTED";
+    updateGlobeOverlay();
+    return;
+  }
+  if (desc) desc.textContent = region.desc || "";
+  if (readout) readout.textContent = region.name.toUpperCase();
+  updateGlobeOverlay();
+  if (regionMesh) regionMesh.position.copy(bboxCenter(region.bbox, 1.005));
+  previewRegionSelection(region);
+}
+
+/* Tap the globe -> select the nearest preset region at once, then analyze. */
 function selectNearestRegion(lat, lon) {
   let best = null;
   let bestD = Infinity;
@@ -3405,11 +3464,25 @@ function selectNearestRegion(lat, lon) {
     if (d < bestD) { bestD = d; best = r; }
   });
   if (!best) return;
-  if ($("region").value === best.id) return;
-  $("region").value = best.id;
-  onRegionChange();
-  analyze();
-  flashHint(`${best.name.toUpperCase()} SELECTED — ANALYZING`);
+
+  const sel = $("region");
+  const changed = !sel || sel.value !== best.id;
+  if (sel) sel.value = best.id;
+
+  // optimistic: the globe answers the click before the network does
+  applyRegionSelection(best);
+
+  if (!state.selected.length) {
+    flashHint(`${best.name.toUpperCase()} SELECTED — PICK A VARIABLE`);
+    return;
+  }
+  if (changed || !state.result) {
+    flashHint(`${best.name.toUpperCase()} SELECTED — ANALYZING`);
+    analyze();
+  } else {
+    // clicking inside the region already on screen must still acknowledge
+    flashHint(`${best.name.toUpperCase()} SELECTED`);
+  }
 }
 
 let hintTimer = null;
