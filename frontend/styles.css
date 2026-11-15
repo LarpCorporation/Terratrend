@@ -328,17 +328,56 @@ body {
 
 .globe-overlay { position: absolute; inset: 0; pointer-events: none; }
 
-/* globe renderer switch (photoreal / dot matrix) */
-.globe-style-btn {
+/* globe renderer switcher: a small HUD dropdown, not a bare toggle */
+.globe-mode {
   position: absolute; top: 14px; right: 16px;
-  pointer-events: auto; cursor: pointer;
-  background: rgba(8, 9, 10, .72); color: var(--hi-dim);
-  border: 1px solid var(--line-hot);
-  padding: 4px 9px;
-  font-family: var(--font); font-size: .5rem; letter-spacing: .14em;
-  transition: color .13s, border-color .13s;
+  pointer-events: auto; z-index: 20;
 }
-.globe-style-btn:hover { color: var(--text-bright); border-color: var(--hi); }
+.globe-mode-trigger {
+  display: flex; align-items: center; gap: 7px;
+  background: rgba(8, 9, 10, .82); color: var(--hi-dim);
+  border: 1px solid var(--line-hot);
+  padding: 5px 10px; cursor: pointer;
+  font-family: var(--font); font-size: .5rem; letter-spacing: .14em;
+  transition: color .13s, border-color .13s, background .13s;
+}
+.globe-mode-trigger:hover,
+.globe-mode.open .globe-mode-trigger {
+  color: var(--text-bright); border-color: var(--hi);
+  background: rgba(14, 16, 18, .95);
+}
+.gm-label { color: var(--muted-2); }
+.gm-value { color: var(--hi); }
+.gm-caret { color: var(--muted-2); font-size: .6rem; }
+.globe-mode.open .gm-caret { transform: rotate(180deg); }
+
+.globe-mode-menu {
+  position: absolute; top: calc(100% + 4px); right: 0;
+  min-width: 208px; padding: 3px;
+  background: rgba(10, 12, 14, .97);
+  border: 1px solid var(--line-hot);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, .6);
+}
+.gm-option {
+  display: flex; align-items: flex-start; gap: 9px; width: 100%;
+  padding: 7px 8px; cursor: pointer; text-align: left;
+  background: transparent; border: 0; border-left: 2px solid transparent;
+  transition: background .12s, border-color .12s;
+}
+.gm-option:hover:not(:disabled) { background: #16191c; }
+.gm-option.on { border-left-color: var(--hi); background: #14171a; }
+.gm-option:disabled { cursor: not-allowed; opacity: .38; }
+.gm-mark { color: var(--hi-dim); font-size: .72rem; line-height: 1.3; }
+.gm-option.on .gm-mark { color: var(--text-bright); }
+.gm-text { display: flex; flex-direction: column; gap: 2px; }
+.gm-name {
+  font-family: var(--font); font-size: .56rem; letter-spacing: .12em;
+  color: var(--text-bright);
+}
+.gm-desc {
+  font-family: var(--font); font-size: .46rem; letter-spacing: .05em;
+  color: var(--muted-2);
+}
 .corner {
   position: absolute; width: 18px; height: 18px;
   border: 1px solid var(--hi); opacity: .45;

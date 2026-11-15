@@ -2368,13 +2368,9 @@ async function initGlobe() {
   buildStarfield();
 
   // the photographic globe is the default; fall back to dots if textures fail
-  const styleBtn = $("globe-style-btn");
-  if (styleBtn) {
-    styleBtn.addEventListener("click", () => {
-      applyGlobeStyle(appliedStyle === "relief" ? "dots" : "relief");
-    });
-  }
-  applyGlobeStyle();  // dots until the textures finish loading
+  initGlobeModeMenu();
+  // dots while the texture is still loading; skip if it already landed
+  if (textureState !== "ready") applyGlobeStyle();
 
   // invisible sphere used to convert a click into a lat/lon
   pickSphere = new THREE.Mesh(
@@ -2483,6 +2479,12 @@ let textureState = "idle";   // idle | loading | ready | failed
 let globeStyle = "relief";   // what the user wants
 let appliedStyle = "dots";   // what is actually on screen
 
+// remember the last chosen mode across reloads
+try {
+  const saved = window.localStorage.getItem("tt-globe-style");
+  if (saved === "dots" || saved === "relief") globeStyle = saved;
+} catch (e) { /* private mode / storage disabled: keep the default */ }
+
 function buildEarthSurface() {
   textureState = "loading";
   const loader = new THREE.TextureLoader();
@@ -2496,7 +2498,9 @@ function buildEarthSurface() {
 
   const topo = loader.load(EARTH_TEXTURES.topo, () => {
     textureState = "ready";
-    applyGlobeStyle();
+    // defer one frame: on a cached texture this callback can beat initGlobe's
+    // initial applyGlobeStyle(), which would then reset the globe to dots
+    requestAnimationFrame(() => applyGlobeStyle());
   }, undefined, onFail);
   // data mask: sample raw values, no colour-space conversion
   topo.colorSpace = THREE.NoColorSpace;
@@ -2667,14 +2671,62 @@ function applyGlobeStyle(style) {
     gridLines.forEach((line) => { line.visible = !wantRelief; });
   }
 
-  const btn = $("globe-style-btn");
-  if (btn) {
-    btn.hidden = textureState !== "ready";
-    btn.textContent = wantRelief ? "◐ RELIEF" : "◌ DOTS";
-    btn.title = wantRelief
-      ? "Showing the blue-relief Earth — click for the dot globe"
-      : "Showing the dot-matrix globe — click for the blue-relief Earth";
+  // sync the dropdown
+  const value = $("globe-style-value");
+  if (value) {
+    value.textContent = appliedStyle === "relief" ? "BLUE RELIEF" : "DOT MATRIX";
   }
+  document.querySelectorAll(".gm-option").forEach((opt) => {
+    const on = opt.dataset.style === appliedStyle;
+    opt.classList.toggle("on", on);
+    opt.setAttribute("aria-selected", on ? "true" : "false");
+    if (opt.dataset.style === "relief") {
+      // no textures (offline / CDN blocked): offer the mode but explain
+      opt.disabled = textureState !== "ready";
+      const desc = opt.querySelector(".gm-desc");
+      if (desc) {
+        desc.textContent = textureState === "ready"
+          ? "textured sphere · blue palette"
+          : "needs the CDN textures — unavailable offline";
+      }
+    }
+  });
+}
+
+function initGlobeModeMenu() {
+  const trigger = $("globe-style-btn");
+  const menu = $("globe-style-menu");
+  const wrap = $("globe-mode");
+  if (!trigger || !menu || !wrap) return;
+
+  const setOpen = (open) => {
+    menu.hidden = !open;
+    wrap.classList.toggle("open", open);
+    trigger.setAttribute("aria-expanded", open ? "true" : "false");
+  };
+
+  trigger.addEventListener("click", (e) => {
+    e.stopPropagation();
+    setOpen(menu.hidden);
+  });
+
+  menu.querySelectorAll(".gm-option").forEach((opt) => {
+    opt.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (opt.disabled) return;
+      applyGlobeStyle(opt.dataset.style);
+      try {
+        window.localStorage.setItem("tt-globe-style", opt.dataset.style);
+      } catch (err) { /* storage unavailable: not fatal */ }
+      setOpen(false);
+    });
+  });
+
+  document.addEventListener("click", () => setOpen(false));
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") setOpen(false);
+  });
+  menu.addEventListener("click", (e) => e.stopPropagation());
 }
 
 function buildAtmosphere() {

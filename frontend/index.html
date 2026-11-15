@@ -151,8 +151,34 @@
           <div class="gt-sub">GLOBAL OBSERVATION GRID</div>
         </div>
 
-        <button id="globe-style-btn" class="globe-style-btn" hidden
-                title="Switch globe rendering">◌ DOTS</button>
+        <div class="globe-mode" id="globe-mode">
+          <button id="globe-style-btn" class="globe-mode-trigger"
+                  aria-haspopup="listbox" aria-expanded="false"
+                  title="Switch the globe rendering mode">
+            <span class="gm-label">GLOBE</span>
+            <span class="gm-value" id="globe-style-value">BLUE RELIEF</span>
+            <span class="gm-caret" aria-hidden="true">▾</span>
+          </button>
+          <div class="globe-mode-menu" id="globe-style-menu" role="listbox"
+               aria-label="Globe rendering mode" hidden>
+            <button class="gm-option on" data-style="relief" role="option"
+                    aria-selected="true">
+              <span class="gm-mark" aria-hidden="true">◐</span>
+              <span class="gm-text">
+                <span class="gm-name">BLUE RELIEF</span>
+                <span class="gm-desc">textured sphere · blue palette</span>
+              </span>
+            </button>
+            <button class="gm-option" data-style="dots" role="option"
+                    aria-selected="false">
+              <span class="gm-mark" aria-hidden="true">◌</span>
+              <span class="gm-text">
+                <span class="gm-name">DOT MATRIX</span>
+                <span class="gm-desc">white point-cloud globe</span>
+              </span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
