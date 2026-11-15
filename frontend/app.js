@@ -2364,13 +2364,14 @@ async function initGlobe() {
   buildAtmosphere();
   buildRegionMesh();
   buildEarthSurface();
+  buildClouds();
   buildStarfield();
 
   // the photographic globe is the default; fall back to dots if textures fail
   const styleBtn = $("globe-style-btn");
   if (styleBtn) {
     styleBtn.addEventListener("click", () => {
-      applyGlobeStyle(appliedStyle === "photo" ? "dots" : "photo");
+      applyGlobeStyle(appliedStyle === "relief" ? "dots" : "relief");
     });
   }
   applyGlobeStyle();  // dots until the textures finish loading
@@ -2468,15 +2469,18 @@ function buildGridLines() {
   }
 }
 
-/* ---------- photoreal Earth (NASA Blue Marble + night lights) ---------- */
+/* ---------- stylized "blue relief" Earth ----------
+   Real, sharp coastlines from NASA topology data, recoloured the way the
+   reference dashboard does it: ice-blue land that brightens with elevation,
+   deep blue sea. Lit gently for roundness - no day/night terminator. */
 const EARTH_TEXTURES = {
-  day: "https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg",
-  night: "https://unpkg.com/three-globe/example/img/earth-night.jpg",
+  topo: "https://unpkg.com/three-globe/example/img/earth-topology.png",
 };
 let earthMesh = null;
+let cloudMesh = null;
 let starField = null;
 let textureState = "idle";   // idle | loading | ready | failed
-let globeStyle = "photo";    // what the user wants
+let globeStyle = "relief";   // what the user wants
 let appliedStyle = "dots";   // what is actually on screen
 
 function buildEarthSurface() {
@@ -2490,30 +2494,20 @@ function buildEarthSurface() {
     applyGlobeStyle("dots");
   };
 
-  let loaded = 0;
-  const onLoad = () => {
-    loaded += 1;
-    if (loaded < 2) return;
+  const topo = loader.load(EARTH_TEXTURES.topo, () => {
     textureState = "ready";
     applyGlobeStyle();
-  };
-
-  const day = loader.load(EARTH_TEXTURES.day, onLoad, undefined, onFail);
-  const night = loader.load(EARTH_TEXTURES.night, onLoad, undefined, onFail);
-  for (const t of [day, night]) {
-    t.colorSpace = THREE.SRGBColorSpace;
-    t.anisotropy = 4;
-  }
+  }, undefined, onFail);
+  // data mask: sample raw values, no colour-space conversion
+  topo.colorSpace = THREE.NoColorSpace;
+  topo.anisotropy = 4;
 
   earthMesh = new THREE.Mesh(
     new THREE.SphereGeometry(0.999, 96, 96),
     new THREE.ShaderMaterial({
       uniforms: {
-        uDay: { value: day },
-        uNight: { value: night },
-        // fixed sun in world space: the terminator stays put while the globe
-        // rotates under it, which is what reads as a real planet
-        uSunDir: { value: new THREE.Vector3(0.52, 0.22, 0.83).normalize() },
+        uTopo: { value: topo },
+        uSunDir: { value: new THREE.Vector3(0.42, 0.34, 0.84).normalize() },
       },
       vertexShader: `
         varying vec2 vUv;
@@ -2524,26 +2518,103 @@ function buildEarthSurface() {
           gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
         }`,
       fragmentShader: `
-        uniform sampler2D uDay;
-        uniform sampler2D uNight;
+        uniform sampler2D uTopo;
         uniform vec3 uSunDir;
         varying vec2 vUv;
         varying vec3 vNormalW;
         void main() {
+          // topology: 0 = ocean, higher = land elevation (0..~0.55 typical)
+          float elev = texture2D(uTopo, vUv).r;
+
+          // crisp coastlines
+          float landMask = smoothstep(0.028, 0.075, elev);
+
+          // ice-blue land, brightening to white at high elevation (ice caps)
+          vec3 landLow  = vec3(0.39, 0.66, 0.84);
+          vec3 landHigh = vec3(0.86, 0.96, 1.00);
+          vec3 landCol = mix(landLow, landHigh, smoothstep(0.08, 0.72, elev));
+
+          // deeper blue sea, with a lighter coastal shelf from the elevation ramp
+          vec3 seaDeep = vec3(0.020, 0.075, 0.170);
+          vec3 seaShal = vec3(0.055, 0.150, 0.300);
+          vec3 seaCol = mix(seaDeep, seaShal, smoothstep(0.004, 0.05, elev));
+
+          vec3 col = mix(seaCol, landCol, landMask);
+
+          // directional light with a wider dynamic range, so the sphere reads
+          // more three-dimensional like the reference
           vec3 n = normalize(vNormalW);
-          float lam = dot(n, normalize(uSunDir));
-          float dayMix = smoothstep(-0.22, 0.28, lam);
-          vec3 dayCol = texture2D(uDay, vUv).rgb;
-          vec3 nightCol = texture2D(uNight, vUv).rgb;
-          // lift the daylight side so the planet reads bright like the reference
-          vec3 lit = dayCol * (0.95 + 1.15 * max(lam, 0.0));
-          vec3 dark = nightCol * 1.35 + dayCol * 0.10;
-          gl_FragColor = vec4(mix(dark, lit, dayMix), 1.0);
+          vec3 L = normalize(uSunDir);
+          float lam = 0.48 + 0.62 * max(dot(n, L), 0.0);
+          col *= lam;
+
+          // soft specular sheen, stronger over open water
+          vec3 V = vec3(0.0, 0.0, 1.0);
+          vec3 H = normalize(L + V);
+          float spec = pow(max(dot(n, H), 0.0), 42.0);
+          col += vec3(0.25, 0.34, 0.45) * spec * (0.35 + 0.65 * (1.0 - landMask));
+
+          gl_FragColor = vec4(col, 1.0);
         }`,
     }),
   );
   earthMesh.visible = false;
   globeGroup.add(earthMesh);
+}
+
+/* drifting procedural cloud layer (fbm noise - no texture asset) */
+function buildClouds() {
+  cloudMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(1.012, 96, 96),
+    new THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      uniforms: { uTime: { value: 0 } },
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }`,
+      fragmentShader: `
+        varying vec2 vUv;
+        uniform float uTime;
+        float hash(vec2 p) {
+          return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+        }
+        float noise(vec2 p) {
+          vec2 i = floor(p), f = fract(p);
+          vec2 u = f * f * (3.0 - 2.0 * f);
+          return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x),
+                     mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x),
+                     u.y);
+        }
+        float fbm(vec2 p) {
+          float v = 0.0, a = 0.5;
+          for (int i = 0; i < 5; i++) {
+            v += a * noise(p);
+            p = p * 2.1 + vec2(1.7, 0.3);
+            a *= 0.5;
+          }
+          return v;
+        }
+        void main() {
+          vec2 p = vec2(vUv.x * 7.0, vUv.y * 3.6);
+          p.x += uTime * 0.012;
+          float c = fbm(p);
+          // wispy shapes: two noise octaves, thresholded softly
+          float shape = smoothstep(0.52, 0.85, c);
+          // band the clouds toward the tropics and mid-latitudes
+          float latBand = smoothstep(0.02, 0.16, abs(vUv.y - 0.5))
+                        * (1.0 - smoothstep(0.38, 0.5, abs(vUv.y - 0.5)));
+          float a = shape * latBand * 0.62;
+          vec3 col = vec3(0.88, 0.94, 1.0);
+          gl_FragColor = vec4(col, a);
+        }`,
+    }),
+  );
+  cloudMesh.visible = false;
+  globeGroup.add(cloudMesh);
 }
 
 function buildStarfield() {
@@ -2567,28 +2638,29 @@ function buildStarfield() {
   scene.add(starField);
 }
 
-/* switch between the photographic Earth and the original dot matrix.
+/* switch between the blue-relief Earth and the original dot matrix.
    Call with no argument to (re)apply whatever the user last chose. */
 function applyGlobeStyle(style) {
   if (style) globeStyle = style;
-  const wantPhoto = globeStyle === "photo" && textureState === "ready";
-  appliedStyle = wantPhoto ? "photo" : "dots";
+  const wantRelief = globeStyle === "relief" && textureState === "ready";
+  appliedStyle = wantRelief ? "relief" : "dots";
 
-  if (landPoints) landPoints.visible = !wantPhoto;
-  if (earthMesh) earthMesh.visible = wantPhoto;
-  if (haloMesh) haloMesh.visible = !wantPhoto;
-  if (starField) starField.visible = wantPhoto;
+  if (landPoints) landPoints.visible = !wantRelief;
+  if (earthMesh) earthMesh.visible = wantRelief;
+  if (cloudMesh) cloudMesh.visible = wantRelief;
+  if (haloMesh) haloMesh.visible = !wantRelief;
+  if (starField) starField.visible = wantRelief;
   if (Array.isArray(gridLines)) {
-    gridLines.forEach((line) => { line.visible = !wantPhoto; });
+    gridLines.forEach((line) => { line.visible = !wantRelief; });
   }
 
   const btn = $("globe-style-btn");
   if (btn) {
     btn.hidden = textureState !== "ready";
-    btn.textContent = wantPhoto ? "◐ PHOTOREAL" : "◌ DOTS";
-    btn.title = wantPhoto
-      ? "Showing NASA Blue Marble + night lights — click for the dot globe"
-      : "Showing the dot-matrix globe — click for the photographic Earth";
+    btn.textContent = wantRelief ? "◐ RELIEF" : "◌ DOTS";
+    btn.title = wantRelief
+      ? "Showing the blue-relief Earth — click for the dot globe"
+      : "Showing the dot-matrix globe — click for the blue-relief Earth";
   }
 }
 
@@ -3008,6 +3080,15 @@ function animateGlobe() {
     regionMesh.scale.set(s, s, s);
     regionMesh.visible = false;
   }
+
+  // drift the cloud layer slightly faster than the surface for parallax
+  if (cloudMesh && cloudMesh.visible) {
+    cloudMesh.rotation.y += 0.0004;
+    if (cloudMesh.material.uniforms) {
+      cloudMesh.material.uniforms.uTime.value = performance.now() * 0.001;
+    }
+  }
+
   renderer.render(scene, camera);
 }
 
