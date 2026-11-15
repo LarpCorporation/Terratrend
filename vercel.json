@@ -1,14 +1,20 @@
 {
   "version": 2,
   "cleanUrls": true,
-  "rewrites": [
+  "builds": [
     {
-      "source": "/api/(.*)",
-      "destination": "https://terratrend-qr8t.onrender.com/api/$1"
+      "src": "frontend/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "https://terratrend-qr8t.onrender.com/api/$1"
     },
     {
-      "source": "/(.*)",
-      "destination": "/frontend/$1"
+      "src": "/(.*)",
+      "dest": "/frontend/$1"
     }
   ]
 }
