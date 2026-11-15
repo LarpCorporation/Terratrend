@@ -1,0 +1,79 @@
+{
+  "date_utc": "2026-11-15T11:49:41Z",
+  "normal_app": "http://127.0.0.1:8517/",
+  "preview_8519_stopped": true,
+  "backend": {
+    "passed": 224,
+    "skipped": 1,
+    "subtests_passed": 43
+  },
+  "frontend_passed": 79,
+  "syntax_and_whitespace": "passed",
+  "router_coverage": {
+    "router_line_coverage": 100.0,
+    "unexecuted_lines": [],
+    "coverage_kind": "line execution, not branch coverage"
+  },
+  "main_completed_verification_jobs": [
+    {
+      "id": "cf8fa299bb79f2d6135f",
+      "status": "complete",
+      "variables": [
+        "T10M",
+        "GLDAS_SOILT"
+      ],
+      "local_pairs": 0
+    },
+    {
+      "id": "183d4fed4ed5e73fe8b1",
+      "status": "complete",
+      "variables": [
+        "T10M"
+      ],
+      "local_pairs": 0
+    },
+    {
+      "id": "7498e91bb2b0768d2ce6",
+      "status": "complete",
+      "variables": [],
+      "local_pairs": 1
+    }
+  ],
+  "other_observed_jobs_left_running": [
+    {
+      "id": "cc98133ee5cca15a99c7",
+      "status": "running",
+      "message": "NASA T2M: 178/261 monthly subsets ready (0 from cache)",
+      "created": 1794743253.89567
+    }
+  ],
+  "browser_verified": [
+    "unified movable A/B panel",
+    "native measurement checkboxes",
+    "search and collapse",
+    "retained results while navigating",
+    "restore earlier completed investigation",
+    "explicit A/B request scope",
+    "automatic route/product disclosure",
+    "rectangle-specific recovery with existing country retained",
+    "local relationship page with real r=0.65 and 108 months",
+    "remote selected B only: two targets and one real r=0.78 simultaneous relationship",
+    "map link and pinned evidence",
+    "two-history comparison chart",
+    "eight-step skippable/replayable tour",
+    "connected/remembered forms hidden",
+    "blue-up #59baff and red-down #ff786a",
+    "map colour key follows blue-increase/red-decrease theme",
+    "collapsed measurement summary remains fully visible after scrolling through choices"
+  ],
+  "console_errors_on_final_check": [],
+  "screenshots": [
+    "../screenshots/2026-11-15-unified-workspace.jpg",
+    "../screenshots/2026-11-15-workflow-relationships.jpg"
+  ],
+  "limits": [
+    "In-page history survives navigation, not full reload. Scientific caches and remembered connections survive restart.",
+    "Automatic paired comparisons retain matching products; some exact boundaries require native grids.",
+    "Relationships do not establish physical causes or predict future impacts."
+  ]
+}

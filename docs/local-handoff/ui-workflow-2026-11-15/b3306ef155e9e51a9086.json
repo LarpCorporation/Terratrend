@@ -1,0 +1,958 @@
+{
+  "local": {
+    "region": {
+      "id": "custom:6027db8ecbaf85fbc908",
+      "name": "Coordinate bounds",
+      "level": "custom",
+      "parent": null,
+      "geometry_version": "1dc5aba6733f8455",
+      "bbox": [
+        -2.0,
+        6.0,
+        0.0,
+        8.0
+      ],
+      "surface": "mixed",
+      "desc": "Coordinate bounds \u00b7 49,086.2 km\u00b2 \u00b7 user-defined boundary",
+      "center": [
+        -1,
+        7
+      ],
+      "selection_kind": "bounds",
+      "area_km2": 49086.2435,
+      "boundary_source": "User-defined selection"
+    },
+    "start": 2016,
+    "end": 2024,
+    "variables": [
+      {
+        "id": "T2M",
+        "name": "Air Temperature",
+        "unit": "\u00b0C",
+        "color": "#ff7a33",
+        "sphere": "atmosphere",
+        "sphere_code": "ATM"
+      },
+      {
+        "id": "QV2M",
+        "name": "Specific Humidity",
+        "unit": "g/kg",
+        "color": "#7fd3a0",
+        "sphere": "hydrosphere",
+        "sphere_code": "HYD"
+      }
+    ],
+    "pairs": [],
+    "source_errors": {},
+    "analysable_variables": [
+      "T2M",
+      "QV2M"
+    ],
+    "source_anomaly": {
+      "region": {
+        "id": "custom:6027db8ecbaf85fbc908",
+        "name": "Coordinate bounds",
+        "level": "custom",
+        "parent": null,
+        "geometry_version": "1dc5aba6733f8455",
+        "bbox": [
+          -2.0,
+          6.0,
+          0.0,
+          8.0
+        ],
+        "surface": "mixed",
+        "desc": "Coordinate bounds \u00b7 49,086.2 km\u00b2 \u00b7 user-defined boundary",
+        "center": [
+          -1,
+          7
+        ],
+        "selection_kind": "bounds",
+        "area_km2": 49086.2435,
+        "boundary_source": "User-defined selection"
+      },
+      "variable": {
+        "id": "T2M",
+        "name": "Air Temperature",
+        "unit": "\u00b0C",
+        "color": "#ff7a33",
+        "mission": "MERRA-2",
+        "group": "temperature",
+        "sphere": "atmosphere",
+        "sphere_code": "ATM",
+        "sphere_name": "Atmosphere",
+        "desc": "Mean near-surface air temperature at 2 m",
+        "plain": "How warm the air is, about 2 metres above the ground \u2014 roughly what you feel standing outside.",
+        "trend_means": "Rising means the air is getting warmer on average."
+      },
+      "anomaly_report": {
+        "sigma": 0.4456,
+        "months_above": 17,
+        "months_below": 15,
+        "total_months": 108,
+        "peak_sigma": -2.33,
+        "peak_month": "2022-12",
+        "episodes": [
+          {
+            "start": "2016-01",
+            "end": "2016-04",
+            "months": 4,
+            "peak_sigma": 2.28,
+            "peak_month": "2016-03"
+          },
+          {
+            "start": "2018-02",
+            "end": "2018-02",
+            "months": 1,
+            "peak_sigma": 1.73,
+            "peak_month": "2018-02"
+          },
+          {
+            "start": "2020-12",
+            "end": "2021-01",
+            "months": 2,
+            "peak_sigma": 1.86,
+            "peak_month": "2021-01"
+          },
+          {
+            "start": "2021-06",
+            "end": "2021-06",
+            "months": 1,
+            "peak_sigma": 1.16,
+            "peak_month": "2021-06"
+          },
+          {
+            "start": "2023-07",
+            "end": "2023-07",
+            "months": 1,
+            "peak_sigma": 1.03,
+            "peak_month": "2023-07"
+          },
+          {
+            "start": "2023-09",
+            "end": "2023-09",
+            "months": 1,
+            "peak_sigma": 1.21,
+            "peak_month": "2023-09"
+          },
+          {
+            "start": "2024-03",
+            "end": "2024-09",
+            "months": 7,
+            "peak_sigma": 1.71,
+            "peak_month": "2024-08"
+          }
+        ],
+        "narrative": "ran above its own trend in 17 of 108 months (16%); below it in 15; peak -2.3\u03c3 in 2022-12; across 7 distinct episodes."
+      },
+      "anomaly_yearly": [
+        {
+          "year": 2016,
+          "value": 0.3319
+        },
+        {
+          "year": 2017,
+          "value": 0.0119
+        },
+        {
+          "year": 2018,
+          "value": -0.2005
+        },
+        {
+          "year": 2019,
+          "value": 0.0208
+        },
+        {
+          "year": 2020,
+          "value": -0.2014
+        },
+        {
+          "year": 2021,
+          "value": 0.0541
+        },
+        {
+          "year": 2022,
+          "value": -0.5335
+        },
+        {
+          "year": 2023,
+          "value": 0.0713
+        },
+        {
+          "year": 2024,
+          "value": 0.4454
+        }
+      ],
+      "month_labels": [
+        "2016-01",
+        "2016-02",
+        "2016-03",
+        "2016-04",
+        "2016-05",
+        "2016-06",
+        "2016-07",
+        "2016-08",
+        "2016-09",
+        "2016-10",
+        "2016-11",
+        "2016-12",
+        "2017-01",
+        "2017-02",
+        "2017-03",
+        "2017-04",
+        "2017-05",
+        "2017-06",
+        "2017-07",
+        "2017-08",
+        "2017-09",
+        "2017-10",
+        "2017-11",
+        "2017-12",
+        "2018-01",
+        "2018-02",
+        "2018-03",
+        "2018-04",
+        "2018-05",
+        "2018-06",
+        "2018-07",
+        "2018-08",
+        "2018-09",
+        "2018-10",
+        "2018-11",
+        "2018-12",
+        "2019-01",
+        "2019-02",
+        "2019-03",
+        "2019-04",
+        "2019-05",
+        "2019-06",
+        "2019-07",
+        "2019-08",
+        "2019-09",
+        "2019-10",
+        "2019-11",
+        "2019-12",
+        "2020-01",
+        "2020-02",
+        "2020-03",
+        "2020-04",
+        "2020-05",
+        "2020-06",
+        "2020-07",
+        "2020-08",
+        "2020-09",
+        "2020-10",
+        "2020-11",
+        "2020-12",
+        "2021-01",
+        "2021-02",
+        "2021-03",
+        "2021-04",
+        "2021-05",
+        "2021-06",
+        "2021-07",
+        "2021-08",
+        "2021-09",
+        "2021-10",
+        "2021-11",
+        "2021-12",
+        "2022-01",
+        "2022-02",
+        "2022-03",
+        "2022-04",
+        "2022-05",
+        "2022-06",
+        "2022-07",
+        "2022-08",
+        "2022-09",
+        "2022-10",
+        "2022-11",
+        "2022-12",
+        "2023-01",
+        "2023-02",
+        "2023-03",
+        "2023-04",
+        "2023-05",
+        "2023-06",
+        "2023-07",
+        "2023-08",
+        "2023-09",
+        "2023-10",
+        "2023-11",
+        "2023-12",
+        "2024-01",
+        "2024-02",
+        "2024-03",
+        "2024-04",
+        "2024-05",
+        "2024-06",
+        "2024-07",
+        "2024-08",
+        "2024-09",
+        "2024-10",
+        "2024-11",
+        "2024-12"
+      ]
+    },
+    "conditional_drivers": {
+      "ok": false,
+      "reason": "No directional candidates with joint coverage"
+    },
+    "provenance": {
+      "T2M": {
+        "provider": "nasa-giovanni",
+        "source": "NASA Giovanni / MERRA-2",
+        "resource": "Giovanni",
+        "dataset": "M2IMNXASM",
+        "collection_version": "5.12.4",
+        "field": "T2M",
+        "policy": "challenge_resource",
+        "citation": "https://disc.gsfc.nasa.gov/datasets/M2IMNXASM_5.12.4/summary",
+        "access": "Giovanni area averaging through NASA Harmony; regional CSV only",
+        "aggregation": "NASA server rectangle average; monthly spatial support is not supplied",
+        "quality": "Monthly mean instantaneous assimilation diagnostics; a different product from native mode. Cell weighting follows NASA's service.",
+        "geometry_version": "1dc5aba6733f8455",
+        "requested_bbox": [
+          -2.0,
+          6.0,
+          0.0,
+          8.0
+        ],
+        "spatial_detail_available": false,
+        "monthly_area_coverage_known": false,
+        "dlon": 0.625,
+        "dlat": 0.5,
+        "cache_hit": true,
+        "remote_job_id": "6217fbca-ebde-40ea-a5e9-bc42b294050c",
+        "requested_months": 108,
+        "published_months": 108,
+        "first_observed_month": 201601,
+        "last_observed_month": 202412,
+        "retrieved_utc": "2026-11-15T02:10:33.742663+00:00"
+      },
+      "QV2M": {
+        "provider": "nasa-giovanni",
+        "source": "NASA Giovanni / MERRA-2",
+        "resource": "Giovanni",
+        "dataset": "M2IMNXASM",
+        "collection_version": "5.12.4",
+        "field": "QV2M",
+        "policy": "challenge_resource",
+        "citation": "https://disc.gsfc.nasa.gov/datasets/M2IMNXASM_5.12.4/summary",
+        "access": "Giovanni area averaging through NASA Harmony; regional CSV only",
+        "aggregation": "NASA server rectangle average; monthly spatial support is not supplied",
+        "quality": "Monthly mean instantaneous assimilation diagnostics; a different product from native mode. Cell weighting follows NASA's service.",
+        "geometry_version": "1dc5aba6733f8455",
+        "requested_bbox": [
+          -2.0,
+          6.0,
+          0.0,
+          8.0
+        ],
+        "spatial_detail_available": false,
+        "monthly_area_coverage_known": false,
+        "dlon": 0.625,
+        "dlat": 0.5,
+        "cache_hit": true,
+        "remote_job_id": "b8fe658c-24b8-4381-9d13-f42d3f305dc6",
+        "requested_months": 108,
+        "published_months": 108,
+        "first_observed_month": 201601,
+        "last_observed_month": 202412,
+        "retrieved_utc": "2026-11-15T02:12:13.500239+00:00"
+      }
+    },
+    "method": "Seasonal decomposition (monthly climatology + linear trend removed) \u00b7 lagged cross-correlation (\u00b16 mo) for direction \u00b7 first-order partial correlation (T2M confounder) \u00b7 two-way Granger F-test (3 lags) \u00b7 \u03b1=0.05",
+    "sources": [
+      "NASA Giovanni / MERRA-2"
+    ]
+  },
+  "global": {
+    "source": {
+      "region": {
+        "id": "custom:6027db8ecbaf85fbc908",
+        "name": "Coordinate bounds",
+        "level": "custom",
+        "parent": null,
+        "geometry_version": "1dc5aba6733f8455",
+        "bbox": [
+          -2.0,
+          6.0,
+          0.0,
+          8.0
+        ],
+        "surface": "mixed",
+        "desc": "Coordinate bounds \u00b7 49,086.2 km\u00b2 \u00b7 user-defined boundary",
+        "center": [
+          -1,
+          7
+        ],
+        "selection_kind": "bounds",
+        "area_km2": 49086.2435,
+        "boundary_source": "User-defined selection"
+      },
+      "variable": {
+        "id": "T2M",
+        "name": "Air Temperature",
+        "unit": "\u00b0C",
+        "color": "#ff7a33",
+        "mission": "MERRA-2",
+        "group": "temperature",
+        "sphere": "atmosphere",
+        "sphere_code": "ATM",
+        "sphere_name": "Atmosphere",
+        "desc": "Mean near-surface air temperature at 2 m",
+        "plain": "How warm the air is, about 2 metres above the ground \u2014 roughly what you feel standing outside.",
+        "trend_means": "Rising means the air is getting warmer on average."
+      },
+      "start": 2016,
+      "end": 2024,
+      "yearly_timeseries": [
+        {
+          "year": 2016,
+          "value": 26.9737,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2017,
+          "value": 26.6134,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2018,
+          "value": 26.3607,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2019,
+          "value": 26.5417,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2020,
+          "value": 26.2791,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2021,
+          "value": 26.4943,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2022,
+          "value": 25.8664,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2023,
+          "value": 26.4308,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2024,
+          "value": 26.7646,
+          "months": 12,
+          "complete": true
+        }
+      ],
+      "anomaly_report": {
+        "sigma": 0.4456,
+        "months_above": 17,
+        "months_below": 15,
+        "total_months": 108,
+        "peak_sigma": -2.33,
+        "peak_month": "2022-12",
+        "episodes": [
+          {
+            "start": "2016-01",
+            "end": "2016-04",
+            "months": 4,
+            "peak_sigma": 2.28,
+            "peak_month": "2016-03"
+          },
+          {
+            "start": "2018-02",
+            "end": "2018-02",
+            "months": 1,
+            "peak_sigma": 1.73,
+            "peak_month": "2018-02"
+          },
+          {
+            "start": "2020-12",
+            "end": "2021-01",
+            "months": 2,
+            "peak_sigma": 1.86,
+            "peak_month": "2021-01"
+          },
+          {
+            "start": "2021-06",
+            "end": "2021-06",
+            "months": 1,
+            "peak_sigma": 1.16,
+            "peak_month": "2021-06"
+          },
+          {
+            "start": "2023-07",
+            "end": "2023-07",
+            "months": 1,
+            "peak_sigma": 1.03,
+            "peak_month": "2023-07"
+          },
+          {
+            "start": "2023-09",
+            "end": "2023-09",
+            "months": 1,
+            "peak_sigma": 1.21,
+            "peak_month": "2023-09"
+          },
+          {
+            "start": "2024-03",
+            "end": "2024-09",
+            "months": 7,
+            "peak_sigma": 1.71,
+            "peak_month": "2024-08"
+          }
+        ],
+        "narrative": "ran above its own trend in 17 of 108 months (16%); below it in 15; peak -2.3\u03c3 in 2022-12; across 7 distinct episodes."
+      },
+      "anomaly_yearly": [
+        {
+          "year": 2016,
+          "value": 0.3319
+        },
+        {
+          "year": 2017,
+          "value": 0.0119
+        },
+        {
+          "year": 2018,
+          "value": -0.2005
+        },
+        {
+          "year": 2019,
+          "value": 0.0208
+        },
+        {
+          "year": 2020,
+          "value": -0.2014
+        },
+        {
+          "year": 2021,
+          "value": 0.0541
+        },
+        {
+          "year": 2022,
+          "value": -0.5335
+        },
+        {
+          "year": 2023,
+          "value": 0.0713
+        },
+        {
+          "year": 2024,
+          "value": 0.4454
+        }
+      ],
+      "month_labels": [
+        "2016-01",
+        "2016-02",
+        "2016-03",
+        "2016-04",
+        "2016-05",
+        "2016-06",
+        "2016-07",
+        "2016-08",
+        "2016-09",
+        "2016-10",
+        "2016-11",
+        "2016-12",
+        "2017-01",
+        "2017-02",
+        "2017-03",
+        "2017-04",
+        "2017-05",
+        "2017-06",
+        "2017-07",
+        "2017-08",
+        "2017-09",
+        "2017-10",
+        "2017-11",
+        "2017-12",
+        "2018-01",
+        "2018-02",
+        "2018-03",
+        "2018-04",
+        "2018-05",
+        "2018-06",
+        "2018-07",
+        "2018-08",
+        "2018-09",
+        "2018-10",
+        "2018-11",
+        "2018-12",
+        "2019-01",
+        "2019-02",
+        "2019-03",
+        "2019-04",
+        "2019-05",
+        "2019-06",
+        "2019-07",
+        "2019-08",
+        "2019-09",
+        "2019-10",
+        "2019-11",
+        "2019-12",
+        "2020-01",
+        "2020-02",
+        "2020-03",
+        "2020-04",
+        "2020-05",
+        "2020-06",
+        "2020-07",
+        "2020-08",
+        "2020-09",
+        "2020-10",
+        "2020-11",
+        "2020-12",
+        "2021-01",
+        "2021-02",
+        "2021-03",
+        "2021-04",
+        "2021-05",
+        "2021-06",
+        "2021-07",
+        "2021-08",
+        "2021-09",
+        "2021-10",
+        "2021-11",
+        "2021-12",
+        "2022-01",
+        "2022-02",
+        "2022-03",
+        "2022-04",
+        "2022-05",
+        "2022-06",
+        "2022-07",
+        "2022-08",
+        "2022-09",
+        "2022-10",
+        "2022-11",
+        "2022-12",
+        "2023-01",
+        "2023-02",
+        "2023-03",
+        "2023-04",
+        "2023-05",
+        "2023-06",
+        "2023-07",
+        "2023-08",
+        "2023-09",
+        "2023-10",
+        "2023-11",
+        "2023-12",
+        "2024-01",
+        "2024-02",
+        "2024-03",
+        "2024-04",
+        "2024-05",
+        "2024-06",
+        "2024-07",
+        "2024-08",
+        "2024-09",
+        "2024-10",
+        "2024-11",
+        "2024-12"
+      ]
+    },
+    "summary": {
+      "total_scanned": 2,
+      "valid_tests": 2,
+      "geographic_coverage": [
+        "Coordinate bounds"
+      ],
+      "significant_count": 1,
+      "fdr_rejected": 0,
+      "fdr_q": 0.1,
+      "min_effect_sigma": 0.25,
+      "strongest_direct": {
+        "region": "Coordinate bounds",
+        "variable": "Air Temperature",
+        "r": 0.781
+      },
+      "strongest_inverse": null
+    },
+    "teleconnections": [
+      {
+        "source_region": {
+          "id": "custom:6027db8ecbaf85fbc908",
+          "name": "Coordinate bounds",
+          "lat": 7.0,
+          "lon": -1.0
+        },
+        "source_variable": {
+          "id": "T2M",
+          "name": "Air Temperature",
+          "unit": "\u00b0C",
+          "color": "#ff7a33"
+        },
+        "target_region": {
+          "id": "custom:1222355f88247b7128ad",
+          "name": "Coordinate bounds",
+          "surface": "mixed",
+          "lat": 9.0,
+          "lon": -0.5
+        },
+        "target_variable": {
+          "id": "T2M",
+          "name": "Air Temperature",
+          "unit": "\u00b0C",
+          "color": "#ff7a33",
+          "sphere": "atmosphere",
+          "sphere_code": "ATM"
+        },
+        "r": 0.781,
+        "r_lagged": 0.781,
+        "p": 0.0,
+        "relationship": "simultaneous",
+        "evidence_label": "Lagged association; physical causation not established",
+        "lag_months": 0,
+        "lead_note": "simultaneous",
+        "composite": {
+          "n_surge_months": 17,
+          "mean_during_sigma": 1.22,
+          "mean_outside_sigma": -0.23,
+          "effect_sigma": 1.45
+        },
+        "direction": "direct",
+        "strength": "STRONG",
+        "mechanism": "Air Temperature over Coordinate bounds moves in step with Air Temperature over Coordinate bounds (at the same time as, r=+0.78, p=0.000). During Air Temperature surges above trend (17 months), Air Temperature there sat +1.4\u03c3 against its own baseline \u2014  a measurable remote response.",
+        "source_provenance": {
+          "provider": "nasa-giovanni",
+          "source": "NASA Giovanni / MERRA-2",
+          "resource": "Giovanni",
+          "dataset": "M2IMNXASM",
+          "collection_version": "5.12.4",
+          "field": "T2M",
+          "policy": "challenge_resource",
+          "citation": "https://disc.gsfc.nasa.gov/datasets/M2IMNXASM_5.12.4/summary",
+          "access": "Giovanni area averaging through NASA Harmony; regional CSV only",
+          "aggregation": "NASA server rectangle average; monthly spatial support is not supplied",
+          "quality": "Monthly mean instantaneous assimilation diagnostics; a different product from native mode. Cell weighting follows NASA's service.",
+          "geometry_version": "1dc5aba6733f8455",
+          "requested_bbox": [
+            -2.0,
+            6.0,
+            0.0,
+            8.0
+          ],
+          "spatial_detail_available": false,
+          "monthly_area_coverage_known": false,
+          "dlon": 0.625,
+          "dlat": 0.5,
+          "cache_hit": true,
+          "remote_job_id": "6217fbca-ebde-40ea-a5e9-bc42b294050c",
+          "requested_months": 108,
+          "published_months": 108,
+          "first_observed_month": 201601,
+          "last_observed_month": 202412,
+          "retrieved_utc": "2026-11-15T02:10:33.742663+00:00"
+        },
+        "target_provenance": {
+          "provider": "nasa-giovanni",
+          "source": "NASA Giovanni / MERRA-2",
+          "resource": "Giovanni",
+          "dataset": "M2IMNXASM",
+          "collection_version": "5.12.4",
+          "field": "T2M",
+          "policy": "challenge_resource",
+          "citation": "https://disc.gsfc.nasa.gov/datasets/M2IMNXASM_5.12.4/summary",
+          "access": "Giovanni area averaging through NASA Harmony; regional CSV only",
+          "aggregation": "NASA server rectangle average; monthly spatial support is not supplied",
+          "quality": "Monthly mean instantaneous assimilation diagnostics; a different product from native mode. Cell weighting follows NASA's service.",
+          "geometry_version": "ccc5c3827f964cae",
+          "requested_bbox": [
+            -1.0,
+            8.0,
+            0.0,
+            10.0
+          ],
+          "spatial_detail_available": false,
+          "monthly_area_coverage_known": false,
+          "dlon": 0.625,
+          "dlat": 0.5,
+          "cache_hit": true,
+          "remote_job_id": "6639a616-658d-4b1c-bc67-13b498feb411",
+          "requested_months": 108,
+          "published_months": 108,
+          "first_observed_month": 201601,
+          "last_observed_month": 202412,
+          "retrieved_utc": "2026-11-15T02:12:32.473697+00:00"
+        },
+        "source_yearly": [
+          {
+            "year": 2016,
+            "value": 26.9737,
+            "months": 12,
+            "complete": true
+          },
+          {
+            "year": 2017,
+            "value": 26.6134,
+            "months": 12,
+            "complete": true
+          },
+          {
+            "year": 2018,
+            "value": 26.3607,
+            "months": 12,
+            "complete": true
+          },
+          {
+            "year": 2019,
+            "value": 26.5417,
+            "months": 12,
+            "complete": true
+          },
+          {
+            "year": 2020,
+            "value": 26.2791,
+            "months": 12,
+            "complete": true
+          },
+          {
+            "year": 2021,
+            "value": 26.4943,
+            "months": 12,
+            "complete": true
+          },
+          {
+            "year": 2022,
+            "value": 25.8664,
+            "months": 12,
+            "complete": true
+          },
+          {
+            "year": 2023,
+            "value": 26.4308,
+            "months": 12,
+            "complete": true
+          },
+          {
+            "year": 2024,
+            "value": 26.7646,
+            "months": 12,
+            "complete": true
+          }
+        ],
+        "target_yearly": [
+          {
+            "year": 2016,
+            "value": 27.3552,
+            "months": 12,
+            "complete": true
+          },
+          {
+            "year": 2017,
+            "value": 27.3276,
+            "months": 12,
+            "complete": true
+          },
+          {
+            "year": 2018,
+            "value": 27.0137,
+            "months": 12,
+            "complete": true
+          },
+          {
+            "year": 2019,
+            "value": 27.2816,
+            "months": 12,
+            "complete": true
+          },
+          {
+            "year": 2020,
+            "value": 26.8539,
+            "months": 12,
+            "complete": true
+          },
+          {
+            "year": 2021,
+            "value": 27.4234,
+            "months": 12,
+            "complete": true
+          },
+          {
+            "year": 2022,
+            "value": 26.5684,
+            "months": 12,
+            "complete": true
+          },
+          {
+            "year": 2023,
+            "value": 27.1042,
+            "months": 12,
+            "complete": true
+          },
+          {
+            "year": 2024,
+            "value": 27.4517,
+            "months": 12,
+            "complete": true
+          }
+        ],
+        "target_anomaly_yearly": [
+          {
+            "year": 2016,
+            "value": 0.1331
+          },
+          {
+            "year": 2017,
+            "value": 0.1227
+          },
+          {
+            "year": 2018,
+            "value": -0.1741
+          },
+          {
+            "year": 2019,
+            "value": 0.111
+          },
+          {
+            "year": 2020,
+            "value": -0.2994
+          },
+          {
+            "year": 2021,
+            "value": 0.2873
+          },
+          {
+            "year": 2022,
+            "value": -0.5504
+          },
+          {
+            "year": 2023,
+            "value": 0.0026
+          },
+          {
+            "year": 2024,
+            "value": 0.3672
+          }
+        ],
+        "p_adjusted": 0.0
+      }
+    ],
+    "method": "Seasonal + trend decomposition of the driver \u00b7 lagged cross-correlation of anomalies (\u00b124 mo) \u00b7 composite response of each target during driver +1\u03c3 months \u00b7 \u03b1=0.05",
+    "sources": [
+      "NASA Giovanni / MERRA-2"
+    ]
+  },
+  "scope": "remote"
+}

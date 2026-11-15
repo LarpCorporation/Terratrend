@@ -39,6 +39,7 @@ function wireMapPanels(){
   }
   const observer=new ResizeObserver(()=>{for(const id of mapPanelState.keys()){const p=$(id);if(p.dataset.moved==='true'&&!p.hidden)placeMapPanel(p,p.offsetLeft,p.offsetTop);}});
   observer.observe(document.querySelector('.hud-grid'));
+  for(const id of mapPanelState.keys())observer.observe($(id));
 }
 window.TerraPanelPosition=(x,y,width,height,parentWidth,parentHeight)=>({
   x:Math.max(8,Math.min(Math.max(8,parentWidth-width-8),x)),

@@ -78,8 +78,8 @@
         "strength": "STRONG",
         "confidence": "LOW",
         "title": "Soil Temperature \u00b7 GLDAS (0\u201310 cm) \u2194 Air Temperature at 10 m",
-        "mechanism": "Possible mechanism: Soil temperature \u00b7 gldas (0\u201310 cm) and air temperature at 10 m move simultaneously. After the seasonal cycle and shared trend are removed they stay correlated in the same direction at r=+0.65 (p=0.000), so about 65% of the month-to-month variation is shared. Neither history predicts the other beyond their shared variance, so the ordering between them is unresolved.",
-        "mechanism_status": "hypothesis"
+        "mechanism": "Computed relationship: Soil temperature \u00b7 gldas (0\u201310 cm) and air temperature at 10 m move simultaneously. After the seasonal cycle and shared trend are removed they stay correlated in the same direction at r=+0.65 (p<0.001). The squared correlation corresponds to about 42% shared month-to-month variation in this linear comparison. Neither predictive-direction test passes its threshold, so the ordering between them is unresolved. This exploratory association does not establish physical causation or attribute the long-term trend.",
+        "mechanism_status": "statistical_description"
       }
     ],
     "source_errors": {},
@@ -366,11 +366,11 @@
         "dlat": 0.25,
         "expected_cells": 80,
         "available_cells": 80,
-        "cached_series": 1,
+        "cached_series": 80,
         "monthly_area_coverage_known": true,
         "first_observed_month": 201601,
         "last_observed_month": 202412,
-        "retrieved_utc": "2026-11-15T07:20:56.523987+00:00"
+        "retrieved_utc": "2026-11-15T10:34:50.910217+00:00"
       },
       "T10M": {
         "provider": "nasa-giovanni",

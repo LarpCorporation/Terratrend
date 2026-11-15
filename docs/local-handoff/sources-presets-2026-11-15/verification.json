@@ -1,0 +1,49 @@
+{
+  "date_utc": "2026-11-15T10:38:02Z",
+  "tests": {
+    "backend_passed": 217,
+    "backend_skipped": 1,
+    "backend_subtests_passed": 43,
+    "frontend_passed": 68,
+    "syntax_and_whitespace": "passed"
+  },
+  "new_adapter_line_coverage": {
+    "hydrology_data.py": {
+      "percent": 100.0,
+      "missing": []
+    },
+    "station_data.py": {
+      "percent": 99.1,
+      "missing": [
+        106
+      ]
+    },
+    "appeears_data.py": {
+      "percent": 98.8,
+      "missing": [
+        89,
+        191
+      ]
+    },
+    "service_credentials.py": {
+      "percent": 97.6,
+      "missing": [
+        37
+      ]
+    }
+  },
+  "live_value_audit": {
+    "ghana_ndvi_months": 108,
+    "ndvi_max_difference": 0.0,
+    "ndvi_summary_bytes": 20710,
+    "hydrology_months": 324,
+    "hydrology_max_absolute_conversion_difference": 4.973799150320701e-14,
+    "hydrology_tolerance": 1e-10
+  },
+  "cached_after_restart": {
+    "ndvi": true,
+    "linked_hydrology_series": 80,
+    "linked_giovanni": true
+  },
+  "ui_followup": "User requested ranked UI task list before implementation; new scope awaits approval. Latest linked-view explanation is verified by API; final updated-layout screen check remains pending."
+}

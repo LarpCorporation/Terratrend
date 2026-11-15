@@ -1,0 +1,61 @@
+[
+  {
+    "id": "b1fce23015316269fb54",
+    "status": "complete",
+    "areas": [
+      "Ghana North (Savannah)"
+    ],
+    "series": [
+      {
+        "id": "GLDAS_SOILT",
+        "source": "nasa-hydrology",
+        "cached": 80,
+        "years": 9
+      },
+      {
+        "id": "T10M",
+        "source": "nasa-giovanni",
+        "cached": true,
+        "years": 9
+      }
+    ]
+  },
+  {
+    "id": "6dc476e65f7535707f79",
+    "status": "complete",
+    "scope": "local",
+    "local_pairs": 1,
+    "remote_pairs": 0,
+    "remote_tests": null
+  },
+  {
+    "id": "ed47c5b2281b88285070",
+    "status": "complete",
+    "areas": [
+      "Coordinate bounds",
+      "Coordinate bounds"
+    ],
+    "series": [
+      {
+        "id": "T2M",
+        "source": "nasa-giovanni",
+        "cached": true,
+        "years": 9
+      },
+      {
+        "id": "QV2M",
+        "source": "nasa-giovanni",
+        "cached": true,
+        "years": 9
+      }
+    ]
+  },
+  {
+    "id": "b3306ef155e9e51a9086",
+    "status": "complete",
+    "scope": "remote",
+    "local_pairs": 0,
+    "remote_pairs": 1,
+    "remote_tests": 2
+  }
+]

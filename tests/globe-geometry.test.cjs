@@ -8,6 +8,35 @@ const context = {window:{THREE},setTimeout,clearTimeout};
 vm.createContext(context);
 vm.runInContext(fs.readFileSync(path.join(__dirname,'../frontend/earth-renderer.js'),'utf8'),context);
 const Globe=context.window.TerraGlobe;
+
+test('a hidden map schedules its next frame without doing projection or GPU work',()=>{
+  let scheduled=0;context.requestAnimationFrame=()=>scheduled++;
+  const map={host:{offsetParent:null},frame(){},updateProjection(){throw new Error('Hidden maps must not redraw');}};
+  Globe.prototype.frame.call(map,1000);assert.equal(scheduled,1);
+});
+
+test('significant increases are blue and decreases red while uncertain areas stay neutral',()=>{
+  const nodes=['up','down','uncertain'].map(id=>({feature:{id},mesh:{material:{color:new THREE.Color()}},lines:{material:{color:new THREE.Color()}}}));
+  const map={nodes,selected:[],hover:null,results:new Map([
+    ['up',{overall:{ok:true,significant:true,direction:'rising'}}],['down',{overall:{ok:true,significant:true,direction:'falling'}}],['uncertain',{overall:{ok:true,significant:false,direction:'rising'}}]])};
+  Globe.prototype.paint.call(map);
+  const colors=nodes.map(n=>n.mesh.material.color);
+  assert.ok(colors[0].b>colors[0].r,'increase must use blue');assert.ok(colors[1].r>colors[1].b,'decrease must use red');
+  assert.notEqual(colors[2].getHex(),colors[0].getHex());
+});
+
+test('relationship arcs use measurement colors and animate only a supported temporal lead',()=>{
+  const map={arcs:new THREE.Group(),planeArcs:new THREE.Group(),packets:[]};
+  const link={source_region:{lon:0,lat:6},target_region:{lon:8,lat:9},target_variable:{color:'#ab79cf'},direction:'direct',relationship:'simultaneous',lag_months:0};
+  Globe.prototype.setConnections.call(map,[link]);
+  assert.equal(map.arcs.children[0].material.color.getHexString(),'ab79cf');assert.equal(map.packets.length,0);
+  Globe.prototype.setConnections.call(map,[{...link,relationship:'response',lag_months:2}]);assert.equal(map.packets.length,2);
+});
+
+test('clearing trend colors does not discard the relationship overlay',()=>{
+  const map={results:new Map([['a',{}]]),paint(){},setConnections(){throw new Error('Relationship evidence must survive');}};
+  Globe.prototype.clearResults.call(map);assert.equal(map.results.size,0);
+});
 function feature(coordinates,type='Polygon'){return {geometry:{type,coordinates},properties:{name:'Test area',bbox:[-20,-30,50,40]}};}
 
 test('large-area fill triangles follow the sphere above the ocean surface',()=>{

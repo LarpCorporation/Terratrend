@@ -1,0 +1,2610 @@
+{
+  "region": {
+    "id": "focus:ghana_north",
+    "name": "Ghana North (Savannah)",
+    "level": "preset",
+    "parent": null,
+    "geometry_version": "88f50f8325ea1565",
+    "bbox": [
+      -2.5,
+      9.0,
+      0.0,
+      11.0
+    ],
+    "surface": "land",
+    "desc": "Northern Ghana / Savannah agro-ecological zone \u00b7 preset focus box",
+    "boundary_source": "TerraTrend curated focus box; not an official ecological boundary",
+    "center": [
+      -1.25,
+      10.0
+    ],
+    "selection_kind": "bounds"
+  },
+  "start": 2016,
+  "end": 2024,
+  "months": [
+    "2016-01",
+    "2016-02",
+    "2016-03",
+    "2016-04",
+    "2016-05",
+    "2016-06",
+    "2016-07",
+    "2016-08",
+    "2016-09",
+    "2016-10",
+    "2016-11",
+    "2016-12",
+    "2017-01",
+    "2017-02",
+    "2017-03",
+    "2017-04",
+    "2017-05",
+    "2017-06",
+    "2017-07",
+    "2017-08",
+    "2017-09",
+    "2017-10",
+    "2017-11",
+    "2017-12",
+    "2018-01",
+    "2018-02",
+    "2018-03",
+    "2018-04",
+    "2018-05",
+    "2018-06",
+    "2018-07",
+    "2018-08",
+    "2018-09",
+    "2018-10",
+    "2018-11",
+    "2018-12",
+    "2019-01",
+    "2019-02",
+    "2019-03",
+    "2019-04",
+    "2019-05",
+    "2019-06",
+    "2019-07",
+    "2019-08",
+    "2019-09",
+    "2019-10",
+    "2019-11",
+    "2019-12",
+    "2020-01",
+    "2020-02",
+    "2020-03",
+    "2020-04",
+    "2020-05",
+    "2020-06",
+    "2020-07",
+    "2020-08",
+    "2020-09",
+    "2020-10",
+    "2020-11",
+    "2020-12",
+    "2021-01",
+    "2021-02",
+    "2021-03",
+    "2021-04",
+    "2021-05",
+    "2021-06",
+    "2021-07",
+    "2021-08",
+    "2021-09",
+    "2021-10",
+    "2021-11",
+    "2021-12",
+    "2022-01",
+    "2022-02",
+    "2022-03",
+    "2022-04",
+    "2022-05",
+    "2022-06",
+    "2022-07",
+    "2022-08",
+    "2022-09",
+    "2022-10",
+    "2022-11",
+    "2022-12",
+    "2023-01",
+    "2023-02",
+    "2023-03",
+    "2023-04",
+    "2023-05",
+    "2023-06",
+    "2023-07",
+    "2023-08",
+    "2023-09",
+    "2023-10",
+    "2023-11",
+    "2023-12",
+    "2024-01",
+    "2024-02",
+    "2024-03",
+    "2024-04",
+    "2024-05",
+    "2024-06",
+    "2024-07",
+    "2024-08",
+    "2024-09",
+    "2024-10",
+    "2024-11",
+    "2024-12"
+  ],
+  "series": [
+    {
+      "variable": {
+        "id": "GLDAS_SOILT",
+        "name": "Soil Temperature \u00b7 GLDAS (0\u201310 cm)",
+        "unit": "\u00b0C",
+        "mission": "GLDAS",
+        "group": "temperature",
+        "sphere": "land",
+        "sphere_code": "LND",
+        "sphere_name": "Land & Biosphere",
+        "desc": "Monthly upper-soil temperature from the GLDAS Noah model",
+        "color": "#d5a16c",
+        "dataset": "GLDAS_NOAH025_M",
+        "source_field": "SoilTMP0_10cm_inst"
+      },
+      "provenance": {
+        "provider": "nasa-hydrology",
+        "source": "NASA Hydrology Time Series / GLDAS",
+        "resource": "Hydrology Time Series",
+        "dataset": "GLDAS_NOAH025_M",
+        "collection_version": "2.1",
+        "field": "SoilTMP0_10cm_inst",
+        "policy": "challenge_resource",
+        "citation": "https://doi.org/10.5067/SXAVCZFAQLNO",
+        "access": "Monthly point-series API for every intersecting GLDAS source cell",
+        "aggregation": "Native-cell polygon overlap \u00d7 cos(latitude); at least 80% selected area each month",
+        "quality": "GLDAS model estimates; provider fill excluded. Soil water mass is not a saturation fraction; wind is near-surface forcing, not a verified 2 m measurement.",
+        "geometry_version": "88f50f8325ea1565",
+        "dlon": 0.25,
+        "dlat": 0.25,
+        "expected_cells": 80,
+        "available_cells": 80,
+        "cached_series": 80,
+        "monthly_area_coverage_known": true,
+        "first_observed_month": 201601,
+        "last_observed_month": 202412,
+        "retrieved_utc": "2026-11-15T10:58:41.844936+00:00"
+      },
+      "monthly_timeseries": [
+        {
+          "month": "2016-01",
+          "value": 26.966579
+        },
+        {
+          "month": "2016-02",
+          "value": 28.625912
+        },
+        {
+          "month": "2016-03",
+          "value": 33.710653
+        },
+        {
+          "month": "2016-04",
+          "value": 34.936588
+        },
+        {
+          "month": "2016-05",
+          "value": 32.751822
+        },
+        {
+          "month": "2016-06",
+          "value": 30.025309
+        },
+        {
+          "month": "2016-07",
+          "value": 27.399024
+        },
+        {
+          "month": "2016-08",
+          "value": 26.536531
+        },
+        {
+          "month": "2016-09",
+          "value": 26.742024
+        },
+        {
+          "month": "2016-10",
+          "value": 28.198126
+        },
+        {
+          "month": "2016-11",
+          "value": 29.245294
+        },
+        {
+          "month": "2016-12",
+          "value": 28.303283
+        },
+        {
+          "month": "2017-01",
+          "value": 27.363666
+        },
+        {
+          "month": "2017-02",
+          "value": 29.337941
+        },
+        {
+          "month": "2017-03",
+          "value": 32.875295
+        },
+        {
+          "month": "2017-04",
+          "value": 34.582417
+        },
+        {
+          "month": "2017-05",
+          "value": 32.610675
+        },
+        {
+          "month": "2017-06",
+          "value": 29.845428
+        },
+        {
+          "month": "2017-07",
+          "value": 27.603805
+        },
+        {
+          "month": "2017-08",
+          "value": 26.351114
+        },
+        {
+          "month": "2017-09",
+          "value": 26.512473
+        },
+        {
+          "month": "2017-10",
+          "value": 28.417476
+        },
+        {
+          "month": "2017-11",
+          "value": 29.996008
+        },
+        {
+          "month": "2017-12",
+          "value": 29.480467
+        },
+        {
+          "month": "2018-01",
+          "value": 28.001354
+        },
+        {
+          "month": "2018-02",
+          "value": 32.087822
+        },
+        {
+          "month": "2018-03",
+          "value": 34.754108
+        },
+        {
+          "month": "2018-04",
+          "value": 35.196732
+        },
+        {
+          "month": "2018-05",
+          "value": 33.345706
+        },
+        {
+          "month": "2018-06",
+          "value": 31.106522
+        },
+        {
+          "month": "2018-07",
+          "value": 27.95483
+        },
+        {
+          "month": "2018-08",
+          "value": 26.249501
+        },
+        {
+          "month": "2018-09",
+          "value": 26.405478
+        },
+        {
+          "month": "2018-10",
+          "value": 28.547445
+        },
+        {
+          "month": "2018-11",
+          "value": 30.407223
+        },
+        {
+          "month": "2018-12",
+          "value": 28.609008
+        },
+        {
+          "month": "2019-01",
+          "value": 29.393796
+        },
+        {
+          "month": "2019-02",
+          "value": 31.792091
+        },
+        {
+          "month": "2019-03",
+          "value": 34.545755
+        },
+        {
+          "month": "2019-04",
+          "value": 35.847534
+        },
+        {
+          "month": "2019-05",
+          "value": 33.445237
+        },
+        {
+          "month": "2019-06",
+          "value": 30.032111
+        },
+        {
+          "month": "2019-07",
+          "value": 26.95668
+        },
+        {
+          "month": "2019-08",
+          "value": 25.352901
+        },
+        {
+          "month": "2019-09",
+          "value": 25.946834
+        },
+        {
+          "month": "2019-10",
+          "value": 26.598355
+        },
+        {
+          "month": "2019-11",
+          "value": 29.376706
+        },
+        {
+          "month": "2019-12",
+          "value": 28.191846
+        },
+        {
+          "month": "2020-01",
+          "value": 27.960344
+        },
+        {
+          "month": "2020-02",
+          "value": 28.697406
+        },
+        {
+          "month": "2020-03",
+          "value": 33.47535
+        },
+        {
+          "month": "2020-04",
+          "value": 34.519207
+        },
+        {
+          "month": "2020-05",
+          "value": 32.624878
+        },
+        {
+          "month": "2020-06",
+          "value": 29.526755
+        },
+        {
+          "month": "2020-07",
+          "value": 26.613385
+        },
+        {
+          "month": "2020-08",
+          "value": 25.52905
+        },
+        {
+          "month": "2020-09",
+          "value": 25.159864
+        },
+        {
+          "month": "2020-10",
+          "value": 26.999262
+        },
+        {
+          "month": "2020-11",
+          "value": 28.288207
+        },
+        {
+          "month": "2020-12",
+          "value": 30.545259
+        },
+        {
+          "month": "2021-01",
+          "value": 28.800314
+        },
+        {
+          "month": "2021-02",
+          "value": 30.25144
+        },
+        {
+          "month": "2021-03",
+          "value": 33.65878
+        },
+        {
+          "month": "2021-04",
+          "value": 34.157681
+        },
+        {
+          "month": "2021-05",
+          "value": 32.443821
+        },
+        {
+          "month": "2021-06",
+          "value": 30.012471
+        },
+        {
+          "month": "2021-07",
+          "value": 26.845672
+        },
+        {
+          "month": "2021-08",
+          "value": 25.431361
+        },
+        {
+          "month": "2021-09",
+          "value": 25.724777
+        },
+        {
+          "month": "2021-10",
+          "value": 27.855216
+        },
+        {
+          "month": "2021-11",
+          "value": 29.453255
+        },
+        {
+          "month": "2021-12",
+          "value": 28.482431
+        },
+        {
+          "month": "2022-01",
+          "value": 27.593571
+        },
+        {
+          "month": "2022-02",
+          "value": 29.327056
+        },
+        {
+          "month": "2022-03",
+          "value": 33.953074
+        },
+        {
+          "month": "2022-04",
+          "value": 33.164002
+        },
+        {
+          "month": "2022-05",
+          "value": 31.204194
+        },
+        {
+          "month": "2022-06",
+          "value": 28.626063
+        },
+        {
+          "month": "2022-07",
+          "value": 26.261101
+        },
+        {
+          "month": "2022-08",
+          "value": 25.137209
+        },
+        {
+          "month": "2022-09",
+          "value": 24.699049
+        },
+        {
+          "month": "2022-10",
+          "value": 26.550806
+        },
+        {
+          "month": "2022-11",
+          "value": 27.842637
+        },
+        {
+          "month": "2022-12",
+          "value": 27.635889
+        },
+        {
+          "month": "2023-01",
+          "value": 28.042803
+        },
+        {
+          "month": "2023-02",
+          "value": 30.484423
+        },
+        {
+          "month": "2023-03",
+          "value": 33.347966
+        },
+        {
+          "month": "2023-04",
+          "value": 33.312669
+        },
+        {
+          "month": "2023-05",
+          "value": 31.762588
+        },
+        {
+          "month": "2023-06",
+          "value": 28.749815
+        },
+        {
+          "month": "2023-07",
+          "value": 27.157312
+        },
+        {
+          "month": "2023-08",
+          "value": 25.736614
+        },
+        {
+          "month": "2023-09",
+          "value": 25.982955
+        },
+        {
+          "month": "2023-10",
+          "value": 27.823463
+        },
+        {
+          "month": "2023-11",
+          "value": 30.023677
+        },
+        {
+          "month": "2023-12",
+          "value": 27.993904
+        },
+        {
+          "month": "2024-01",
+          "value": 28.329763
+        },
+        {
+          "month": "2024-02",
+          "value": 30.499259
+        },
+        {
+          "month": "2024-03",
+          "value": 35.229868
+        },
+        {
+          "month": "2024-04",
+          "value": 34.78388
+        },
+        {
+          "month": "2024-05",
+          "value": 32.957993
+        },
+        {
+          "month": "2024-06",
+          "value": 30.008792
+        },
+        {
+          "month": "2024-07",
+          "value": 27.265676
+        },
+        {
+          "month": "2024-08",
+          "value": 26.461978
+        },
+        {
+          "month": "2024-09",
+          "value": 25.985988
+        },
+        {
+          "month": "2024-10",
+          "value": 27.008269
+        },
+        {
+          "month": "2024-11",
+          "value": 26.96563
+        },
+        {
+          "month": "2024-12",
+          "value": 26.988365
+        }
+      ],
+      "yearly_timeseries": [
+        {
+          "year": 2016,
+          "value": 29.4534,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2017,
+          "value": 29.5814,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2018,
+          "value": 30.2221,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2019,
+          "value": 29.79,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2020,
+          "value": 29.1616,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2021,
+          "value": 29.4264,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2022,
+          "value": 28.4996,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2023,
+          "value": 29.2015,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2024,
+          "value": 29.3738,
+          "months": 12,
+          "complete": true
+        }
+      ],
+      "cells": [
+        {
+          "lon": -2.375,
+          "lat": 9.125,
+          "n": 9,
+          "slope": -0.022644999999999894,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.7544541774940892,
+          "per_decade": -0.22644999999999893,
+          "stars": "",
+          "ci_low_per_decade": -1.7599999999999958,
+          "ci_high_per_decade": 1.0987499999999972,
+          "t_p": 0.4973106144517616,
+          "methods_agree": true
+        },
+        {
+          "lon": -2.375,
+          "lat": 9.375,
+          "n": 9,
+          "slope": -0.01962250000000019,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.7630546354387056,
+          "per_decade": -0.19622500000000187,
+          "stars": "",
+          "ci_low_per_decade": -1.8223333333333378,
+          "ci_high_per_decade": 1.0060000000000002,
+          "t_p": 0.481971524861587,
+          "methods_agree": true
+        },
+        {
+          "lon": -2.375,
+          "lat": 9.625,
+          "n": 9,
+          "slope": -0.03949999999999978,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.49261408755631053,
+          "per_decade": -0.3949999999999978,
+          "stars": "",
+          "ci_low_per_decade": -2.119399999999999,
+          "ci_high_per_decade": 0.9160000000000057,
+          "t_p": 0.32693931401567,
+          "methods_agree": true
+        },
+        {
+          "lon": -2.375,
+          "lat": 9.875,
+          "n": 9,
+          "slope": -0.032737499999999996,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.5056686532996022,
+          "per_decade": -0.32737499999999997,
+          "stars": "",
+          "ci_low_per_decade": -1.9808000000000021,
+          "ci_high_per_decade": 0.9104999999999919,
+          "t_p": 0.3744389930885985,
+          "methods_agree": true
+        },
+        {
+          "lon": -2.375,
+          "lat": 10.125,
+          "n": 9,
+          "slope": -0.04072500000000012,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.46551216987418664,
+          "per_decade": -0.4072500000000012,
+          "stars": "",
+          "ci_low_per_decade": -1.81266666666667,
+          "ci_high_per_decade": 0.7807500000000012,
+          "t_p": 0.272772472779081,
+          "methods_agree": true
+        },
+        {
+          "lon": -2.375,
+          "lat": 10.375,
+          "n": 9,
+          "slope": -0.047276666666666564,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.17530808080827365,
+          "per_decade": -0.47276666666666567,
+          "stars": "",
+          "ci_low_per_decade": -2.073999999999998,
+          "ci_high_per_decade": 0.3696666666666696,
+          "t_p": 0.16822637013777997,
+          "methods_agree": true
+        },
+        {
+          "lon": -2.375,
+          "lat": 10.625,
+          "n": 9,
+          "slope": -0.08306000000000016,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.13640795985148513,
+          "per_decade": -0.8306000000000016,
+          "stars": "",
+          "ci_low_per_decade": -2.5442000000000036,
+          "ci_high_per_decade": 0.25200000000001666,
+          "t_p": 0.07552239670841021,
+          "methods_agree": true
+        },
+        {
+          "lon": -2.375,
+          "lat": 10.875,
+          "n": 9,
+          "slope": -0.08829285714285712,
+          "direction": "falling",
+          "significant": true,
+          "p": 0.04760395472787149,
+          "per_decade": -0.8829285714285712,
+          "stars": "**",
+          "ci_low_per_decade": -2.3129999999999975,
+          "ci_high_per_decade": -0.4706666666666711,
+          "t_p": 0.04070802674199103,
+          "methods_agree": true
+        },
+        {
+          "lon": -2.125,
+          "lat": 9.125,
+          "n": 9,
+          "slope": -0.02683250000000026,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.7544541774940892,
+          "per_decade": -0.2683250000000026,
+          "stars": "",
+          "ci_low_per_decade": -1.6556666666666686,
+          "ci_high_per_decade": 1.0557499999999997,
+          "t_p": 0.4848850579475381,
+          "methods_agree": true
+        },
+        {
+          "lon": -2.125,
+          "lat": 9.375,
+          "n": 9,
+          "slope": -0.07059999999999977,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.48125354860181035,
+          "per_decade": -0.7059999999999977,
+          "stars": "",
+          "ci_low_per_decade": -2.4848,
+          "ci_high_per_decade": 1.0372500000000073,
+          "t_p": 0.24074989375679845,
+          "methods_agree": true
+        },
+        {
+          "lon": -2.125,
+          "lat": 9.625,
+          "n": 9,
+          "slope": -0.07474999999999987,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.48861807984813876,
+          "per_decade": -0.7474999999999987,
+          "stars": "",
+          "ci_low_per_decade": -2.4819999999999993,
+          "ci_high_per_decade": 0.8702499999999969,
+          "t_p": 0.17451409049378475,
+          "methods_agree": true
+        },
+        {
+          "lon": -2.125,
+          "lat": 9.875,
+          "n": 9,
+          "slope": -0.06502500000000025,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.37613676965993803,
+          "per_decade": -0.6502500000000024,
+          "stars": "",
+          "ci_low_per_decade": -2.426000000000007,
+          "ci_high_per_decade": 0.6912499999999966,
+          "t_p": 0.16314981849819898,
+          "methods_agree": true
+        },
+        {
+          "lon": -2.125,
+          "lat": 10.125,
+          "n": 9,
+          "slope": -0.10441249999999988,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.11785089502136525,
+          "per_decade": -1.0441249999999989,
+          "stars": "",
+          "ci_low_per_decade": -2.3116666666666674,
+          "ci_high_per_decade": 0.20233333333333547,
+          "t_p": 0.07259602177332436,
+          "methods_agree": true
+        },
+        {
+          "lon": -2.125,
+          "lat": 10.375,
+          "n": 9,
+          "slope": -0.09277083333333311,
+          "direction": "falling",
+          "significant": false,
+          "p": 0.07633274037635718,
+          "per_decade": -0.9277083333333311,
+          "stars": "*",
+          "ci_low_per_decade": -2.4696666666666665,
+          "ci_high_per_decade": 0.11366666666666228,
+          "t_p": 0.06071120971805466,
+          "methods_agree": true
+        },
+        {
+          "lon": -2.125,
+          "lat": 10.625,
+          "n": 9,
+          "slope": -0.10156666666666622,
+          "direction": "falling",
+          "significant": true,
+          "p": 0.04869777299063838,
+          "per_decade": -1.0156666666666623,
+          "stars": "**",
+          "ci_low_per_decade": -2.7446666666666646,
+          "ci_high_per_decade": -0.12699999999998823,
+          "t_p": 0.03932380204262498,
+          "methods_agree": true
+        },
+        {
+          "lon": -2.125,
+          "lat": 10.875,
+          "n": 9,
+          "slope": -0.08637857142857058,
+          "direction": "falling",
+          "significant": true,
+          "p": 0.04760395472787149,
+          "per_decade": -0.8637857142857058,
+          "stars": "**",
+          "ci_low_per_decade": -2.2421666666666638,
+          "ci_high_per_decade": -0.2593333333333329,
+          "t_p": 0.050600829366145295,
+          "methods_agree": false
+        },
+        {
+          "lon": -1.875,
+          "lat": 9.125,
+          "n": 9,
+          "slope": -0.03423249999999998,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.49116608617413426,
+          "per_decade": -0.34232499999999977,
+          "stars": "",
+          "ci_low_per_decade": -2.1073999999999984,
+          "ci_high_per_decade": 1.2187500000000018,
+          "t_p": 0.3804990005959057,
+          "methods_agree": true
+        },
+        {
+          "lon": -1.875,
+          "lat": 9.375,
+          "n": 9,
+          "slope": -0.05056750000000019,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.500989248247603,
+          "per_decade": -0.5056750000000019,
+          "stars": "",
+          "ci_low_per_decade": -2.4388000000000005,
+          "ci_high_per_decade": 1.1610000000000031,
+          "t_p": 0.30978915973794185,
+          "methods_agree": true
+        },
+        {
+          "lon": -1.875,
+          "lat": 9.625,
+          "n": 9,
+          "slope": -0.04490749999999988,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.37279623408027085,
+          "per_decade": -0.4490749999999988,
+          "stars": "",
+          "ci_low_per_decade": -2.1552000000000007,
+          "ci_high_per_decade": 1.0799999999999965,
+          "t_p": 0.2882719038925754,
+          "methods_agree": true
+        },
+        {
+          "lon": -1.875,
+          "lat": 9.875,
+          "n": 9,
+          "slope": -0.07949166666666665,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.19031537219394856,
+          "per_decade": -0.7949166666666665,
+          "stars": "",
+          "ci_low_per_decade": -2.458199999999998,
+          "ci_high_per_decade": 0.7696666666666729,
+          "t_p": 0.1430012327083181,
+          "methods_agree": true
+        },
+        {
+          "lon": -1.875,
+          "lat": 10.125,
+          "n": 9,
+          "slope": -0.08421166666666675,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.17530808080827365,
+          "per_decade": -0.8421166666666675,
+          "stars": "",
+          "ci_low_per_decade": -2.4314000000000036,
+          "ci_high_per_decade": 0.9525000000000006,
+          "t_p": 0.14625901087292936,
+          "methods_agree": true
+        },
+        {
+          "lon": -1.875,
+          "lat": 10.375,
+          "n": 9,
+          "slope": -0.04820416666666742,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.34808262363292397,
+          "per_decade": -0.48204166666667425,
+          "stars": "",
+          "ci_low_per_decade": -2.036999999999999,
+          "ci_high_per_decade": 0.6909999999999883,
+          "t_p": 0.22633165425238788,
+          "methods_agree": true
+        },
+        {
+          "lon": -1.875,
+          "lat": 10.625,
+          "n": 9,
+          "slope": -0.09943499999999972,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.11785089502136525,
+          "per_decade": -0.9943499999999972,
+          "stars": "",
+          "ci_low_per_decade": -2.1266000000000034,
+          "ci_high_per_decade": 0.24725000000000108,
+          "t_p": 0.09112997872689155,
+          "methods_agree": true
+        },
+        {
+          "lon": -1.875,
+          "lat": 10.875,
+          "n": 9,
+          "slope": -0.09232000000000014,
+          "direction": "falling",
+          "significant": false,
+          "p": 0.07633274037635718,
+          "per_decade": -0.9232000000000014,
+          "stars": "*",
+          "ci_low_per_decade": -2.344000000000001,
+          "ci_high_per_decade": 0.14200000000000065,
+          "t_p": 0.04249287447597472,
+          "methods_agree": false
+        },
+        {
+          "lon": -1.625,
+          "lat": 9.125,
+          "n": 9,
+          "slope": -0.031306666666666774,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.5150764059500821,
+          "per_decade": -0.3130666666666677,
+          "stars": "",
+          "ci_low_per_decade": -1.9726,
+          "ci_high_per_decade": 1.3165000000000049,
+          "t_p": 0.4300966420595911,
+          "methods_agree": true
+        },
+        {
+          "lon": -1.625,
+          "lat": 9.375,
+          "n": 9,
+          "slope": -0.044982499999999884,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.40209608224656135,
+          "per_decade": -0.4498249999999988,
+          "stars": "",
+          "ci_low_per_decade": -2.3078000000000003,
+          "ci_high_per_decade": 1.0420000000000051,
+          "t_p": 0.2721374287134104,
+          "methods_agree": true
+        },
+        {
+          "lon": -1.625,
+          "lat": 9.625,
+          "n": 9,
+          "slope": -0.08399821428571398,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.19109800442630354,
+          "per_decade": -0.8399821428571398,
+          "stars": "",
+          "ci_low_per_decade": -2.422400000000003,
+          "ci_high_per_decade": 0.8670000000000044,
+          "t_p": 0.1455403067592027,
+          "methods_agree": true
+        },
+        {
+          "lon": -1.625,
+          "lat": 9.875,
+          "n": 9,
+          "slope": -0.042524999999999646,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.7544541774940892,
+          "per_decade": -0.42524999999999646,
+          "stars": "",
+          "ci_low_per_decade": -1.9151999999999987,
+          "ci_high_per_decade": 1.060749999999997,
+          "t_p": 0.3067773395279594,
+          "methods_agree": true
+        },
+        {
+          "lon": -1.625,
+          "lat": 10.125,
+          "n": 9,
+          "slope": -0.0649416666666666,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.3674605347607649,
+          "per_decade": -0.6494166666666661,
+          "stars": "",
+          "ci_low_per_decade": -2.4125000000000085,
+          "ci_high_per_decade": 1.3789999999999836,
+          "t_p": 0.22365387933483172,
+          "methods_agree": true
+        },
+        {
+          "lon": -1.625,
+          "lat": 10.375,
+          "n": 9,
+          "slope": -0.06754583333333342,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.17911415092317995,
+          "per_decade": -0.6754583333333342,
+          "stars": "",
+          "ci_low_per_decade": -2.270000000000003,
+          "ci_high_per_decade": 0.2749999999999986,
+          "t_p": 0.16717640627146313,
+          "methods_agree": true
+        },
+        {
+          "lon": -1.625,
+          "lat": 10.625,
+          "n": 9,
+          "slope": -0.09575833333333308,
+          "direction": "falling",
+          "significant": true,
+          "p": 0.04760395472787149,
+          "per_decade": -0.9575833333333308,
+          "stars": "**",
+          "ci_low_per_decade": -2.205599999999997,
+          "ci_high_per_decade": -0.022000000000002018,
+          "t_p": 0.09517012215293819,
+          "methods_agree": false
+        },
+        {
+          "lon": -1.625,
+          "lat": 10.875,
+          "n": 9,
+          "slope": -0.11016999999999992,
+          "direction": "falling",
+          "significant": false,
+          "p": 0.07633274037635718,
+          "per_decade": -1.1016999999999992,
+          "stars": "*",
+          "ci_low_per_decade": -2.2013999999999996,
+          "ci_high_per_decade": 0.005499999999996064,
+          "t_p": 0.05268426363916201,
+          "methods_agree": true
+        },
+        {
+          "lon": -1.375,
+          "lat": 9.125,
+          "n": 9,
+          "slope": -0.04352333333333351,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.5069653094311937,
+          "per_decade": -0.43523333333333514,
+          "stars": "",
+          "ci_low_per_decade": -2.208199999999998,
+          "ci_high_per_decade": 1.2824999999999953,
+          "t_p": 0.3689521666505069,
+          "methods_agree": true
+        },
+        {
+          "lon": -1.375,
+          "lat": 9.375,
+          "n": 9,
+          "slope": -0.037642500000000204,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.40479013107004347,
+          "per_decade": -0.376425000000002,
+          "stars": "",
+          "ci_low_per_decade": -2.3000000000000043,
+          "ci_high_per_decade": 1.0077499999999961,
+          "t_p": 0.2989194069600303,
+          "methods_agree": true
+        },
+        {
+          "lon": -1.375,
+          "lat": 9.625,
+          "n": 9,
+          "slope": -0.05474750000000048,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.3824436107448572,
+          "per_decade": -0.5474750000000048,
+          "stars": "",
+          "ci_low_per_decade": -2.3614000000000033,
+          "ci_high_per_decade": 1.0404999999999998,
+          "t_p": 0.23795116734863786,
+          "methods_agree": true
+        },
+        {
+          "lon": -1.375,
+          "lat": 9.875,
+          "n": 9,
+          "slope": -0.07277249999999977,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.2836766550320118,
+          "per_decade": -0.7277249999999977,
+          "stars": "",
+          "ci_low_per_decade": -2.6413999999999973,
+          "ci_high_per_decade": 1.1164999999999914,
+          "t_p": 0.20103536161746627,
+          "methods_agree": true
+        },
+        {
+          "lon": -1.375,
+          "lat": 10.125,
+          "n": 9,
+          "slope": -0.057683333333333156,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.27844456060848444,
+          "per_decade": -0.5768333333333315,
+          "stars": "",
+          "ci_low_per_decade": -2.5159999999999982,
+          "ci_high_per_decade": 1.1969999999999814,
+          "t_p": 0.22632735128186843,
+          "methods_agree": true
+        },
+        {
+          "lon": -1.375,
+          "lat": 10.375,
+          "n": 9,
+          "slope": -0.05195833333333333,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.36392059292974377,
+          "per_decade": -0.5195833333333333,
+          "stars": "",
+          "ci_low_per_decade": -2.1738,
+          "ci_high_per_decade": 0.31333333333333735,
+          "t_p": 0.22720541361987667,
+          "methods_agree": true
+        },
+        {
+          "lon": -1.375,
+          "lat": 10.625,
+          "n": 9,
+          "slope": -0.10755000000000052,
+          "direction": "falling",
+          "significant": false,
+          "p": 0.07633274037635718,
+          "per_decade": -1.0755000000000052,
+          "stars": "*",
+          "ci_low_per_decade": -2.300600000000003,
+          "ci_high_per_decade": 0.13724999999999987,
+          "t_p": 0.06734127749590502,
+          "methods_agree": true
+        },
+        {
+          "lon": -1.375,
+          "lat": 10.875,
+          "n": 9,
+          "slope": -0.11299999999999984,
+          "direction": "falling",
+          "significant": true,
+          "p": 0.04760395472787149,
+          "per_decade": -1.1299999999999983,
+          "stars": "**",
+          "ci_low_per_decade": -2.248800000000003,
+          "ci_high_per_decade": -0.11174999999999713,
+          "t_p": 0.0481530245804469,
+          "methods_agree": true
+        },
+        {
+          "lon": -1.125,
+          "lat": 9.125,
+          "n": 9,
+          "slope": -0.050522500000000026,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.39919565996613615,
+          "per_decade": -0.5052250000000003,
+          "stars": "",
+          "ci_low_per_decade": -2.3441999999999936,
+          "ci_high_per_decade": 0.8932499999999965,
+          "t_p": 0.25355697070501426,
+          "methods_agree": true
+        },
+        {
+          "lon": -1.125,
+          "lat": 9.375,
+          "n": 9,
+          "slope": -0.05213809523809519,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.46551216987418664,
+          "per_decade": -0.521380952380952,
+          "stars": "",
+          "ci_low_per_decade": -1.9166666666666763,
+          "ci_high_per_decade": 0.8990000000000009,
+          "t_p": 0.2536870132852238,
+          "methods_agree": true
+        },
+        {
+          "lon": -1.125,
+          "lat": 9.625,
+          "n": 9,
+          "slope": -0.052121428571428104,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.4705902112596947,
+          "per_decade": -0.5212142857142811,
+          "stars": "",
+          "ci_low_per_decade": -1.867599999999996,
+          "ci_high_per_decade": 0.6516666666666755,
+          "t_p": 0.26087128449290176,
+          "methods_agree": true
+        },
+        {
+          "lon": -1.125,
+          "lat": 9.875,
+          "n": 9,
+          "slope": -0.062437500000000146,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.3954316533954616,
+          "per_decade": -0.6243750000000015,
+          "stars": "",
+          "ci_low_per_decade": -2.4370000000000047,
+          "ci_high_per_decade": 1.3515000000000121,
+          "t_p": 0.2313795334147164,
+          "methods_agree": true
+        },
+        {
+          "lon": -1.125,
+          "lat": 10.125,
+          "n": 9,
+          "slope": -0.06195833333333341,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.19117701292116318,
+          "per_decade": -0.619583333333334,
+          "stars": "",
+          "ci_low_per_decade": -2.2879999999999967,
+          "ci_high_per_decade": 0.4689999999999994,
+          "t_p": 0.17586828550776,
+          "methods_agree": true
+        },
+        {
+          "lon": -1.125,
+          "lat": 10.375,
+          "n": 9,
+          "slope": -0.06365833333333329,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.18563390265758772,
+          "per_decade": -0.6365833333333328,
+          "stars": "",
+          "ci_low_per_decade": -2.2910000000000075,
+          "ci_high_per_decade": 0.3536666666666596,
+          "t_p": 0.17605846788376933,
+          "methods_agree": true
+        },
+        {
+          "lon": -1.125,
+          "lat": 10.625,
+          "n": 9,
+          "slope": -0.08296666666666633,
+          "direction": "falling",
+          "significant": false,
+          "p": 0.05274433277617718,
+          "per_decade": -0.8296666666666632,
+          "stars": "*",
+          "ci_low_per_decade": -2.415999999999997,
+          "ci_high_per_decade": -0.061749999999998195,
+          "t_p": 0.07949891489728822,
+          "methods_agree": true
+        },
+        {
+          "lon": -1.125,
+          "lat": 10.875,
+          "n": 9,
+          "slope": -0.09814999999999993,
+          "direction": "falling",
+          "significant": true,
+          "p": 0.036031686218233716,
+          "per_decade": -0.9814999999999994,
+          "stars": "**",
+          "ci_low_per_decade": -2.7353333333333296,
+          "ci_high_per_decade": -0.30425000000000146,
+          "t_p": 0.049679040713872746,
+          "methods_agree": true
+        },
+        {
+          "lon": -0.875,
+          "lat": 9.125,
+          "n": 9,
+          "slope": -0.05634166666666651,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.46551216987418664,
+          "per_decade": -0.5634166666666651,
+          "stars": "",
+          "ci_low_per_decade": -2.0970000000000013,
+          "ci_high_per_decade": 1.2199999999999989,
+          "t_p": 0.4195631072970243,
+          "methods_agree": true
+        },
+        {
+          "lon": -0.875,
+          "lat": 9.375,
+          "n": 9,
+          "slope": -0.07176666666666698,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.2514521865080219,
+          "per_decade": -0.7176666666666698,
+          "stars": "",
+          "ci_low_per_decade": -1.6332500000000039,
+          "ci_high_per_decade": 1.133500000000005,
+          "t_p": 0.2566169051094638,
+          "methods_agree": true
+        },
+        {
+          "lon": -0.875,
+          "lat": 9.625,
+          "n": 9,
+          "slope": -0.05612499999999976,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.34808262363292397,
+          "per_decade": -0.5612499999999976,
+          "stars": "",
+          "ci_low_per_decade": -1.6274999999999906,
+          "ci_high_per_decade": 0.8730000000000082,
+          "t_p": 0.22478763956390013,
+          "methods_agree": true
+        },
+        {
+          "lon": -0.875,
+          "lat": 9.875,
+          "n": 9,
+          "slope": -0.06325000000000033,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.2514521865080219,
+          "per_decade": -0.6325000000000034,
+          "stars": "",
+          "ci_low_per_decade": -2.0873333333333357,
+          "ci_high_per_decade": 0.8554999999999957,
+          "t_p": 0.18305794264017683,
+          "methods_agree": true
+        },
+        {
+          "lon": -0.875,
+          "lat": 10.125,
+          "n": 9,
+          "slope": -0.0899750000000001,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.11785089502136525,
+          "per_decade": -0.8997500000000009,
+          "stars": "",
+          "ci_low_per_decade": -2.0920000000000094,
+          "ci_high_per_decade": 0.3404999999999969,
+          "t_p": 0.1149203162937047,
+          "methods_agree": true
+        },
+        {
+          "lon": -0.875,
+          "lat": 10.375,
+          "n": 9,
+          "slope": -0.05760000000000032,
+          "direction": "falling",
+          "significant": false,
+          "p": 0.050372710814392097,
+          "per_decade": -0.5760000000000032,
+          "stars": "*",
+          "ci_low_per_decade": -2.477999999999998,
+          "ci_high_per_decade": -0.05150000000000432,
+          "t_p": 0.12001153445908264,
+          "methods_agree": true
+        },
+        {
+          "lon": -0.875,
+          "lat": 10.625,
+          "n": 9,
+          "slope": -0.0691583333333338,
+          "direction": "falling",
+          "significant": false,
+          "p": 0.06183576573369498,
+          "per_decade": -0.6915833333333379,
+          "stars": "*",
+          "ci_low_per_decade": -2.789999999999999,
+          "ci_high_per_decade": -0.19725000000000215,
+          "t_p": 0.06919799633435009,
+          "methods_agree": true
+        },
+        {
+          "lon": -0.875,
+          "lat": 10.875,
+          "n": 9,
+          "slope": -0.06930000000000014,
+          "direction": "falling",
+          "significant": false,
+          "p": 0.07633274037635718,
+          "per_decade": -0.6930000000000014,
+          "stars": "*",
+          "ci_low_per_decade": -2.56366666666666,
+          "ci_high_per_decade": 0.12875000000000192,
+          "t_p": 0.09440678369136402,
+          "methods_agree": true
+        },
+        {
+          "lon": -0.625,
+          "lat": 9.125,
+          "n": 9,
+          "slope": -0.035633333333333475,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.6096794282155522,
+          "per_decade": -0.3563333333333347,
+          "stars": "",
+          "ci_low_per_decade": -1.7319999999999958,
+          "ci_high_per_decade": 1.5409999999999968,
+          "t_p": 0.5644471793809043,
+          "methods_agree": true
+        },
+        {
+          "lon": -0.625,
+          "lat": 9.375,
+          "n": 9,
+          "slope": -0.0615833333333331,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.6021675277481959,
+          "per_decade": -0.615833333333331,
+          "stars": "",
+          "ci_low_per_decade": -1.6227499999999928,
+          "ci_high_per_decade": 1.4469999999999672,
+          "t_p": 0.4050108723078263,
+          "methods_agree": true
+        },
+        {
+          "lon": -0.625,
+          "lat": 9.625,
+          "n": 9,
+          "slope": -0.08021666666666653,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.17530808080827365,
+          "per_decade": -0.8021666666666654,
+          "stars": "",
+          "ci_low_per_decade": -1.8825000000000003,
+          "ci_high_per_decade": 1.042000000000023,
+          "t_p": 0.18022251018595714,
+          "methods_agree": true
+        },
+        {
+          "lon": -0.625,
+          "lat": 9.875,
+          "n": 9,
+          "slope": -0.0644208333333336,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.21660717826281894,
+          "per_decade": -0.6442083333333359,
+          "stars": "",
+          "ci_low_per_decade": -2.3260000000000005,
+          "ci_high_per_decade": 0.9859999999999935,
+          "t_p": 0.14867435595292577,
+          "methods_agree": true
+        },
+        {
+          "lon": -0.625,
+          "lat": 10.125,
+          "n": 9,
+          "slope": -0.06130833333333345,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.17773627140620984,
+          "per_decade": -0.6130833333333345,
+          "stars": "",
+          "ci_low_per_decade": -2.607499999999998,
+          "ci_high_per_decade": 0.1639999999999997,
+          "t_p": 0.1064801307410046,
+          "methods_agree": true
+        },
+        {
+          "lon": -0.625,
+          "lat": 10.375,
+          "n": 9,
+          "slope": -0.038212500000000205,
+          "direction": "falling",
+          "significant": true,
+          "p": 0.04915603045839467,
+          "per_decade": -0.38212500000000205,
+          "stars": "**",
+          "ci_low_per_decade": -2.168499999999991,
+          "ci_high_per_decade": -0.03574999999999662,
+          "t_p": 0.17655662999899935,
+          "methods_agree": false
+        },
+        {
+          "lon": -0.625,
+          "lat": 10.625,
+          "n": 9,
+          "slope": -0.08207500000000056,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.11962654048126042,
+          "per_decade": -0.8207500000000056,
+          "stars": "",
+          "ci_low_per_decade": -3.147500000000001,
+          "ci_high_per_decade": 0.0017499999999959215,
+          "t_p": 0.07122228895554072,
+          "methods_agree": true
+        },
+        {
+          "lon": -0.625,
+          "lat": 10.875,
+          "n": 9,
+          "slope": -0.11088333333333308,
+          "direction": "falling",
+          "significant": false,
+          "p": 0.07633274037635718,
+          "per_decade": -1.108833333333331,
+          "stars": "*",
+          "ci_low_per_decade": -2.5070000000000014,
+          "ci_high_per_decade": 0.21125000000000504,
+          "t_p": 0.09077954852453107,
+          "methods_agree": true
+        },
+        {
+          "lon": -0.375,
+          "lat": 9.125,
+          "n": 9,
+          "slope": -0.05325833333333341,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.7703959254615758,
+          "per_decade": -0.5325833333333341,
+          "stars": "",
+          "ci_low_per_decade": -2.1578000000000017,
+          "ci_high_per_decade": 1.2025000000000041,
+          "t_p": 0.3307457962608682,
+          "methods_agree": true
+        },
+        {
+          "lon": -0.375,
+          "lat": 9.375,
+          "n": 9,
+          "slope": -0.04726666666666679,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.6315503232721733,
+          "per_decade": -0.4726666666666679,
+          "stars": "",
+          "ci_low_per_decade": -2.133200000000002,
+          "ci_high_per_decade": 1.2094999999999878,
+          "t_p": 0.30680875043498945,
+          "methods_agree": true
+        },
+        {
+          "lon": -0.375,
+          "lat": 9.625,
+          "n": 9,
+          "slope": -0.061604166666666536,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.2808728413344279,
+          "per_decade": -0.6160416666666654,
+          "stars": "",
+          "ci_low_per_decade": -2.2756000000000043,
+          "ci_high_per_decade": 0.8954999999999913,
+          "t_p": 0.15757154159601017,
+          "methods_agree": true
+        },
+        {
+          "lon": -0.375,
+          "lat": 9.875,
+          "n": 9,
+          "slope": -0.07768333333333319,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.20664491360624648,
+          "per_decade": -0.7768333333333319,
+          "stars": "",
+          "ci_low_per_decade": -2.3903999999999996,
+          "ci_high_per_decade": 0.8060000000000045,
+          "t_p": 0.1170411671829088,
+          "methods_agree": true
+        },
+        {
+          "lon": -0.375,
+          "lat": 10.125,
+          "n": 9,
+          "slope": -0.05777249999999956,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.1859237835774592,
+          "per_decade": -0.5777249999999956,
+          "stars": "",
+          "ci_low_per_decade": -2.7500000000000036,
+          "ci_high_per_decade": 0.14475000000000016,
+          "t_p": 0.10043822321295903,
+          "methods_agree": true
+        },
+        {
+          "lon": -0.375,
+          "lat": 10.375,
+          "n": 9,
+          "slope": -0.04571666666666706,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.15725593117540515,
+          "per_decade": -0.4571666666666706,
+          "stars": "",
+          "ci_low_per_decade": -2.1890000000000143,
+          "ci_high_per_decade": 0.11624999999999552,
+          "t_p": 0.1493346353759606,
+          "methods_agree": true
+        },
+        {
+          "lon": -0.375,
+          "lat": 10.625,
+          "n": 9,
+          "slope": -0.1042250000000009,
+          "direction": "falling",
+          "significant": false,
+          "p": 0.08769018519649863,
+          "per_decade": -1.042250000000009,
+          "stars": "*",
+          "ci_low_per_decade": -3.119000000000014,
+          "ci_high_per_decade": 0.14274999999999594,
+          "t_p": 0.080528991457397,
+          "methods_agree": true
+        },
+        {
+          "lon": -0.375,
+          "lat": 10.875,
+          "n": 9,
+          "slope": -0.10268000000000015,
+          "direction": "falling",
+          "significant": false,
+          "p": 0.07633274037635718,
+          "per_decade": -1.0268000000000015,
+          "stars": "*",
+          "ci_low_per_decade": -2.6060000000000016,
+          "ci_high_per_decade": 0.35366666666667135,
+          "t_p": 0.10915711310335441,
+          "methods_agree": true
+        },
+        {
+          "lon": -0.125,
+          "lat": 9.125,
+          "n": 9,
+          "slope": -0.06842083333333346,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.38604400248099235,
+          "per_decade": -0.6842083333333346,
+          "stars": "",
+          "ci_low_per_decade": -2.302599999999998,
+          "ci_high_per_decade": 1.169999999999991,
+          "t_p": 0.27691009816046375,
+          "methods_agree": true
+        },
+        {
+          "lon": -0.125,
+          "lat": 9.375,
+          "n": 9,
+          "slope": -0.07476666666666695,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.390785420169645,
+          "per_decade": -0.7476666666666696,
+          "stars": "",
+          "ci_low_per_decade": -2.400000000000002,
+          "ci_high_per_decade": 1.0239999999999938,
+          "t_p": 0.18794538879852363,
+          "methods_agree": true
+        },
+        {
+          "lon": -0.125,
+          "lat": 9.625,
+          "n": 9,
+          "slope": -0.061579166666666595,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.2886388092991339,
+          "per_decade": -0.615791666666666,
+          "stars": "",
+          "ci_low_per_decade": -2.251199999999997,
+          "ci_high_per_decade": 0.9960000000000058,
+          "t_p": 0.17786726072238745,
+          "methods_agree": true
+        },
+        {
+          "lon": -0.125,
+          "lat": 9.875,
+          "n": 9,
+          "slope": -0.07012916666666666,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.22181819121439084,
+          "per_decade": -0.7012916666666666,
+          "stars": "",
+          "ci_low_per_decade": -2.381499999999992,
+          "ci_high_per_decade": 0.5489999999999995,
+          "t_p": 0.1291600935007804,
+          "methods_agree": true
+        },
+        {
+          "lon": -0.125,
+          "lat": 10.125,
+          "n": 9,
+          "slope": -0.06442749999999986,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.22395342055791345,
+          "per_decade": -0.6442749999999986,
+          "stars": "",
+          "ci_low_per_decade": -2.613000000000003,
+          "ci_high_per_decade": 0.34250000000000114,
+          "t_p": 0.10725684970167348,
+          "methods_agree": true
+        },
+        {
+          "lon": -0.125,
+          "lat": 10.375,
+          "n": 9,
+          "slope": -0.05744714285714296,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.17530808080827365,
+          "per_decade": -0.5744714285714296,
+          "stars": "",
+          "ci_low_per_decade": -2.423000000000002,
+          "ci_high_per_decade": 0.179999999999995,
+          "t_p": 0.13869468480517666,
+          "methods_agree": true
+        },
+        {
+          "lon": -0.125,
+          "lat": 10.625,
+          "n": 9,
+          "slope": -0.10612499999999989,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.11785089502136525,
+          "per_decade": -1.061249999999999,
+          "stars": "",
+          "ci_low_per_decade": -2.8389999999999915,
+          "ci_high_per_decade": 0.1314999999999955,
+          "t_p": 0.1184631228130868,
+          "methods_agree": true
+        },
+        {
+          "lon": -0.125,
+          "lat": 10.875,
+          "n": 9,
+          "slope": -0.09216999999999978,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.11785089502136525,
+          "per_decade": -0.9216999999999977,
+          "stars": "",
+          "ci_low_per_decade": -2.5539999999999985,
+          "ci_high_per_decade": 0.4670000000000041,
+          "t_p": 0.1360929307003027,
+          "methods_agree": true
+        }
+      ],
+      "overall": {
+        "ok": true,
+        "n": 9,
+        "slope": -0.06813333333333307,
+        "intercept": 167.03523333333283,
+        "z": -1.3208739303563835,
+        "p": 0.18654340356110932,
+        "tau": -0.3888888888888889,
+        "significant": false,
+        "stars": "",
+        "direction": "flat",
+        "change_total": -0.07959999999999923,
+        "change_pct": null,
+        "autocorr_r1": 0.025755785566222312,
+        "autocorr_factor": 1.0528733662148382,
+        "p_uncorrected": 0.17530808080827365,
+        "z_uncorrected": -1.355343691370986,
+        "per_decade": -0.6813333333333307,
+        "t_slope": -0.08777833333333322,
+        "t_se": 0.055814415953001136,
+        "t_per_decade": -0.8777833333333322,
+        "t_p": 0.15978962887584403,
+        "t_df": 7,
+        "t_significant": false,
+        "t_ci_low_per_decade": -2.1975845488428685,
+        "t_ci_high_per_decade": 0.4420178821762043,
+        "methods_agree": true,
+        "ci_low": -0.21635999999999952,
+        "ci_high": 0.10430000000000028,
+        "ci_low_per_decade": -2.1635999999999953,
+        "ci_high_per_decade": 1.0430000000000028,
+        "dt_label": "year",
+        "first": 29.4534,
+        "last": 29.3738,
+        "seasonal_z": -2.61839230461548,
+        "seasonal_p": 0.008834517328161873,
+        "seasonal_significant": true
+      },
+      "seasonal": [
+        -2.61839230461548,
+        0.008834517328161873,
+        0.0,
+        true
+      ],
+      "summary": {
+        "total_cells": 80,
+        "valid_cells": 80,
+        "significant_cells": 7,
+        "rising_cells": 0,
+        "falling_cells": 7,
+        "consensus": "mixed",
+        "spatial_detail_available": true
+      }
+    },
+    {
+      "variable": {
+        "id": "T10M",
+        "name": "Air Temperature at 10 m",
+        "unit": "\u00b0C",
+        "mission": "MERRA-2",
+        "group": "temperature",
+        "sphere": "atmosphere",
+        "sphere_code": "ATM",
+        "sphere_name": "Atmosphere",
+        "desc": "Monthly air temperature at 10 m from M2IMNXASM; different height from T2M",
+        "color": "#eda27f",
+        "dataset": "M2IMNXASM",
+        "source_field": "T10M"
+      },
+      "provenance": {
+        "provider": "nasa-giovanni",
+        "source": "NASA Giovanni / MERRA-2",
+        "resource": "Giovanni",
+        "dataset": "M2IMNXASM",
+        "collection_version": "5.12.4",
+        "field": "T10M",
+        "policy": "challenge_resource",
+        "citation": "https://disc.gsfc.nasa.gov/datasets/M2IMNXASM_5.12.4/summary",
+        "access": "Giovanni area averaging through NASA Harmony; regional CSV only",
+        "aggregation": "NASA server rectangle average; monthly spatial support is not supplied",
+        "quality": "Monthly mean instantaneous assimilation diagnostics; a different product from native mode. Cell weighting follows NASA's service.",
+        "geometry_version": "88f50f8325ea1565",
+        "requested_bbox": [
+          -2.5,
+          9.0,
+          0.0,
+          11.0
+        ],
+        "spatial_detail_available": false,
+        "monthly_area_coverage_known": false,
+        "dlon": 0.625,
+        "dlat": 0.5,
+        "cache_hit": true,
+        "remote_job_id": "b7486a6a-02c4-4ad2-bdb0-d45f0f01df18",
+        "requested_months": 108,
+        "published_months": 108,
+        "first_observed_month": 201601,
+        "last_observed_month": 202412,
+        "retrieved_utc": "2026-11-15T06:58:58.002598+00:00"
+      },
+      "monthly_timeseries": [
+        {
+          "month": "2016-01",
+          "value": 24.188530000000014
+        },
+        {
+          "month": "2016-02",
+          "value": 27.620300000000043
+        },
+        {
+          "month": "2016-03",
+          "value": 31.648680000000013
+        },
+        {
+          "month": "2016-04",
+          "value": 31.621939999999995
+        },
+        {
+          "month": "2016-05",
+          "value": 29.45165000000003
+        },
+        {
+          "month": "2016-06",
+          "value": 27.62360000000001
+        },
+        {
+          "month": "2016-07",
+          "value": 26.19186000000002
+        },
+        {
+          "month": "2016-08",
+          "value": 26.097280000000012
+        },
+        {
+          "month": "2016-09",
+          "value": 26.155020000000036
+        },
+        {
+          "month": "2016-10",
+          "value": 27.357079999999996
+        },
+        {
+          "month": "2016-11",
+          "value": 27.54406
+        },
+        {
+          "month": "2016-12",
+          "value": 26.26162000000005
+        },
+        {
+          "month": "2017-01",
+          "value": 26.768730000000005
+        },
+        {
+          "month": "2017-02",
+          "value": 28.741330000000005
+        },
+        {
+          "month": "2017-03",
+          "value": 31.45043000000004
+        },
+        {
+          "month": "2017-04",
+          "value": 31.045200000000023
+        },
+        {
+          "month": "2017-05",
+          "value": 29.430840000000046
+        },
+        {
+          "month": "2017-06",
+          "value": 27.26794000000001
+        },
+        {
+          "month": "2017-07",
+          "value": 26.395530000000008
+        },
+        {
+          "month": "2017-08",
+          "value": 26.21795000000003
+        },
+        {
+          "month": "2017-09",
+          "value": 26.77117000000004
+        },
+        {
+          "month": "2017-10",
+          "value": 27.425900000000013
+        },
+        {
+          "month": "2017-11",
+          "value": 27.603200000000015
+        },
+        {
+          "month": "2017-12",
+          "value": 26.427819999999997
+        },
+        {
+          "month": "2018-01",
+          "value": 25.473540000000014
+        },
+        {
+          "month": "2018-02",
+          "value": 29.396749999999997
+        },
+        {
+          "month": "2018-03",
+          "value": 30.710020000000043
+        },
+        {
+          "month": "2018-04",
+          "value": 30.589300000000037
+        },
+        {
+          "month": "2018-05",
+          "value": 29.045980000000043
+        },
+        {
+          "month": "2018-06",
+          "value": 27.350760000000037
+        },
+        {
+          "month": "2018-07",
+          "value": 25.81510000000003
+        },
+        {
+          "month": "2018-08",
+          "value": 25.634820000000047
+        },
+        {
+          "month": "2018-09",
+          "value": 25.69448
+        },
+        {
+          "month": "2018-10",
+          "value": 27.020399999999995
+        },
+        {
+          "month": "2018-11",
+          "value": 27.22980000000001
+        },
+        {
+          "month": "2018-12",
+          "value": 24.47305
+        },
+        {
+          "month": "2019-01",
+          "value": 26.25988000000001
+        },
+        {
+          "month": "2019-02",
+          "value": 28.72150000000005
+        },
+        {
+          "month": "2019-03",
+          "value": 31.22195000000005
+        },
+        {
+          "month": "2019-04",
+          "value": 31.106870000000015
+        },
+        {
+          "month": "2019-05",
+          "value": 28.58620000000002
+        },
+        {
+          "month": "2019-06",
+          "value": 27.403220000000033
+        },
+        {
+          "month": "2019-07",
+          "value": 26.483640000000037
+        },
+        {
+          "month": "2019-08",
+          "value": 25.73040000000003
+        },
+        {
+          "month": "2019-09",
+          "value": 26.521050000000002
+        },
+        {
+          "month": "2019-10",
+          "value": 26.041470000000004
+        },
+        {
+          "month": "2019-11",
+          "value": 27.56967000000003
+        },
+        {
+          "month": "2019-12",
+          "value": 24.969780000000014
+        },
+        {
+          "month": "2020-01",
+          "value": 24.430020000000013
+        },
+        {
+          "month": "2020-02",
+          "value": 26.946740000000034
+        },
+        {
+          "month": "2020-03",
+          "value": 30.792320000000018
+        },
+        {
+          "month": "2020-04",
+          "value": 29.861140000000034
+        },
+        {
+          "month": "2020-05",
+          "value": 29.216120000000046
+        },
+        {
+          "month": "2020-06",
+          "value": 27.347920000000045
+        },
+        {
+          "month": "2020-07",
+          "value": 26.035300000000007
+        },
+        {
+          "month": "2020-08",
+          "value": 25.94332000000003
+        },
+        {
+          "month": "2020-09",
+          "value": 25.99490000000003
+        },
+        {
+          "month": "2020-10",
+          "value": 26.406120000000044
+        },
+        {
+          "month": "2020-11",
+          "value": 25.89718000000005
+        },
+        {
+          "month": "2020-12",
+          "value": 26.72112000000004
+        },
+        {
+          "month": "2021-01",
+          "value": 26.72198000000003
+        },
+        {
+          "month": "2021-02",
+          "value": 28.57772
+        },
+        {
+          "month": "2021-03",
+          "value": 30.313840000000027
+        },
+        {
+          "month": "2021-04",
+          "value": 31.066280000000006
+        },
+        {
+          "month": "2021-05",
+          "value": 29.56110000000001
+        },
+        {
+          "month": "2021-06",
+          "value": 27.791380000000004
+        },
+        {
+          "month": "2021-07",
+          "value": 26.279719999999998
+        },
+        {
+          "month": "2021-08",
+          "value": 25.738800000000026
+        },
+        {
+          "month": "2021-09",
+          "value": 26.19448
+        },
+        {
+          "month": "2021-10",
+          "value": 27.24236000000002
+        },
+        {
+          "month": "2021-11",
+          "value": 27.513800000000003
+        },
+        {
+          "month": "2021-12",
+          "value": 25.568750000000023
+        },
+        {
+          "month": "2022-01",
+          "value": 25.333799999999997
+        },
+        {
+          "month": "2022-02",
+          "value": 28.386400000000037
+        },
+        {
+          "month": "2022-03",
+          "value": 30.965700000000027
+        },
+        {
+          "month": "2022-04",
+          "value": 29.53994
+        },
+        {
+          "month": "2022-05",
+          "value": 28.13674000000003
+        },
+        {
+          "month": "2022-06",
+          "value": 26.86840000000001
+        },
+        {
+          "month": "2022-07",
+          "value": 26.07116000000002
+        },
+        {
+          "month": "2022-08",
+          "value": 25.654870000000017
+        },
+        {
+          "month": "2022-09",
+          "value": 25.596370000000036
+        },
+        {
+          "month": "2022-10",
+          "value": 26.52890000000002
+        },
+        {
+          "month": "2022-11",
+          "value": 25.722650000000044
+        },
+        {
+          "month": "2022-12",
+          "value": 24.084000000000003
+        },
+        {
+          "month": "2023-01",
+          "value": 25.35098000000005
+        },
+        {
+          "month": "2023-02",
+          "value": 28.423400000000015
+        },
+        {
+          "month": "2023-03",
+          "value": 30.204300000000046
+        },
+        {
+          "month": "2023-04",
+          "value": 30.08788000000004
+        },
+        {
+          "month": "2023-05",
+          "value": 29.36984000000001
+        },
+        {
+          "month": "2023-06",
+          "value": 27.35485
+        },
+        {
+          "month": "2023-07",
+          "value": 26.937370000000044
+        },
+        {
+          "month": "2023-08",
+          "value": 26.33184
+        },
+        {
+          "month": "2023-09",
+          "value": 26.697000000000003
+        },
+        {
+          "month": "2023-10",
+          "value": 27.333730000000003
+        },
+        {
+          "month": "2023-11",
+          "value": 27.849800000000016
+        },
+        {
+          "month": "2023-12",
+          "value": 25.190420000000017
+        },
+        {
+          "month": "2024-01",
+          "value": 26.540340000000015
+        },
+        {
+          "month": "2024-02",
+          "value": 29.080960000000005
+        },
+        {
+          "month": "2024-03",
+          "value": 32.45617000000004
+        },
+        {
+          "month": "2024-04",
+          "value": 32.02758
+        },
+        {
+          "month": "2024-05",
+          "value": 30.962950000000035
+        },
+        {
+          "month": "2024-06",
+          "value": 28.389200000000017
+        },
+        {
+          "month": "2024-07",
+          "value": 27.09576000000004
+        },
+        {
+          "month": "2024-08",
+          "value": 26.785300000000007
+        },
+        {
+          "month": "2024-09",
+          "value": 26.695250000000044
+        },
+        {
+          "month": "2024-10",
+          "value": 27.075980000000015
+        },
+        {
+          "month": "2024-11",
+          "value": 24.52203000000003
+        },
+        {
+          "month": "2024-12",
+          "value": 23.53660000000002
+        }
+      ],
+      "yearly_timeseries": [
+        {
+          "year": 2016,
+          "value": 27.6468,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2017,
+          "value": 27.9622,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2018,
+          "value": 27.3695,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2019,
+          "value": 27.5513,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2020,
+          "value": 27.1327,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2021,
+          "value": 27.7142,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2022,
+          "value": 26.9074,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2023,
+          "value": 27.5943,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2024,
+          "value": 27.9307,
+          "months": 12,
+          "complete": true
+        }
+      ],
+      "cells": [],
+      "overall": {
+        "ok": true,
+        "n": 9,
+        "slope": -0.00599999999999972,
+        "intercept": 39.732299999999434,
+        "z": -0.10425720702853739,
+        "p": 0.9169652366288645,
+        "tau": -0.05555555555555555,
+        "significant": false,
+        "stars": "",
+        "direction": "flat",
+        "change_total": 0.2839000000000027,
+        "change_pct": null,
+        "autocorr_r1": -0.25588600362134833,
+        "autocorr_factor": 1.0,
+        "p_uncorrected": 0.9169652366288645,
+        "z_uncorrected": -0.10425720702853739,
+        "per_decade": -0.0599999999999972,
+        "t_slope": -0.012156666666666401,
+        "t_se": 0.04785192312290963,
+        "t_per_decade": -0.121566666666664,
+        "t_p": 0.8067595941183885,
+        "t_df": 7,
+        "t_significant": false,
+        "t_ci_low_per_decade": -1.2530848456845203,
+        "t_ci_high_per_decade": 1.0099515123511922,
+        "methods_agree": true,
+        "ci_low": -0.12852499999999978,
+        "ci_high": 0.11490000000000104,
+        "ci_low_per_decade": -1.2852499999999978,
+        "ci_high_per_decade": 1.1490000000000105,
+        "dt_label": "year",
+        "first": 27.6468,
+        "last": 27.9307,
+        "seasonal_z": -0.2708681694429807,
+        "seasonal_p": 0.7864924272252569,
+        "seasonal_significant": false
+      },
+      "seasonal": [
+        -0.2708681694429807,
+        0.7864924272252569,
+        0.0,
+        false
+      ],
+      "summary": {
+        "total_cells": 0,
+        "valid_cells": 0,
+        "significant_cells": 0,
+        "rising_cells": 0,
+        "falling_cells": 0,
+        "consensus": "none",
+        "spatial_detail_available": false
+      }
+    }
+  ],
+  "grid": {
+    "nx": 5,
+    "ny": 5,
+    "bbox": [
+      -2.5,
+      9.0,
+      0.0,
+      11.0
+    ]
+  },
+  "satellite": {
+    "enabled": false,
+    "reason": "Imagery route not enabled by the challenge source policy"
+  },
+  "couplings": [
+    {
+      "var_a": "GLDAS_SOILT",
+      "var_b": "T10M",
+      "var_a_name": "Soil Temperature \u00b7 GLDAS (0\u201310 cm)",
+      "var_b_name": "Air Temperature at 10 m",
+      "sphere_a": "Land & Biosphere",
+      "sphere_b": "Atmosphere",
+      "sphere_a_code": "LND",
+      "sphere_b_code": "ATM",
+      "same_sphere": false,
+      "r": 0.456,
+      "phase": "moderate",
+      "phase_label": "MODERATE COUPLING",
+      "title": "Soil Temperature \u00b7 GLDAS (0\u201310 cm) <-> Air Temperature at 10 m Coupling",
+      "description": "Co-trend association. Possible mechanism: Observed correlation of r = 0.46 between Soil Temperature \u00b7 GLDAS (0\u201310 cm) and Air Temperature at 10 m across the analyzed timeline.",
+      "evidence_type": "co_trend_association"
+    }
+  ],
+  "window": {
+    "first_month": "2016-01",
+    "last_month": "2024-12",
+    "partial_years": []
+  },
+  "sources": [
+    "NASA Hydrology Time Series / GLDAS",
+    "NASA Giovanni / MERRA-2"
+  ],
+  "provenance": [
+    {
+      "provider": "nasa-hydrology",
+      "source": "NASA Hydrology Time Series / GLDAS",
+      "resource": "Hydrology Time Series",
+      "dataset": "GLDAS_NOAH025_M",
+      "collection_version": "2.1",
+      "field": "SoilTMP0_10cm_inst",
+      "policy": "challenge_resource",
+      "citation": "https://doi.org/10.5067/SXAVCZFAQLNO",
+      "access": "Monthly point-series API for every intersecting GLDAS source cell",
+      "aggregation": "Native-cell polygon overlap \u00d7 cos(latitude); at least 80% selected area each month",
+      "quality": "GLDAS model estimates; provider fill excluded. Soil water mass is not a saturation fraction; wind is near-surface forcing, not a verified 2 m measurement.",
+      "geometry_version": "88f50f8325ea1565",
+      "dlon": 0.25,
+      "dlat": 0.25,
+      "expected_cells": 80,
+      "available_cells": 80,
+      "cached_series": 80,
+      "monthly_area_coverage_known": true,
+      "first_observed_month": 201601,
+      "last_observed_month": 202412,
+      "retrieved_utc": "2026-11-15T10:58:41.844936+00:00"
+    },
+    {
+      "provider": "nasa-giovanni",
+      "source": "NASA Giovanni / MERRA-2",
+      "resource": "Giovanni",
+      "dataset": "M2IMNXASM",
+      "collection_version": "5.12.4",
+      "field": "T10M",
+      "policy": "challenge_resource",
+      "citation": "https://disc.gsfc.nasa.gov/datasets/M2IMNXASM_5.12.4/summary",
+      "access": "Giovanni area averaging through NASA Harmony; regional CSV only",
+      "aggregation": "NASA server rectangle average; monthly spatial support is not supplied",
+      "quality": "Monthly mean instantaneous assimilation diagnostics; a different product from native mode. Cell weighting follows NASA's service.",
+      "geometry_version": "88f50f8325ea1565",
+      "requested_bbox": [
+        -2.5,
+        9.0,
+        0.0,
+        11.0
+      ],
+      "spatial_detail_available": false,
+      "monthly_area_coverage_known": false,
+      "dlon": 0.625,
+      "dlat": 0.5,
+      "cache_hit": true,
+      "remote_job_id": "b7486a6a-02c4-4ad2-bdb0-d45f0f01df18",
+      "requested_months": 108,
+      "published_months": 108,
+      "first_observed_month": 201601,
+      "last_observed_month": 202412,
+      "retrieved_utc": "2026-11-15T06:58:58.002598+00:00"
+    }
+  ]
+}

@@ -2,6 +2,8 @@
 
 TerraTrend is a NASA Space Apps project for investigating environmental change across whole geographic areas. The original analysis engine and chart tools now sit behind a map-first interface inspired by Kaspersky Cybermap, using the globe geometry from the sibling TerraTrend 2 project.
 
+**Ask and explain:** **ASK** can prepare a request such as “Scan all variables in Ghana from 2016 to 2024,” run it through the existing data-use review and explain the completed evidence. **Plain / Student / Researcher** explanations work locally. Connect an optional Groq key privately under **Data & Methods → Connect Groq** for AI assistance. **Events** adds the teammates’ curated stories, globe pathways, explicit observation checks and an interactive event walkthrough. [Setup, privacy, scientific limits and verification](docs/AI_ASSISTANT_AND_EVENTS.md).
+
 ## Run
 
 From this repository’s root:
@@ -16,18 +18,21 @@ The startup script uses a project virtual environment and installs missing Pytho
 
 ## Investigation workflow
 
-1. Choose **Continent**, **Subcontinent**, **Country**, or **Region**. The scope selector limits the displayed units. Ghana’s 16 administrative regions are bundled; other countries request ADM1 boundaries on demand when online access is available. **◇ Presets** switches the same globe to 23 original focus boxes, including Savannah, Congo Basin and Sahel; these are curated boxes, not official ecosystem boundaries.
+1. Choose **Continent**, **Subcontinent**, **Country**, or **Region**. The scope selector limits the displayed units. Ghana’s 16 administrative regions are bundled; other countries request ADM1 boundaries on demand when online access is available. **◇ Presets** switches the same globe to the original focus boxes and added event study rectangles, including Savannah, Congo Basin and Sahel; these are curated boxes, not official ecosystem boundaries.
 2. Click the blue **A / Primary area** card or amber **B / Comparison area** card to choose the target. Pick a whole boundary, draw a freehand/clicked **Lasso**, enter **Lat / Lon** bounds, or place a **Circle**/**Square** centre and adjust its size in kilometres. Custom shapes show approximate area; choose **Use for area A/B** to commit. A and B keep independent methods and stay selected when the displayed geographic level changes.
 3. Use the persistent **selection icon at the bottom right** to open the compact icon rail. Hover/focus a tool for its label. The settings card opens only when a method needs controls; closing it leaves the rail accessible. Clear A/B with its × button, or click an already selected boundary again.
-4. Choose a data source and a period of at least nine years. Variables are optional: leave them empty to discover what is changing, or select up to three for detailed analysis.
-5. Choose **Analyze** explicitly. With no variables selected, it prepares a discovery scan of the source's supported measurements for primary area A. A data-use review shows the area, period, measurements and estimated uncached download size. Choose **Start this request** to submit it, or **Go back** to change the scope. Selecting an area alone does not start a scientific request.
-6. Use **Analyze Layer** to calculate a separate trend for every area currently displayed. Results are calculated independently at each level. Missing data have their own status.
-7. Discovery shows a ranked table of significant increases, significant decreases, nonsignificant results, insufficient observations and source errors. Choose a measurement to open **Analysis** for its graph, statistics, native-cell summaries and CSV export. Open **Compare** and choose two different units for an A/B analysis using the same variables and dates.
-8. Open **Interconnections** to screen local candidate leads and simultaneous associations. In **Linked datasets**, select two or three measurements across sources. Remote screening is off by default and requires the explicit **Include remote areas** option and review. Each result retains its source and quality limits. **Globe / plane** switches the projection while retaining geographic identities.
+4. In the movable investigation panel, open **Measurements**, search/filter and check up to three measurements. The list collapses; dates and run controls remain reachable. Choose at least nine years. Leave measurements empty to discover compatible trends in A. Data sources are chosen automatically.
+5. Choose **Analyze Area A** or **Compare A + B** explicitly. With no variables selected, it prepares a discovery scan of the source's supported measurements for primary area A. A data-use review shows the area, period, measurements and estimated uncached download size. Choose **Start this request** to submit it, or **Go back** to change the scope. Selecting an area alone does not start a scientific request.
+6. Whole-layer processing is separate under **More investigations → Analyze all N displayed areas**. It uses the first measurement and every displayed area; it is not the selected A/B comparison. The request review lists the full scope.
+7. Discovery shows a ranked table of significant increases, significant decreases, nonsignificant results, insufficient observations and source errors. Choose a measurement to open **Analysis** for its graph, statistics, native-cell summaries and CSV export. Open **Compare** to reuse the current A/B result, or add B through the same investigation panel. Completed investigations remain accessible from the results dropdown while the page is open; navigating does not clear them.
+8. **Saved investigations.** Finished analyses, comparisons, discoveries and relationship checks are stored server-side in `backend/cache/results.sqlite3` and listed under **SAVED** in the top bar, with area names, measurements, years, result type and saved time. Use **Open this result** to restore the real evidence (areas, provider, dates, measurements, charts, statistics and map overlays) and **Explain this result** for a plain-language summary. Opening a saved result reads local data and starts no download. Results stay until you remove them; older-method records are labelled, not hidden or mixed into new work. **The saved trend map** colours areas from these stored verdicts when the chosen measurement and dates match exactly; it never starts a job, never mixes two date windows, and leaves unanalysed countries uncoloured. Click a coloured area to open its saved evidence, or hover for its magnitude, units, window and saved status.
+9. **Compare two places.** Comparison is opt-in: **＋ Add comparison area B** reveals the second area. With B chosen the run control reads **COMPARE A + B**; with B empty it reads **ADD COMPARISON AREA B** and offers an **Analyze area A only** choice, so the button label can never contradict the request. Clearing B removes the comparison and restores the A-only action while keeping A and its evidence. The Compare page names both areas, the measurement and the requested period, and states when the displayed numbers belong to an earlier selection.
+10. **Remote relationships from Interconnections.** After a local relationship result, the Interconnections page offers **Run remote relationships**. It reuses that completed investigation's area, measurements and dates, names the intended area B and any edits you have made since, and runs through the same data-use review. If B is missing it offers **Choose comparison area B** and returns to the same task; local results are kept.
+11. Choose two or three measurements and **Find relationships** in the investigation panel. Enable **Also test relationships with B** for the explicitly selected comparison area. Interconnections is a normal page; opening it starts no request. Remote results offer **Show on map**, a variable-colour key, pinned evidence and both observation histories. Arrows/animated dots reflect a possible temporal lead; simultaneous links have none. **Help** opens **Welcome to TerraTrend** and the interactive tour: 15 short lessons, an optional advanced chapter, and lessons that advance only when you actually select an area, check a measurement, change dates, press the real Analyze control or open the real Analysis/Compare/Interconnections page. The tour uses evidence already saved on this computer, can be skipped or left with Escape, resumes where you stopped, and replays individual lessons from Help. Blue means increase/above trend, red decrease/below trend; nonsignificance and missing data retain neutral labels.
 
 ## Scientific data
 
-The default source is **NASA MERRA-2 · exact boundaries**, using GES DISC datasets available through the challenge’s **Giovanni** resource. Open **Data & Methods**, generate a user token in your [NASA Earthdata profile](https://urs.earthdata.nasa.gov/profile), and connect it there. The app verifies authorization by reading one real temperature cell. Enable **Remember this connection on this computer** to restore the connection after server restarts. The key uses the desktop credential store when available, or an owner-only local configuration file outside the project; it is not saved to browser storage or the repository. **Forget this connection** removes it. NASA can still expire or revoke the token. A server operator can instead provide `EARTHDATA_TOKEN` in the process environment.
+The default is **Automatic processing**, routing each measurement to a verified source for its actual boundary. Compatible temperature/humidity rectangles use Giovanni series; countries and nonrectangular boundaries use native MERRA-2 where mapped. Direct A/B comparisons retain matching products: if either temperature/humidity area requires native data, both use it. Vegetation uses AppEEARS, GLDAS fields use Hydrology and station fields use NOAA. Advanced overrides remain in Data & Methods. The original **NASA MERRA-2 · exact boundaries** mode uses GES DISC datasets available through the challenge’s Giovanni resource. Open **Data & Methods**, generate a user token in your [NASA Earthdata profile](https://urs.earthdata.nasa.gov/profile), and connect it there. The app verifies authorization by reading one real temperature cell. Enable **Remember this connection on this computer** to restore the connection after server restarts. The key uses the desktop credential store when available, or an owner-only local configuration file outside the project; it is not saved to browser storage or the repository. **Forget this connection** removes it. NASA can still expire or revoke the token. A server operator can instead provide `EARTHDATA_TOKEN` in the process environment.
 
 If the running server is older than these files, the UI shows **RESTART SERVER** and opens setup. It does not silently change to cache-only data. Stop that Python process with Ctrl+C, run `./start.sh 8517` from this folder and reload. Measurements without an automatic source mapping are marked in the variable controls; cached data remain available only when explicitly selected.
 
@@ -79,6 +84,44 @@ Interconnection screens use anomaly series, lag-search correction, full-family f
 
 Continents and subcontinents use Natural Earth’s regional country membership. Transcontinental countries remain whole under that scheme. Administrative boundaries can be dated or unavailable, and small islands may be absent at the bundled 1:50m resolution.
 
+## Cloud Deployment
+
+### 1. Deploy on Render (Recommended — Unified Backend & Frontend)
+
+TerraTrend includes a ready-to-use `render.yaml` Blueprint, `Procfile`, and `Dockerfile`. Render hosts the long-running Python computation engine, background job runner, disk cache, and static frontend together on a single domain with zero CORS issues.
+
+* **Via Render Blueprint (1-Click with GitHub)**:
+  1. Push this repository to GitHub.
+  2. In [Render Dashboard](https://dashboard.render.com), click **New +** ➔ **Blueprint**.
+  3. Select your repository. Render automatically reads `render.yaml`, configures the Python web service, and deploys.
+* **Via Render CLI**:
+  ```bash
+  render blueprints launch
+  ```
+* **Via Docker**:
+  Render will also build and run the included multi-stage `Dockerfile` with system dependencies (`libnetcdf-dev`, `libhdf5-dev`) pre-configured.
+
+### 2. Deploy on Vercel
+
+A `vercel.json` configuration is included. Vercel serves the static frontend assets and can proxy `/api/*` endpoints to your Render deployment.
+
+```bash
+npx vercel
+```
+
+### Environment Configuration
+
+Copy `.env.example` to `.env` to configure optional server parameters:
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `HOST` | No | `0.0.0.0` | Network interface to bind |
+| `PORT` | No | `8517` | Web server port (`PORT` is auto-assigned on Render) |
+| `EARTHDATA_TOKEN` | No | `""` | NASA Earthdata bearer token for automatic satellite queries |
+| `APPEEARS_TOKEN` | No | `""` | NASA AppEEARS token for vegetation products |
+| `GROQ_API_KEY` | No | `""` | Optional Groq API key for AI assistant explanations |
+| `TERRATREND_GROQ_MODEL` | No | `llama-3.3-70b-versatile` | Groq LLM model name |
+
 ## Validation
 
 ```bash
@@ -93,3 +136,5 @@ node --check frontend/map-panels.js
 ```
 
 See [implementation notes](docs/UI_OVERHAUL_IMPLEMENTATION.md) for the architecture, validated behavior, API and remaining work. The [integration review](docs/UI_OVERHAUL_REVIEW.md) records the original assessment. The pre-overhaul README is preserved as [historical documentation](docs/LEGACY_README.md); its demo claims and old workflow are not the current contract.
+
+Current interface behavior, screenshots, request routing and verification: [UI workflow implementation](docs/UI_WORKFLOW_IMPLEMENTATION.md). A full browser reload starts a fresh investigation; private remembered connections and scientific disk caches survive restarts.

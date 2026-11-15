@@ -1,0 +1,72 @@
+{
+  "assistant.py": {
+    "line_percent": 88.8,
+    "unexecuted": [
+      61,
+      112,
+      113,
+      114,
+      141,
+      171,
+      173,
+      183,
+      184,
+      185,
+      186,
+      187,
+      188,
+      189,
+      190,
+      191,
+      192,
+      193
+    ],
+    "coverage_kind": "line execution including HTTP handler threads, not branch coverage"
+  },
+  "groq_client.py": {
+    "line_percent": 93.6,
+    "unexecuted": [
+      91,
+      96,
+      120,
+      122,
+      129,
+      136,
+      137
+    ],
+    "coverage_kind": "line execution including HTTP handler threads, not branch coverage"
+  },
+  "event_network.py": {
+    "line_percent": 97.2,
+    "unexecuted": [
+      221,
+      222,
+      285,
+      324,
+      325,
+      326,
+      332,
+      333,
+      334
+    ],
+    "coverage_kind": "line execution including HTTP handler threads, not branch coverage"
+  },
+  "event_images.py": {
+    "line_percent": 92.0,
+    "unexecuted": [
+      36,
+      37,
+      92,
+      93,
+      94,
+      95,
+      96
+    ],
+    "coverage_kind": "line execution including HTTP handler threads, not branch coverage"
+  },
+  "explanation_store.py": {
+    "line_percent": 100.0,
+    "unexecuted": [],
+    "coverage_kind": "line execution including HTTP handler threads, not branch coverage"
+  }
+}

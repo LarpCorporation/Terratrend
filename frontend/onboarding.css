@@ -1,0 +1,610 @@
+/* ============================================================================
+   TerraTrend interactive onboarding
+   ----------------------------------------------------------------------------
+   The spotlight is a real cutout: four fixed dim/blur panels tile the viewport
+   around a sharp, fully interactive hole, and a ring traces the target. The
+   tutorial panel is frosted olive glass with 16px body text, visible focus
+   rings and an opaque fallback when backdrop filtering is unavailable or the
+   reader asks for reduced transparency.
+
+   Palette: olive #0d1a13 / #15251e, text #cfe5d5, area A #68b8ff,
+   area B #e9c77a, rise #59baff, fall #ff8a7a.
+   ========================================================================== */
+
+/* ---- spotlight layer ----------------------------------------------------- */
+.tt-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 1600;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity .18s ease;
+}
+
+/* Four panels tile the whole viewport except the target hole. They dim and
+   gently blur the page, and they swallow stray clicks while a step shows. */
+.tt-scrim {
+  position: fixed;
+  pointer-events: auto;
+  background: rgba(5, 11, 8, .72);
+  -webkit-backdrop-filter: blur(3px) saturate(.78);
+  backdrop-filter: blur(3px) saturate(.78);
+  transition:
+    left .28s cubic-bezier(.22, .61, .36, 1),
+    top .28s cubic-bezier(.22, .61, .36, 1),
+    width .28s cubic-bezier(.22, .61, .36, 1),
+    height .28s cubic-bezier(.22, .61, .36, 1);
+}
+
+/* Follow-scroll updates must not lag behind the pointer. */
+.tt-layer.tt-following .tt-scrim,
+.tt-layer.tt-following .tt-ring,
+.tt-layer.tt-following .tt-pointer {
+  transition: none;
+}
+
+.tt-ring {
+  position: fixed;
+  pointer-events: none;
+  border: 2px solid rgba(184, 237, 207, .92);
+  border-radius: 10px;
+  box-shadow:
+    0 0 0 4px rgba(104, 184, 255, .22),
+    0 0 38px rgba(104, 184, 255, .32);
+  transition:
+    left .28s cubic-bezier(.22, .61, .36, 1),
+    top .28s cubic-bezier(.22, .61, .36, 1),
+    width .28s cubic-bezier(.22, .61, .36, 1),
+    height .28s cubic-bezier(.22, .61, .36, 1);
+}
+
+.tt-pointer {
+  position: fixed;
+  width: 14px;
+  height: 9px;
+  pointer-events: none;
+  background: #16281f;
+  filter: drop-shadow(0 0 1px rgba(207, 229, 213, .55)) drop-shadow(0 6px 12px rgba(0, 0, 0, .45));
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  transition:
+    left .28s cubic-bezier(.22, .61, .36, 1),
+    top .28s cubic-bezier(.22, .61, .36, 1),
+    transform .28s cubic-bezier(.22, .61, .36, 1);
+}
+
+/* ---- tutorial panel ------------------------------------------------------ */
+.tt-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1660;
+  width: min(400px, calc(100vw - 20px));
+  max-height: calc(100dvh - 20px);
+  max-height: calc(100vh - 20px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 18px 20px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(207, 229, 213, .24);
+  color: #e8f3ea;
+  background: linear-gradient(165deg, rgba(24, 42, 33, .90), rgba(13, 26, 19, .945));
+  -webkit-backdrop-filter: blur(16px) saturate(1.25);
+  backdrop-filter: blur(16px) saturate(1.25);
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, .55),
+    0 2px 0 rgba(255, 255, 255, .05) inset;
+  font-family: 'Ubuntu Mono', 'Liberation Mono', Consolas, monospace;
+  font-size: 16px;
+  line-height: 1.6;
+  color-scheme: dark;
+  scrollbar-width: thin;
+  scrollbar-color: #52735c #12231a;
+  transition: opacity .2s ease;
+}
+
+.tt-panel:focus { outline: none; }
+
+.tt-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+}
+
+.tt-task {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 12px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: #9fc4ac;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tt-progress {
+  flex: none;
+  font-size: 13px;
+  letter-spacing: .04em;
+  color: #cfe5d5;
+  font-variant-numeric: tabular-nums;
+  border: 1px solid rgba(207, 229, 213, .22);
+  border-radius: 999px;
+  padding: 2px 9px;
+  white-space: nowrap;
+}
+
+.tt-icon-btn {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  min-height: 34px;
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid rgba(207, 229, 213, .24);
+  background: rgba(207, 229, 213, .06);
+  color: #d8e8dc;
+  font: inherit;
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.tt-icon-btn:hover { background: rgba(207, 229, 213, .14); }
+
+.tt-title {
+  margin: 2px 0 9px;
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 1.28;
+  color: #f2f8f3;
+  letter-spacing: .01em;
+}
+
+.tt-title:focus { outline: none; }
+
+.tt-title:focus-visible {
+  outline: 2px solid #b8edcf;
+  outline-offset: 4px;
+}
+
+.tt-body {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.65;
+  color: #d9e9dd;
+  overflow-wrap: anywhere;
+}
+
+.tt-requirement {
+  margin: 13px 0 0;
+  padding: 10px 12px;
+  border-left: 3px solid #e9c77a;
+  border-radius: 4px;
+  background: rgba(233, 199, 122, .13);
+  color: #f7e8c2;
+  font-size: 15px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.tt-requirement.tt-waiting {
+  border-left-color: #68b8ff;
+  background: rgba(104, 184, 255, .13);
+  color: #dcecfb;
+}
+
+.tt-actions {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  gap: 10px;
+  margin: 14px 0 0;
+  padding: 10px 0 4px;
+  background: linear-gradient(180deg, rgba(17, 33, 25, 0), rgba(17, 33, 25, .96) 32%);
+}
+
+.tt-btn {
+  min-height: 44px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(207, 229, 213, .30);
+  background: rgba(207, 229, 213, .08);
+  color: #eaf4ed;
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.25;
+  cursor: pointer;
+  text-align: left;
+}
+
+.tt-btn:hover { background: rgba(207, 229, 213, .16); }
+
+.tt-btn.primary {
+  background: #1c5a3f;
+  border-color: #79b795;
+  color: #f0fff6;
+  font-weight: 400;
+}
+
+.tt-btn.primary:hover { background: #226b4b; }
+
+.tt-btn.ghost { background: rgba(207, 229, 213, .06); }
+
+.tt-btn:disabled,
+.tt-link:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+  filter: none;
+}
+
+.tt-panel button:focus-visible,
+.tt-modal button:focus-visible,
+.tt-btn:focus-visible,
+.tt-link:focus-visible {
+  outline: 2px solid #b8edcf;
+  outline-offset: 3px;
+}
+
+.tt-secondary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 16px;
+  margin: 4px 0 0;
+}
+
+.tt-link {
+  min-height: 36px;
+  padding: 6px 0;
+  border: 0;
+  background: none;
+  color: #a9c9b5;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.4;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.tt-link:hover { color: #d3ead9; }
+
+.tt-live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---- saved-evidence block ------------------------------------------------ */
+.tt-evidence {
+  margin: 14px 0 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(207, 229, 213, .20);
+  border-radius: 10px;
+  background: rgba(8, 18, 13, .52);
+  font-size: 14px;
+  line-height: 1.6;
+  color: #cfe0d5;
+}
+
+.tt-evidence[hidden] { display: none; }
+
+.tt-chip {
+  display: inline-block;
+  margin: 0 0 8px;
+  padding: 2px 8px;
+  border: 1px solid rgba(207, 229, 213, .28);
+  border-radius: 999px;
+  font-size: 11px;
+  letter-spacing: .1em;
+  color: #bcd8c5;
+  text-transform: uppercase;
+}
+
+.tt-evidence-title {
+  margin: 0 0 4px;
+  font-size: 15px;
+  line-height: 1.45;
+  color: #f0f7f1;
+}
+
+.tt-evidence-meta {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: #a9c2b1;
+  overflow-wrap: anywhere;
+}
+
+.tt-evidence-note {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #b9d1c2;
+  overflow-wrap: anywhere;
+}
+
+.tt-evidence-note strong { color: #f3e7c4; font-weight: 400; }
+
+.tt-evidence-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 10px 0 0;
+}
+
+.tt-evidence-options .tt-btn {
+  min-height: 40px;
+  padding: 9px 12px;
+  font-size: 14px;
+  text-align: left;
+}
+
+.tt-evidence-live {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 10px 0 0;
+}
+
+/* ---- welcome and lesson-replay dialogs ----------------------------------- */
+.tt-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 12000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  overflow: auto;
+  background: rgba(3, 8, 5, .82);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+.tt-modal[hidden] { display: none; }
+
+.tt-window {
+  position: relative;
+  width: min(640px, 100%);
+  max-height: calc(100dvh - 36px);
+  max-height: calc(100vh - 36px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 26px 28px 24px;
+  border-radius: 16px;
+  border: 1px solid rgba(207, 229, 213, .24);
+  background: linear-gradient(160deg, rgba(24, 42, 33, .985), rgba(13, 26, 19, .995));
+  box-shadow: 0 30px 90px rgba(0, 0, 0, .62);
+  color: #e8f3ea;
+  font-family: 'Ubuntu Mono', 'Liberation Mono', Consolas, monospace;
+  font-size: 16px;
+  line-height: 1.65;
+  scrollbar-width: thin;
+  scrollbar-color: #52735c #12231a;
+}
+
+.tt-window:focus { outline: none; }
+
+.tt-kicker {
+  margin: 0 0 6px;
+  font-size: 12px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: #9fc4ac;
+}
+
+.tt-window h2 {
+  margin: 0 0 14px;
+  font-size: 28px;
+  line-height: 1.2;
+  font-weight: 400;
+  color: #f4faf5;
+}
+
+.tt-window h3 {
+  margin: 18px 0 8px;
+  font-size: 13px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  font-weight: 400;
+  color: #a9c9b5;
+}
+
+.tt-window p {
+  margin: 0 0 14px;
+  color: #d4e6d9;
+  overflow-wrap: anywhere;
+}
+
+.tt-window p.tt-welcome-note,
+.tt-window p.tt-note {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #a9c2b1;
+}
+
+.tt-welcome-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 20px 0 10px;
+}
+
+.tt-welcome-actions .tt-btn { flex: 1 1 200px; }
+
+.tt-welcome-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+  margin: 6px 0 0;
+}
+
+.tt-lessons-window { width: min(720px, 100%); }
+
+.tt-lessons {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tt-lesson {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 11px 12px;
+  border: 1px solid rgba(207, 229, 213, .16);
+  border-radius: 10px;
+  background: rgba(207, 229, 213, .04);
+}
+
+.tt-lesson-info { flex: 1 1 auto; min-width: 0; }
+
+.tt-lesson-title {
+  margin: 0 0 3px;
+  font-size: 15px;
+  line-height: 1.4;
+  color: #f0f7f1;
+  overflow-wrap: anywhere;
+}
+
+.tt-lesson-meta {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #a9c2b1;
+  overflow-wrap: anywhere;
+}
+
+.tt-lesson-status {
+  flex: none;
+  align-self: center;
+  padding: 3px 8px;
+  border: 1px solid rgba(207, 229, 213, .25);
+  border-radius: 999px;
+  font-size: 11px;
+  letter-spacing: .08em;
+  color: #9fc4ac;
+  white-space: nowrap;
+}
+
+.tt-lesson-status.done {
+  color: #bff0d0;
+  border-color: #4f9c74;
+}
+
+.tt-lesson .tt-btn {
+  flex: none;
+  min-height: 40px;
+  padding: 8px 14px;
+  font-size: 14px;
+}
+
+.tt-window-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+  margin: 20px 0 0;
+  padding: 14px 0 0;
+  border-top: 1px solid rgba(207, 229, 213, .16);
+}
+
+/* ---- completion toast ---------------------------------------------------- */
+.tt-toast {
+  position: fixed;
+  left: 22px;
+  bottom: 64px;
+  z-index: 11800;
+  max-width: min(420px, calc(100vw - 44px));
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(207, 229, 213, .30);
+  background: rgba(13, 26, 19, .97);
+  color: #e8f3ea;
+  font-family: 'Ubuntu Mono', 'Liberation Mono', Consolas, monospace;
+  font-size: 15px;
+  line-height: 1.5;
+  box-shadow: 0 14px 44px rgba(0, 0, 0, .5);
+}
+
+.tt-toast[hidden] { display: none; }
+
+/* ---- readability fallbacks ---------------------------------------------- */
+@supports not ((backdrop-filter: blur(4px)) or (-webkit-backdrop-filter: blur(4px))) {
+  .tt-scrim { background: rgba(5, 11, 8, .88); }
+  .tt-panel,
+  .tt-window,
+  .tt-toast { background: #12231a; }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .tt-scrim { background: rgba(5, 11, 8, .9); }
+  .tt-panel,
+  .tt-window,
+  .tt-toast {
+    background: #12231a;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .tt-panel,
+  .tt-window { border-color: #cfe5d5; background: #0f1e16; }
+  .tt-body,
+  .tt-window p { color: #eef7f0; }
+}
+
+/* ---- reduced motion: instant placement, no morph, no fade ---------------- */
+html.tt-reduced-motion .tt-scrim,
+html.tt-reduced-motion .tt-ring,
+html.tt-reduced-motion .tt-pointer,
+html.tt-reduced-motion .tt-layer,
+html.tt-reduced-motion .tt-panel {
+  transition: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tt-scrim,
+  .tt-ring,
+  .tt-pointer,
+  .tt-layer,
+  .tt-panel {
+    transition: none !important;
+  }
+}
+
+/* ---- small viewports / 200% zoom / short heights ------------------------- */
+@media (max-width: 620px) {
+  .tt-panel { padding: 14px 15px 10px; }
+  .tt-title { font-size: 20px; }
+  .tt-body { font-size: 16px; }
+  .tt-actions { gap: 8px; }
+  .tt-actions .tt-btn { flex: 1 1 auto; }
+  .tt-window { padding: 20px 18px 18px; }
+  .tt-window h2 { font-size: 23px; }
+  .tt-welcome-actions .tt-btn { flex: 1 1 100%; }
+  .tt-lesson { flex-wrap: wrap; }
+  .tt-lesson-status { order: 3; }
+  .tt-lesson .tt-btn { order: 4; margin-left: auto; }
+}
+
+@media (max-height: 540px) {
+  .tt-panel { padding: 12px 14px 8px; }
+  .tt-title { font-size: 19px; margin-bottom: 6px; }
+  .tt-body { font-size: 16px; line-height: 1.5; }
+  .tt-requirement { font-size: 14px; padding: 8px 10px; }
+  .tt-btn { min-height: 40px; }
+  .tt-window { padding: 18px 18px 16px; }
+  .tt-window h2 { font-size: 22px; }
+}

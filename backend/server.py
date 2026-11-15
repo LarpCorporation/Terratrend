@@ -6,6 +6,7 @@ Run:  python server.py  [port]
 import datetime
 import json
 import math
+import os
 import sys
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -20,6 +21,13 @@ import geography
 import spatial
 import data_sources
 import jobs
+import explainer
+import result_store
+import groq_client
+import assistant
+import explanation_store
+import event_network
+import event_images
 from analysis import (
     analyze_series, seasonal_mk,
     analyze_cross_coupling, analyze_regional_contrast,
@@ -258,6 +266,66 @@ def fetch_region(var_id, region, start, end, nx=5, ny=5):
 
 def region_metadata(region):
     return {k:v for k,v in region.items() if k != "geometry"}
+
+
+def event_request_spec(event_id,start,end):
+    if type(start) is not int or type(end) is not int or start<MIN_YEAR or end>MAX_YEAR or end-start<8:
+        raise ValueError('Choose at least nine years within the supported dates for the event check.')
+    data=event_network.preview(event_id)
+    requests={}; exclusions=[];geography.initialize()
+    for edge in data['edges']:
+        v=edge['verification']
+        for slot in (v.get('x_slot'),v.get('y_slot')):
+            src=event_network.SLOT_SOURCES.get(slot,{})
+            if not src or src.get('awaiting'):continue
+            rid=src['region']
+            fid=rid if ':' in rid else 'focus:'+rid
+            first=max(start,src['start']);last=min(end,src.get('end') or end)
+            if last-first<8:
+                exclusions.append({'slot':slot,'message':'This source does not cover nine years in the requested period.'});continue
+            request={'operation':'analyze','region':fid,'variables':[src['variable']],
+                     'start':first,'end':last,'provider':'multi-source'}
+            plan=data_sources.plan_request(request)
+            if plan['issues']:
+                exclusions.extend({'slot':slot,'message':i['message']} for i in plan['issues']);continue
+            requests[(fid,src['variable'])]=request
+    if not requests:raise ValueError('No implemented event source supports this selected period and extent.')
+    requests=list(requests.values())
+    return {'operation':'event','event_id':event_id,'title':data['title'],'provider':'multi-source',
+            'region':requests[0]['region'],'variables':list(dict.fromkeys(r['variables'][0] for r in requests)),
+            'start':start,'end':end,'event_requests':requests,'exclusions':exclusions,
+            'features':list(dict.fromkeys(r['region'] for r in requests)),
+            'areas':[region_metadata(resolve_region(fid)) for fid in dict.fromkeys(r['region'] for r in requests)]}
+
+
+def event_series(region_id,variable,start,end):
+    jobs.check_cancelled()
+    fid=region_id if ':' in region_id else 'focus:'+region_id
+    reg=resolve_region(fid)
+    if not reg:raise KeyError('Unknown event study region')
+    request={'operation':'analyze','region':fid,'variables':[variable],'start':start,'end':end,'provider':'multi-source'}
+    plan=data_sources.plan_request(request)
+    if plan['issues']:raise ValueError(plan['issues'][0]['message'])
+    grid=fetch_region(variable,reg,start,end)
+    return covered_region_series(grid,calendar_months(start,end))
+
+
+def run_event(spec):
+    # Rebuild the allowed sources server-side; ignore client-supplied tasks.
+    checked=event_request_spec(spec.get('event_id'),spec.get('start'),spec.get('end'))
+    allowed={(r['region'],r['variables'][0],r['start'],r['end']) for r in checked['event_requests']}
+    count=0
+    def source(region,variable,start,end):
+        nonlocal count
+        jobs.check_cancelled()
+        fid=region if ':' in region else 'focus:'+region
+        if (fid,variable,start,end) not in allowed:raise ValueError('This source is outside the reviewed event request.')
+        count+=1;jobs.progress(count-1,len(allowed),'Checking event observations: '+variable)
+        return event_series(fid,variable,start,end)
+    result=event_network.build(checked['event_id'],MAX_YEAR,source,window=(checked['start'],checked['end']))
+    jobs.check_cancelled()
+    result['exclusions']=checked['exclusions'];result['region']=region_metadata(resolve_region(checked['region']))
+    return result
 
 
 def run_analysis(variables, region, start, end, nx=5, ny=5, compare_region=None,
@@ -628,8 +696,14 @@ def run_coupling_analysis(region_id, variables, start, end, target_variable=None
     if target_variable in series_by_var:
         try:
             residual=interconnect.decompose_monthly(series_by_var[target_variable])['values']
+            try:
+                detail=interconnect.anomaly_detail(series_by_var[target_variable],month_labels)
+            except ValueError:
+                detail=None
             source_anomaly={'region':region_metadata(reg),'variable':var_meta[target_variable],
                 'anomaly_report':interconnect.anomaly_report(residual,month_labels),
+                'anomaly_detail':detail,
+                'provenance':getattr(grids.get(target_variable),'provenance',{}),
                 'anomaly_yearly':_yearly_anomalies(residual,month_labels),'month_labels':month_labels}
         except ValueError:pass
     return {
@@ -718,10 +792,14 @@ def run_teleconnections(source_region, source_var, target_regions=None, target_v
         src_decomp = interconnect.decompose_monthly(src_region_ts)
         src_anom = src_decomp["values"]
         src_anomaly_report = interconnect.anomaly_report(src_anom, month_labels)
+        src_anomaly_detail = interconnect.anomaly_detail(src_region_ts, month_labels)
+        src_anomaly_provenance = getattr(grid_src, "provenance", {})
     except ValueError:
         src_decomp = None
         src_anom = None
         src_anomaly_report = None
+        src_anomaly_detail = None
+        src_anomaly_provenance = {}
 
     connections = []
     scanned_count = 0
@@ -845,6 +923,8 @@ def run_teleconnections(source_region, source_var, target_regions=None, target_v
             "end": end,
             "yearly_timeseries": src_yearly,
             "anomaly_report": src_anomaly_report,
+            "anomaly_detail": src_anomaly_detail,
+            "provenance": src_anomaly_provenance,
             "anomaly_yearly": _yearly_anomalies(src_anom or [], month_labels),
             "month_labels": month_labels,
         },
@@ -880,8 +960,13 @@ def run_teleconnections(source_region, source_var, target_regions=None, target_v
 def execute_job(spec):
     if spec.get("provider")=="legacy-live":raise ValueError("Live legacy access is not enabled under the challenge resource policy")
     token=data_sources.PROVIDER.set(spec.get("provider","project-cache"))
+    area_token=None
     try:
         operation=spec.get("operation","analyze")
+        if spec.get('operation')=='event':
+            event_token=data_sources.PROVIDER.set('multi-source')
+            try:return run_event(spec)
+            finally:data_sources.PROVIDER.reset(event_token)
         variables=spec.get("variables",[])
         start,end=int(spec.get("start",2005)),int(spec.get("end",MAX_YEAR))
         if not isinstance(variables,list) or not variables or not all(isinstance(v,str) for v in variables):
@@ -891,6 +976,12 @@ def execute_job(spec):
         if data_sources.PROVIDER.get() in {"nasa-merra2","nasa-giovanni"} and not data_sources.nasa_data.token():
             raise data_sources.nasa_data.EarthdataRequired("Connect Earthdata in Data & Methods once. NASA downloads require your account; TerraTrend fetches the observations automatically after connecting.")
         available=data_sources.supported(data_sources.PROVIDER.get())
+        if data_sources.PROVIDER.get()=='auto':
+            area_token=data_sources.AUTO_AREAS.set(tuple(data_sources.request_areas(spec)))
+            plan=data_sources.plan_request(spec)
+            if plan['issues']:raise ValueError('; '.join(i['message'] for i in plan['issues']))
+            if not plan['variables']:raise ValueError('No compatible measurements for this selection. Choose a smaller area or another measurement.')
+            available=plan['variables']
         if data_sources.PROVIDER.get()=="nasa-giovanni":
             if operation not in {"analyze","scan","overview","interconnections"}:raise ValueError('Unsupported Giovanni operation')
             if operation=='interconnections' and spec.get('relationship_scope','local')!='local':raise ValueError('Giovanni relationship screening is local to the selected rectangle; remote country boundaries need native mode.')
@@ -939,7 +1030,47 @@ def execute_job(spec):
             return {"rows":rows,"variable":variables[0],"start":start,"end":end}
         raise ValueError("Unknown analysis operation")
     finally:
+        if area_token is not None:data_sources.AUTO_AREAS.reset(area_token)
         data_sources.PROVIDER.reset(token)
+
+
+_PERSIST_OPERATIONS = {"analyze", "scan", "interconnections", "overview", "event"}
+
+
+def explain_request(spec):
+    result_id=str(spec.get('record_id') or '').strip()
+    record=result_store.get_result(result_id) if result_id else None
+    if result_id and record is None:raise KeyError('Unknown saved result')
+    payload=record.get('payload') if record else spec.get('result')
+    if not isinstance(payload,dict):raise ValueError('Choose a completed or saved result to explain.')
+    kind=record.get('kind') if record else spec.get('kind','analysis')
+    version=record.get('method_version') if record else spec.get('method_version')
+    evidence=explainer.build_evidence(payload,kind=kind,extra={'method_version':version} if version else None)
+    reply=explainer.explain(evidence,reader_level=spec.get('reader_level','plain'),question=spec.get('question'))
+    reply['record_id']=result_id or None
+    reply['explanation_id']=explanation_store.save(reply,record_id=result_id or None,method_version=version)
+    return reply
+
+
+def _execute_and_persist(spec):
+    """Run an analysis job and durably save a successful scientific result.
+
+    The record is committed before this returns, so the job can never report
+    ``complete`` with an unsaved result: closing the browser tab does not lose
+    it. Storage failure is logged once and never fails the analysis.
+    """
+    result = execute_job(spec)
+    if spec.get("operation", "analyze") in _PERSIST_OPERATIONS:
+        try:
+            outcome = result_store.save(spec, result)
+            if isinstance(outcome,dict) and outcome.get('ok') and outcome.get('id'):
+                result['saved_record_id']=outcome['id']
+            if not isinstance(outcome, dict) or not outcome.get("ok"):
+                reason = outcome.get("error") if isinstance(outcome, dict) else "unknown error"
+                sys.stderr.write("result_store: analysis was not saved: %s\n" % reason)
+        except Exception as error:  # noqa: BLE001 - storage must not fail the analysis
+            sys.stderr.write("result_store: analysis was not saved: %s\n" % error)
+    return result
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -994,17 +1125,46 @@ class Handler(BaseHTTPRequestHandler):
             if path=='/api/data-sources/appeears':
                 if spec.get('disconnect'):return self._json(200,data_sources.appeears_data.disconnect())
                 return self._json(200,data_sources.appeears_data.connect(spec.get('username'),spec.get('password'),remember=spec.get('remember',True) is True))
-            if path=="/api/jobs":
+            if path=='/api/ai/connection':
+                if spec.get('disconnect') is True:return self._json(200,groq_client.disconnect())
+                return self._json(200,groq_client.connect(spec.get('api_key'),model=spec.get('model'),remember=spec.get('remember') is True))
+            if path=='/api/assistant':
+                return self._json(200,assistant.respond(spec.get('message'),spec.get('context'),reader_level=spec.get('reader_level','plain')))
+            if path == "/api/explain":
+                return self._json(200,explain_request(spec))
+            if path in {"/api/jobs","/api/plan"}:
+                if spec.get('operation')=='event':
+                    spec=event_request_spec(spec.get('event_id'),spec.get('start'),spec.get('end'))
+                    if path=='/api/plan':return self._json(200,spec)
                 custom=spec.get('custom_areas',[])
                 if not isinstance(custom,list) or len(custom)>2:raise ValueError('At most two custom selection boundaries are supported')
                 for area in custom:
                     feature=geography.register_custom(area)
                     if area.get('id') and area['id']!=feature['id']:raise ValueError('Custom selection identity does not match its geometry')
+                if path=='/api/plan':return self._json(200,data_sources.plan_request(spec))
                 # The immutable request identity includes geometry and method versions.
-                spec["method_version"]="polygon-sen-calendar-fdr-v1"
+                spec["method_version"]="polygon-sen-calendar-fdr-v2-auto"
                 ids=[spec.get("region"),spec.get("compare_region")]+spec.get("features",[])
                 spec["geometry_versions"]={fid:(resolve_region(fid) or {}).get("geometry_version","focus-v1") for fid in ids if fid}
-                return self._json(202,jobs.submit(spec,lambda:execute_job(spec)))
+                return self._json(202,jobs.submit(spec,lambda:_execute_and_persist(spec)))
+            if path=="/api/results":
+                action=spec.get("action")
+                if action=="import":
+                    record=spec.get("record")
+                    if not isinstance(record,dict):raise ValueError("Import needs a JSON record object")
+                    outcome=result_store.import_record(record)
+                    if not outcome.get("ok"):
+                        return self._json(400,{"error":outcome.get("error","Invalid historical record"),
+                                               "errors":outcome.get("errors",[])})
+                    return self._json(201,outcome)
+                if action=="delete":
+                    result_id=spec.get("id")
+                    if not isinstance(result_id,str) or not result_id.strip():
+                        raise ValueError("Delete needs a saved result id")
+                    if not result_store.delete_result(result_id.strip()):
+                        return self._json(404,{"error":"Unknown saved result"})
+                    return self._json(200,{"deleted":True,"id":result_id.strip()})
+                raise ValueError("Unknown results action")
             if path.startswith("/api/jobs/") and path.endswith("/cancel"):
                 return self._json(200,jobs.cancel(path.split("/")[3]))
             return self._json(404,{"error":"Unknown operation"})
@@ -1026,6 +1186,17 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json(200,geography.collection(q.get("level",["continent"])[0],q.get("parent",[None])[0]))
             if path=="/api/data-sources":
                 return self._json(200,{"providers":data_sources.providers(),"resources":data_sources.ALLOWED,"earthdata":data_sources.nasa_data.status(),"appeears":data_sources.appeears_data.status()})
+            if path=='/api/ai/connection':return self._json(200,groq_client.status())
+            if path=='/api/events':return self._json(200,event_network.index())
+            if path.startswith('/api/events/'):
+                return self._json(200,event_network.preview(path[len('/api/events/'):].strip('/')))
+            if path.startswith('/api/event-image/'):
+                parts=path[len('/api/event-image/'):].split('/')
+                if len(parts)!=2:raise ValueError('Choose an event and image index.')
+                try:raw,ctype=event_images.image_bytes(parts[0],int(parts[1]))
+                except (ValueError,KeyError):raise
+                except Exception:return self._json(502,{'error':'The event photograph is unavailable. Source credits remain available.'})
+                return self._send(200,raw,ctype)
             if path.startswith("/api/jobs/"):
                 return self._json(200,jobs.get(path.split("/")[3]))
             if path == "/api/health":
@@ -1159,6 +1330,47 @@ class Handler(BaseHTTPRequestHandler):
                     bbox=bbox,
                 )
                 return self._json(200, result)
+            if path == "/api/results":
+                listing = result_store.list_results(
+                    query=q.get("q", [""])[0] or None,
+                    kind=q.get("kind", [""])[0] or None,
+                    variable=q.get("variable", [""])[0] or None,
+                    limit=_int(q, "limit", 100),
+                    offset=_int(q, "offset", 0),
+                )
+                listing["storage"] = result_store.storage_stats()
+                return self._json(200, listing)
+            if path == "/api/results/map":
+                variable = q.get("variable", [""])[0].strip()
+                if not variable:
+                    return self._json(400, {"error": "variable required"})
+                raw_start = q.get("start", [""])[0].strip()
+                raw_end = q.get("end", [""])[0].strip()
+                if not raw_start or not raw_end:
+                    return self._json(400, {"error": "start and end years required"})
+                try:
+                    start_year, end_year = int(raw_start), int(raw_end)
+                except ValueError:
+                    return self._json(400, {"error": "start and end must be years"})
+                return self._json(200, result_store.map_index(
+                    variable=variable, start=start_year, end=end_year,
+                    level=q.get("level", [""])[0] or None,
+                    limit=_int(q, "limit", 400),
+                ))
+            if path == "/api/explain":
+                # Optional grounded explanation. Always answers: when no AI
+                # provider is configured it returns the deterministic summary
+                # and says so, and it never receives credentials.
+                result_id = (q.get("id") or [""])[0].strip()
+                if not result_id:
+                    return self._json(400, {"error": "Choose a saved result to explain."})
+                return self._json(200,explain_request({'record_id':result_id,'reader_level':q.get('reader_level',['plain'])[0],
+                                                     'question':q.get('question',[None])[0]}))
+            if path.startswith("/api/results/"):
+                record = result_store.get_result(path.split("/")[3])
+                if record is None:
+                    return self._json(404, {"error": "Unknown saved result"})
+                return self._json(200, record)
             return self._static(path)
         except KeyError as e:
             return self._json(404, {"error": str(e)})
@@ -1197,14 +1409,11 @@ def _int(q, key, default):
 
 
 def main():
-    port = 8517
-    if len(sys.argv) > 1:
-        try:
-            port = int(sys.argv[1])
-        except ValueError:
-            pass
-    server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
-    print(f"TerraTrend running on http://127.0.0.1:{port}")
+    host = os.environ.get("HOST", "0.0.0.0")
+    port = int(os.environ.get("PORT", sys.argv[1] if len(sys.argv) > 1 else 8517))
+    server = ThreadingHTTPServer((host, port), Handler)
+    display_host = "localhost" if host == "0.0.0.0" else host
+    print(f"TerraTrend running on http://{display_host}:{port} (listening on {host}:{port})")
     try:
         server.serve_forever()
     except KeyboardInterrupt:

@@ -1,6 +1,8 @@
+CURRENT INTERFACE UPDATE — The approved workflow redesign is now implemented. Automatic source routing is the default; source overrides remain in Data & Methods. The unified movable panel owns measurements, dates and run controls, including explicit B relationship screening. Read [the current implementation report](UI_WORKFLOW_IMPLEMENTATION.md). Source mappings and historical verification below remain applicable.
+
 # Additional sources, linked measurements and focus presets
 
-Implemented and verified locally on 15 November 2026. The normal app is at <http://127.0.0.1:8517/>. All preexisting uncommitted work is retained. Nothing has been committed, pushed or deployed.
+Implemented and verified locally on 15 November 2026. The normal app is at <http://127.0.0.1:8517/>. All preexisting uncommitted work is retained. This agent performed no commit, push or deployment. A separate commit appeared during the final audit; it and all remaining changes are preserved.
 
 ## Intended outcomes
 
@@ -16,7 +18,7 @@ Implemented and verified locally on 15 November 2026. The normal app is at <http
 
 Write and run failing tests before production changes; verify parsers against real service schemas and use clearly marked scientific fixtures for edge cases. Verify each available service with bounded live observations, then verify cache reuse. Never place credentials in evidence. Account actions that cannot be automated will have a working local connection form and specific instructions. Preserve the baseline hashes recorded in `/tmp/terratrend-before-sources-presets-2026-11-15.json`.
 
-Test runners: `.venv/bin/python -m pytest backend -q -p no:cacheprovider`; `node --test tests/*.test.cjs`. Final verification includes browser interaction and screenshots. RED/GREEN results and any live-access limits will be recorded here as work completes.
+Test runners: `.venv/bin/python -m pytest backend -q -p no:cacheprovider`; `node --test tests/*.test.cjs`. Final verification includes browser interaction and screenshots. Completed RED/GREEN results and live-access limits are recorded below.
 
 ## Using the additions
 
@@ -98,7 +100,7 @@ No checkpoint commits were made because the active user instruction is to preser
 
 ![Preset globe switch](local-handoff/screenshots/2026-11-15-focus-presets.jpg)
 
-![Live cross-source relationship](local-handoff/screenshots/2026-11-15-linked-preset.jpg)
+The earlier linked-view screenshot is a pre-correction capture. Final visual verification of the updated explanation/layout is pending the requested interface follow-up; it is not presented as the current screen.
 
 ## Primary service references
 
@@ -106,3 +108,9 @@ No checkpoint commits were made because the active user instruction is to preser
 - [NASA's current time-series service tutorial](https://github.com/nasa/gesdisc-tutorials/blob/main/notebooks/How_to_Access_GiC_Time_Series_Service.ipynb) and [GLDAS monthly product](https://doi.org/10.5067/SXAVCZFAQLNO).
 - [NOAA Access data API](https://www.ncei.noaa.gov/support/access-data-service-api-user-documentation), [station search API](https://www.ncei.noaa.gov/support/access-search-service-api-user-documentation), and [GSOM format and quality flags](https://www.ncei.noaa.gov/data/gsom/doc/GSOM_documentation.pdf), including AWND on p.4, PRCP on p.12, TAVG/TMAX/TMIN on pp.13–14 and quality/source definitions on pp.18–20.
 - [Giovanni scope and earlier live checks](GIOVANNI_INTEGRATION.md); [all 13 challenge resources](CHALLENGE_RESOURCES.md).
+
+## New interface request
+
+The user subsequently requested a ranked task list before further interface changes. See [the proposed task order](UI_WORKFLOW_TASKS.md). Navigation/result retention, unified controls, automatic routing, guided recovery, the tutorial and the final blue-up/red-down color change were subsequently approved and implemented; see the current interface report. The source adapters and cached live analyses remain available.
+
+Preservation audit: all 136 baseline paths still exist and the earlier literature deletion remains. HEAD advanced externally to `7e627a87fc63361889117ee2b9a67b13a11c58fe` during work; no reset or history rewrite was performed.

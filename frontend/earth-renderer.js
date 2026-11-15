@@ -4,7 +4,11 @@
   'use strict';
   const T = window.THREE;
   const RAD = Math.PI / 180;
-  const palette = { rise: '#ff786a', fall: '#59cfda', neutral: '#53695a', missing: '#26382e', a: '#68b8ff', b: '#e9c77a' };
+  /* Four analysed states plus "not analysed" must all be distinguishable:
+     blue = significant increase, red = significant decrease, pale sage =
+     analysed but not significant, muted mauve = analysed but insufficient
+     data, and the unanalysed land keeps its own near-background tone. */
+  const palette = { rise: '#59baff', fall: '#ff786a', neutral: '#9db3ab', missing: '#7f7386', base: '#3a4d41', a: '#68b8ff', b: '#e9c77a' };
   const continentCenters={'continent:africa':[20,2],'continent:asia':[95,35],'continent:europe':[20,55],'continent:north_america':[-105,40],'continent:south_america':[-60,-15],'continent:oceania':[135,-25],'continent:antarctica':[0,-78]};
   const centerOf=p=>p.center||continentCenters[p.id]||[(p.bbox[0]+p.bbox[2])/2,(p.bbox[1]+p.bbox[3])/2];
   function ll(lon, lat, r=1) {
@@ -115,7 +119,7 @@
   class TerraGlobe {
     constructor(host,options={}) {
       this.host=host;this.options=options;this.blend=0;this.targetBlend=0;this.auto=false;this.zoom=3.6;
-      this.features=[];this.nodes=[];this.results=new Map();this.selected=[];this.hover=null;this.geometries=[];this.packets=[];
+      this.features=[];this.nodes=[];this.results=new Map();this.savedResults=new Map();this.selected=[];this.hover=null;this.geometries=[];this.packets=[];
       this.selectionMode='boundary';this.selectionFeatures=[];this.selectionSlot='a';this.lassoPoints=[];
       this.renderer=new T.WebGLRenderer({antialias:true,alpha:true,powerPreference:'high-performance'});
       this.renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));this.renderer.setClearColor(0x050b08,1);
@@ -135,6 +139,7 @@
       }));this.world.add(this.glow);
       this.ray=new T.Raycaster();this.pointer=new T.Vector2();
       this.labelLayer=document.createElement('div');this.labelLayer.className='earth-label-layer';host.append(this.labelLayer);
+      this.nodeLayer=document.createElement('div');this.nodeLayer.className='earth-label-layer earth-node-layer';host.append(this.nodeLayer);this.eventNodes=[];
       this.tooltip=document.createElement('div');this.tooltip.className='earth-tooltip';this.tooltip.hidden=true;host.append(this.tooltip);
       this.stars();this.grid();this.bind();new ResizeObserver(()=>this.resize()).observe(host);this.resize();
       this.loadBase().catch(e=>{this.host.dataset.baseError=e.message;});
@@ -218,7 +223,28 @@
     }
     setSelections(ids) {this.selected=ids.slice(0,2);this.paint();}
     setResults(rows) {for(const row of rows)this.results.set(row.id,row);this.paint();}
-    clearResults() {this.results.clear();this.paint();this.setConnections([]);}
+    clearResults() {this.results.clear();this.paint();}
+    /* Stored, previously completed verdicts. Kept separate from the current
+       result so editing the investigation never relabels old evidence as new. */
+    setSavedTrends(rows) {this.savedResults=new Map();
+      for(const row of rows||[]){if(row&&row.id)this.savedResults.set(row.id,row);}
+      this.paint();}
+    clearSavedTrends() {this.savedResults=new Map();this.paint();}
+    rowFor(id) {return this.results.get(id)||this.savedResults.get(id)||null;}
+    /* Hover evidence: verdict, magnitude with units, window and saved status. */
+    describeRow(row,o){
+      if(!row)return ' · not analysed yet';
+      if(!o)return ' · click to select';
+      if(!o.ok)return ' · not enough data to tell';
+      const years=row.window?(row.window.end-row.window.start):null;
+      const total=years?o.per_decade/10*years:null;
+      const r=v=>Math.abs(v)<0.05?v.toFixed(3):Math.abs(v)<1?v.toFixed(2):v.toFixed(1);
+      const magnitude=Number.isFinite(total)?` · about ${total>0?'+':''}${r(total)} ${row.unit||o.unit||''} in total`:'';
+      const verdict=o.significant?(o.direction==='falling'?'clear decrease':'clear increase'):'no clear trend';
+      const when=row.window?` · ${row.window.start}–${row.window.end}`:'';
+      const saved=row.saved?' · saved result':'';
+      return ` · ${verdict}${magnitude}${when}${saved}`;
+    }
     clearSelectionGroup(group) {
       const old=new Set(group.children.map(n=>n.geometry));
       while(group.children.length){const n=group.children[0];group.remove(n);n.geometry?.dispose();n.material?.dispose();}
@@ -280,9 +306,9 @@
     }
     paint() {
       const extra=this.selectionGroup?.children.filter(n=>n.userData.feature).map(n=>({feature:n.userData.feature,mesh:n,lines:n.userData.outline}))||[];
-      for(const n of [...this.nodes,...extra]){const id=n.feature.id,sel=this.selected.indexOf(id),hover=id===this.hover,row=this.results.get(id),o=row?.overall;
-        let color=palette.neutral,opacity=.025;
-        if(o){color=!o.ok?palette.missing:!o.significant?palette.neutral:o.direction==='falling'?palette.fall:palette.rise;opacity=o.ok ? .72 : .18;}
+      for(const n of [...this.nodes,...extra]){const id=n.feature.id,sel=this.selected.indexOf(id),hover=id===this.hover,row=this.results.get(id)||this.savedResults.get(id),o=row?.overall;
+        let color=palette.base,opacity=.035;
+        if(o){color=!o.ok?palette.missing:!o.significant?palette.neutral:o.direction==='falling'?palette.fall:palette.rise;opacity=o.ok ? .72 : .5;}
         n.mesh.material.color.set(color);n.mesh.material.opacity=hover?Math.max(.25,opacity):sel>=0?Math.max(.12,opacity):opacity;
         n.lines.material.color.set(sel>=0?(sel===0?palette.a:palette.b):hover?'#d4eedc':'#6e8a77');
         n.lines.material.opacity=(sel>=0||hover) ? .95 : .27;
@@ -290,6 +316,7 @@
     }
     focusFeature(feature) {
       if(!feature)return;const p=feature.properties||feature,b=p.bbox;
+      if(!Array.isArray(b)||b.length!==4||!b.every(Number.isFinite))return;
       const centre=centerOf(p);
       if(this.targetBlend===0){
         this.world.rotation.set(centre[1]*RAD,-centre[0]*RAD,0);
@@ -306,7 +333,7 @@
         const p1=new T.Vector3(...ll(a.lon,a.lat,1.018)),p2=new T.Vector3(...ll(b.lon,b.lat,1.018));
         const angle=p1.angleTo(p2),points=[];
         for(let i=0;i<=80;i++){const t=i/80;let p;if(Math.abs(Math.sin(angle))>.001)p=p1.clone().multiplyScalar(Math.sin((1-t)*angle)/Math.sin(angle)).add(p2.clone().multiplyScalar(Math.sin(t*angle)/Math.sin(angle)));else p=p1.clone().lerp(p2,t).normalize();points.push(p.normalize().multiplyScalar(1.018+.22*Math.sin(Math.PI*t)));}
-        const curve=new T.CatmullRomCurve3(points),color=c.direction==='inverse'?0x59cfda:0xf091d3;
+        const curve=new T.CatmullRomCurve3(points),color=c.target_variable?.color||c.source_variable?.color||0xb5d3c1;
         const line=new T.Line(new T.BufferGeometry().setFromPoints(points),new T.LineBasicMaterial({color,transparent:true,opacity:.7,depthWrite:false}));line.userData.connection=c;this.arcs.add(line);
         const planePoints=points.map(p=>flat(Math.atan2(p.x,p.z)/RAD,Math.asin(p.y/p.length())/RAD,1.015)),segments=[];
         for(let i=1;i<planePoints.length;i++)if(Math.abs(planePoints[i][0]-planePoints[i-1][0])<2.8)segments.push(new T.Vector3(...planePoints[i-1]),new T.Vector3(...planePoints[i]));
@@ -316,6 +343,54 @@
           const planePacket=new T.Mesh(new T.SphereGeometry(.006,6,6),new T.MeshBasicMaterial({color:0xe5fff4}));this.planeArcs.add(planePacket);this.packets.push({mesh:planePacket,curve,t:0,plane:true});
         }
       }
+    }
+    setEventNodes(nodes, bounds) {
+      this.eventNodes=(nodes||[]).filter(n=>typeof n.lat==='number'&&typeof n.lon==='number');
+      // The Events screen keeps the globe visible between two panels. A label
+      // whose dot sits under a panel is unreadable, so labels are kept inside
+      // the visible stage while their dots stay at the true location.
+      this.eventBounds=(bounds&&bounds.right>bounds.left)?bounds:null;
+      this.nodeLayer.replaceChildren();
+      this.tooltip.hidden=true;
+      for(const n of this.eventNodes){
+        const el=document.createElement('button');
+        el.type='button';
+        el.className='ev-node ev-node-'+(n.layer||'land');
+        el.setAttribute('aria-label',n.name+' — '+(n.description||''));
+        const dot=document.createElement('span');dot.className='ev-node-dot';el.append(dot);
+        const name=document.createElement('span');name.className='ev-node-name';name.textContent=n.name;el.append(name);
+        el.addEventListener('pointerenter',e=>this.showNodeTip(e,n));
+        el.addEventListener('pointermove',e=>this.showNodeTip(e,n));
+        el.addEventListener('pointerleave',()=>{this.tooltip.hidden=true;});
+        el.addEventListener('focus',()=>this.showNodeTip(null,n));
+        el.addEventListener('blur',()=>{this.tooltip.hidden=true;});
+        el.addEventListener('click',e=>{e.stopPropagation();this.options.onEventNode?.(n);});
+        this.nodeLayer.append(el);n.el=el;
+      }
+    }
+    showNodeTip(event,n) {
+      const tip=this.tooltip;
+      tip.hidden=false;tip.classList.add('ev-node-tip');tip.replaceChildren();
+      const head=document.createElement('strong');head.textContent=n.name;
+      const where=document.createElement('em');
+      where.textContent=[n.layer,n.where].filter(Boolean).join(' · ');
+      const body=document.createElement('span');body.textContent=n.description||'';
+      tip.append(head,where,body);
+      const routes=n.pathways||[];
+      if(routes.length){
+        const list=document.createElement('span');list.className='ev-node-routes';
+        for(const route of routes){
+          const line=document.createElement('span');
+          line.textContent=route.role+': '+route.label;
+          list.append(line);
+        }
+        tip.append(list);
+      }
+      const b=this.host.getBoundingClientRect();
+      const x=event?event.clientX-b.left:b.width/2;
+      const y=event?event.clientY-b.top:120;
+      tip.style.left=Math.max(10,Math.min(b.width-310,x+18))+'px';
+      tip.style.top=Math.max(10,Math.min(b.height-150,y-30))+'px';
     }
     pick(event) {
       if(this.pickingDisabled)return null;
@@ -355,8 +430,8 @@
         if(drag){const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>4)drag.moved=true;if(drag.moved){clearTimeout(clickTimer);this.moveMap(dx,dy,drag);}this.tooltip.hidden=true;return;}
         if(this.selectionMode!=='boundary'){canvas.style.cursor='crosshair';this.tooltip.hidden=true;return;}
         const connection=this.pickConnection(e),f=connection?null:this.pick(e);if(this.hover!==(f?.id||null)){this.hover=f?.id||null;this.paint();}canvas.style.cursor=f||connection?'pointer':'grab';
-        if(connection){this.tooltip.hidden=false;this.tooltip.textContent=`${connection.target_region.name} / ${connection.target_variable.name} · CLICK FOR EVIDENCE`;const b=this.host.getBoundingClientRect();this.tooltip.style.left=Math.min(b.width-250,e.clientX-b.left+16)+'px';this.tooltip.style.top=Math.max(12,e.clientY-b.top-38)+'px';return;}
-        this.tooltip.hidden=!f;if(f){const row=this.results.get(f.id),o=row?.overall;this.tooltip.textContent=f.properties.name+(o?o.ok?' · '+(o.significant?o.direction.toUpperCase():'NO SIGNIFICANT TREND'):' · INSUFFICIENT DATA':' · CLICK TO SELECT');const b=this.host.getBoundingClientRect();this.tooltip.style.left=Math.min(b.width-250,e.clientX-b.left+16)+'px';this.tooltip.style.top=Math.max(12,e.clientY-b.top-38)+'px';}
+        if(connection){this.tooltip.hidden=false;this.tooltip.textContent=connection.event_edge?connection.evidence_label:`${connection.source_region.name} → ${connection.target_region.name} · ${connection.target_variable.name} · r=${Number(connection.r).toFixed(2)} · ${connection.lead_note||'No clear lead'} · Click to pin`;const b=this.host.getBoundingClientRect();this.tooltip.style.left=Math.min(b.width-250,e.clientX-b.left+16)+'px';this.tooltip.style.top=Math.max(12,e.clientY-b.top-38)+'px';return;}
+        this.tooltip.hidden=!f;if(f){const row=this.rowFor(f.id),o=row?.overall;this.tooltip.textContent=f.properties.name+this.describeRow(row,o);const b=this.host.getBoundingClientRect();this.tooltip.style.left=Math.min(b.width-250,e.clientX-b.left+16)+'px';this.tooltip.style.top=Math.max(12,e.clientY-b.top-38)+'px';}
       });
       canvas.addEventListener('pointerup',e=>{
         if(!drag)return;
@@ -384,13 +459,36 @@
       },{passive:false});
     }
     frame(time) {
-      requestAnimationFrame(this.frame);this.updateProjection();if(this.auto&&this.targetBlend===0)this.world.rotation.y+=Math.min(50,time-(this.lastFrame??time))*.000045;this.lastFrame=time;
+      requestAnimationFrame(this.frame);
+      if(this.host?.offsetParent===null||time-(this.lastPaint??-1000000)<32)return;
+      this.lastPaint=time;this.updateProjection();if(this.auto&&this.targetBlend===0)this.world.rotation.y+=Math.min(50,time-(this.lastFrame??time))*.000045;this.lastFrame=time;
       this.camera.position.set(0,0,this.zoom);this.camera.lookAt(0,0,0);this.world.updateMatrixWorld();
       for(const n of this.nodes){const p=n.feature.properties,b=p.bbox,c=centerOf(p);const xyz=this.blend>.5?flat(c[0],c[1],1.01):ll(c[0],c[1],1.01),v=new T.Vector3(...xyz).applyMatrix4(this.world.matrixWorld);
         const visible=(this.blend>.5||v.z>.18)&&((b[2]-b[0])*(b[3]-b[1])>10||this.zoom<1.6||this.selected.includes(n.feature.id));v.project(this.camera);
         n.label.hidden=!visible||Math.abs(v.x)>1||Math.abs(v.y)>1;n.label.style.transform=`translate(${(v.x+1)*this.host.clientWidth/2}px,${(1-v.y)*this.host.clientHeight/2}px) translate(-50%,-50%)`;
       }
       for(const p of this.packets){p.t=(time*.00015)%1;const point=p.curve.getPoint(p.t);if(p.plane){p.mesh.position.set(...flat(Math.atan2(point.x,point.z)/RAD,Math.asin(point.y/point.length())/RAD,1.018));p.mesh.scale.setScalar(Math.min(1,this.zoom*.7));}else p.mesh.position.copy(point);}
+      for(const n of this.eventNodes){
+        if(!n.el)continue;
+        const xyz=this.blend>.5?flat(n.lon,n.lat,1.012):ll(n.lon,n.lat,1.012);
+        const v=new T.Vector3(...xyz).applyMatrix4(this.world.matrixWorld);
+        const front=this.blend>.5||v.z>.12;
+        v.project(this.camera);
+        const w=this.host.clientWidth, h=this.host.clientHeight;
+        let x=(v.x+1)*w/2, y=(1-v.y)*h/2;
+        const on=front&&Math.abs(v.x)<=1&&Math.abs(v.y)<=1;
+        n.el.hidden=!on;
+        if(!on)continue;
+        // Keep the whole caption inside the visible stage; only the caption
+        // moves, the dot keeps its true position. The label is centred on the
+        // dot, so half of its measured width is what can overflow a panel.
+        if(this.eventBounds){
+          const half=(n.el.offsetWidth||120)/2+10;
+          const left=this.eventBounds.left+half, right=this.eventBounds.right-half;
+          const label=n.el.querySelector('.ev-node-name');if(label)label.style.transform=right>left?'translateX('+(Math.max(left,Math.min(right,x))-x)+'px)':'';
+        }
+        n.el.style.transform=`translate(${x}px,${y}px) translate(-50%,-50%)`;
+      }
       this.renderer.render(this.scene,this.camera);
     }
   }

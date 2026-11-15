@@ -12,6 +12,19 @@ const catalog = {
 const fields = ['T2M', 'TS', 'GWETROOT'];
 const spec = extra => ({ operation: 'analyze', provider: 'nasa-merra2', region: 'a', variables: ['T2M'], start: 2005, end: 2024, ...extra });
 
+test('automatic remote review includes only the chosen companion fields and actual planned routes',()=>{
+  const c={...catalog,variables:[...catalog.variables,{id:'T10M',name:'Air temperature at 10 m'}]};
+  const routes={a:{T2M:'nasa-giovanni',T10M:'nasa-giovanni'},b:{T2M:'nasa-giovanni',T10M:'nasa-giovanni'}};
+  const plan=Review.estimate(spec({operation:'interconnections',provider:'auto',relationship_scope:'remote',relationship_variables:['T2M','T10M'],target_regions:['b'],routing:{routes}}),c,[...fields,'T10M']);
+  assert.equal(plan.requests,4);assert.deepEqual(plan.routes,['nasa-giovanni']);assert.ok(plan.bytes<1000000);
+});
+
+test('automatic discovery review omits measurements excluded by geometry preflight',()=>{
+  const c={...catalog,variables:[...catalog.variables,{id:'T10M',name:'Ten metre temperature'}]};
+  const plan=Review.estimate(spec({operation:'scan',provider:'auto',variables:['T2M'],routing:{variables:['T2M'],routes:{a:{T2M:'nasa-merra2'}}}}),c,[...fields,'T10M']);
+  assert.deepEqual(plan.variables,['T2M']);assert.equal(plan.requests,240);
+});
+
 test('new live sources disclose nonzero traffic and local screening does not add remote areas',()=>{
   for(const provider of ['nasa-hydrology','nasa-appeears','noaa-cdo','multi-source']){
     const plan=Review.estimate(spec({provider}),catalog,fields);

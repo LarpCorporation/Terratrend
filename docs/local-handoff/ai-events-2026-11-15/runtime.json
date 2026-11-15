@@ -1,0 +1,11 @@
+{
+  "port": 8517,
+  "pid": 324391,
+  "log": "/home/templar/Documents/Projects/Nasa Space APP/Terratrend/.scratch/server-ai-events-8517.log",
+  "replaced_idle_pid": 270209,
+  "groq_live_verified": false,
+  "user_deferred_groq_connection": true,
+  "previous_replaced_idle_pid": 3932455,
+  "restart_checked_utc": "2026-11-15T17:13:51.636535+00:00",
+  "active_jobs_before_restart": 0
+}

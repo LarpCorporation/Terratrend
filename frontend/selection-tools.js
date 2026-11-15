@@ -5,7 +5,7 @@ const selectionTools={mode:'boundary',draft:null,center:null,size:250,revision:0
 function selectionToolMessage(message,error=false){$('selection-tool-status').textContent=message;$('selection-tool-status').classList.toggle('error',error);}
 function selectedFeature(slot){const meta=slot==='a'?currentRegion():currentCompareRegion();return investigation.featureStore.get(meta?.id)||null;}
 function refreshSelectionTools(){
-  const slot=investigation.slot,a=currentRegion(),b=state.compareMode?currentCompareRegion():null;
+  const slot=investigation.slot,a=currentRegion(),b=typeof validComparisonArea==='function'?validComparisonArea():(state.compareMode?currentCompareRegion():null);
   if(investigation.map)investigation.map.selectionSlot=slot;
   $('picked-area-a').textContent=a?.name||'Choose an area';$('picked-area-b').textContent=b?.name||'Add a second area';
   for(const role of ['a','b']){const active=role===slot,button=$('pick-area-'+role);button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));}
@@ -64,9 +64,18 @@ function setSelectionTool(mode){
 function clearSelectionArea(slot=investigation.slot){
   investigation.map?.cancelSelectionClick?.();
   investigation.areas[slot]=null;$(slot==='a'?'region':'compare-region').value='';
+  if(slot==='b'){
+    /* Removing B removes the comparison itself: no active comparison intent,
+       no remote screening that needs B, and the A-only action returns. */
+    state.compareMode=false;
+    if(investigation.slot==='b')investigation.slot='a';
+    const remote=$('ix-remote-search');if(remote){remote.checked=false;remote.disabled=true;}
+  }
   if(slot===investigation.slot)clearSelectionDraft();
   prepareInvestigation(false);refreshSelection(false);
-  flashHint(`AREA ${slot.toUpperCase()} CLEARED · PICK A NEW AREA`);
+  flashHint(slot==='b'?'COMPARISON REMOVED · ANALYZE AREA A IS AVAILABLE AGAIN':`AREA ${slot.toUpperCase()} CLEARED · PICK A NEW AREA`);
+  window.TerraWorkspace?.refresh?.();
+  if(typeof announceAction==='function')announceAction('area-selected',{slot,id:null,name:null,level:null,cleared:true});
 }
 function previewSelection(feature){
   selectionTools.revision++;selectionTools.draft=feature;selectionTools.invalid=false;investigation.map?.setSelectionDraft(feature,investigation.slot);
@@ -91,7 +100,9 @@ function assignSelectionArea(slot,feature){
   investigation.areas[slot]=meta;
   const select=$(slot==='a'?'region':'compare-region');
   if(!Array.from(select.options||[]).some(o=>o.value===feature.id)){const option=document.createElement('option');option.value=feature.id;option.textContent=meta.name;select.append(option);}
-  select.value=feature.id;state.pendingBbox=null;prepareInvestigation(false);refreshSelection(false);return true;
+  select.value=feature.id;state.pendingBbox=null;prepareInvestigation(false);refreshSelection(false);
+  if(typeof announceAction==='function')announceAction('area-selected',{slot,id:feature.id,name:meta.name,level:meta.level||null});
+  return true;
 }
 async function applySelectionDraft(){
   if(!selectionTools.draft||selectionTools.working)return;

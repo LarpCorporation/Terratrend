@@ -173,6 +173,33 @@ REGIONS = [
     {"id": "southern_ocean", "name": "Southern Ocean (Drake)",
      "bbox": [-65.0, -60.0, -55.0, -55.0],
      "desc": "Antarctic circumpolar current / sea-ice boundary", "surface": "ocean"},
+
+    # Curated Events study rectangles, imported from events-and-ux.
+    {'bbox': [-3.3, 4.7, 1.2, 11.2],
+     'desc': 'Event study rectangle surrounding Ghana; includes places beyond the national border',
+     'id': 'ghana_national',
+     'name': 'Ghana study rectangle',
+     'surface': 'land'},
+    {'bbox': [-75.0, -15.0, -50.0, 5.0],
+     'desc': 'Full Amazon basin footprint, wider than the Amazon East box',
+     'id': 'amazon_basin',
+     'name': 'Amazon Basin',
+     'surface': 'land'},
+    {'bbox': [12.0, -30.0, 36.0, -12.0],
+     'desc': 'Semi-arid to sub-humid region with El Niño-sensitive summers',
+     'id': 'southern_africa',
+     'name': 'Southern Africa',
+     'surface': 'land'},
+    {'bbox': [-10.0, -2.0, 10.0, 5.0],
+     'desc': 'Regional SST driver of the West African monsoon',
+     'id': 'gulf_of_guinea',
+     'name': 'Gulf of Guinea',
+     'surface': 'ocean'},
+    {'bbox': [-60.0, 5.0, -15.0, 25.0],
+     'desc': 'Warm-pool region that shifts the Atlantic ITCZ northward',
+     'id': 'tropical_north_atlantic',
+     'name': 'Tropical North Atlantic',
+     'surface': 'ocean'},
 ]
 
 # ---------------------------------------------------------------------------

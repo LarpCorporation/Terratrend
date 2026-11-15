@@ -1,0 +1,10 @@
+{
+  "baseline_paths": 205,
+  "missing_preexisting_files": [],
+  "baseline_head": "7e627a87fc63361889117ee2b9a67b13a11c58fe",
+  "head": "7e627a87fc63361889117ee2b9a67b13a11c58fe",
+  "head_unchanged": true,
+  "no_commit_push_reset_clean_or_deployment": true,
+  "prior_literature_deletion_preserved": true,
+  "checked_utc": "2026-11-15T17:14:33.324709+00:00"
+}

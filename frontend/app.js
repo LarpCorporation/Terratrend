@@ -7,8 +7,9 @@ const $ = (id) => document.getElementById(id);
 
 const C = {
   /* Kaspersky-cybermap palette: data glows magenta / cyan on an olive world */
-  rise: "#ff786a",
-  fall: "#59cfda",
+  rise: "#59baff",
+  fall: "#ff786a",
+  compare: "#e9c77a",
   flat: "#4a5f54",
   nodata: "#22302a",
   cyan: "#cce8d9",
@@ -182,24 +183,16 @@ function renderVarList() {
     ["energy", "ENERGY & ATMOSPHERE"],
   ];
 
+  const showUnavailable=state.showUnavailable===true;
+  let hiddenCount=0;
+  box.dataset.hiddenUnavailable='0';
   const addItem = (v) => {
-    const on = state.selected.includes(v.id);
-    const unavailable = typeof variableSourceAvailable === 'function' && !variableSourceAvailable(v.id);
-    const el = document.createElement("div");
-    el.className = "var-item" + (on ? " on" : "") + (unavailable ? " source-unavailable" : "");
-    el.dataset.variable = v.id;el.tabIndex=0;el.setAttribute('role','button');el.setAttribute('aria-pressed',String(on));el.setAttribute('aria-disabled',String(unavailable&&!on));
-    el.style.setProperty("--vc", v.color);
-    el.title = (v.desc || v.plain || "") + (unavailable ? ' · This measurement needs a source mapping for the selected data source.' : '');
-    el.innerHTML = `
-      <i class="var-dot"></i>
-      <span class="var-text">
-        <span class="var-name">${esc(v.name)}</span>
-        <span class="var-meta">${esc(v.sphere_code || "ATM")} \u00b7 ${esc(v.unit)}</span>
-        ${unavailable ? '<span class="var-source-note">SOURCE MAPPING NEEDED</span>' : ''}
-      </span>`;
-    el.addEventListener("click", () => toggleVar(v.id));
-    el.addEventListener('keydown', event => {if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleVar(v.id);}});
-    box.appendChild(el);
+    const on=state.selected.includes(v.id),unavailable=typeof variableSourceAvailable==='function'&&!variableSourceAvailable(v.id);
+    if(unavailable&&!on&&!showUnavailable){hiddenCount++;box.dataset.hiddenUnavailable=String(hiddenCount);return;}
+    const el=document.createElement('label');el.className='var-item'+(on?' on':'')+(unavailable?' source-unavailable':'');el.dataset.variable=v.id;
+    el.style.setProperty('--vc',v.color);el.title=(v.desc||v.plain||'')+(unavailable?' · Not available for the current processing method.':'');
+    el.innerHTML=`<input class="variable-check" type="checkbox" aria-label="${esc(v.name)}" ${on?'checked':''} ${unavailable&&!on?'disabled':''}><i class="var-dot"></i><span class="var-text"><span class="var-name">${esc(v.name)}</span><span class="var-meta">${esc(v.sphere_code||'ATM')} · ${esc(v.unit)}</span>${unavailable?'<span class="var-source-note">NOT AVAILABLE YET</span>':''}</span>`;
+    const check=el.querySelector('input');check.addEventListener('change',()=>{toggleVar(v.id);check.checked=state.selected.includes(v.id);});box.appendChild(el);
   };
 
   if (state.activeSphere === "all") {
@@ -217,7 +210,18 @@ function renderVarList() {
     filtered.forEach(addItem);
   }
 
+  if(hiddenCount){
+    const note=document.createElement('p');note.className='var-hidden-note';
+    note.id='var-hidden-note';
+    note.textContent=`${hiddenCount} more measurement${hiddenCount===1?'':'s'} need a different data source and ${hiddenCount===1?'is':'are'} hidden.`;
+    const reveal=document.createElement('button');reveal.type='button';reveal.className='link-btn';reveal.id='show-unavailable';
+    reveal.textContent='Show them anyway';
+    reveal.onclick=()=>{state.showUnavailable=true;renderVarList();};
+    note.append(document.createTextNode(' '),reveal);
+    box.append(note);
+  }
   $("var-count").textContent = `${state.selected.length} / ${MAX_VARS}`;
+  window.TerraWorkspace?.refresh?.();
 }
 
 function toggleVar(id) {
@@ -1191,15 +1195,10 @@ function renderLegend(d) {
       <i class="sw" style="background:${s.variable.color};box-shadow:0 0 7px ${s.variable.color};opacity:${active ? 1 : .4}"></i>
       <span class="legend-var-name ${active ? "active" : ""}">${esc(s.variable.name)}</span>
       <span class="legend-chip ${active ? "active" : ""}">${active ? "ON GLOBE" : "SHOW"}</span>`;
+    li.tabIndex=0;li.setAttribute('role','button');
+    li.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();li.click();}});
     li.addEventListener("click", () => {
-      state.activeVarIdx = i;
-      renderHeader(d);
-      renderSignals(d);
-      renderLegend(d);
-      renderCells(d);
-      renderLiterature();
-      drawChart();
-      renderGlobeRegions(d);
+      cancelPendingWork();state.activeVarIdx=i;render();window.TerraWorkspace?.refresh?.();
     });
     box.appendChild(li);
   });
@@ -1302,19 +1301,14 @@ function renderSignals(d) {
         <span class="sig-dir ${dir}">${dirTxt}</span>
       </div>
       <div class="sig-vals">
-        <span>SLOPE <b>${o.ok ? (o.per_decade > 0 ? "+" : "") +
-          num(o.per_decade, 3) : "—"}</b></span>
-        <span>p <b>${o.ok ? (o.p < 0.001 ? "<0.001" : num(o.p, 3)) : "—"}</b></span>
+        <span>TREND <b>${o.ok ? (o.per_decade > 0 ? "+" : "") +
+          num(o.per_decade, 3)+" "+esc(v.unit||"")+" per decade" : "—"}</b></span>
+        <span title="Evidence against the no-trend model; not a probability that the result is true">SIGNIFICANCE p <b>${o.ok ? (o.p < 0.001 ? "<0.001" : num(o.p, 3)) : "—"}</b></span>
       </div>`;
+    el.tabIndex=0;el.setAttribute('role','button');
+    el.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();el.click();}});
     el.addEventListener("click", () => {
-      state.activeVarIdx = i;
-      renderHeader(d);
-      renderSignals(d);
-      renderLegend(d);
-      renderCells(d);
-      renderLiterature();
-      drawChart();
-      renderGlobeRegions(d);
+      cancelPendingWork();state.activeVarIdx=i;render();window.TerraWorkspace?.refresh?.();
     });
     box.appendChild(el);
   });
@@ -1327,7 +1321,7 @@ function renderCells(d) {
   const sm = s.summary;
   if(sm.spatial_detail_available===false){$('cell-tag').textContent='REGIONAL SUMMARY';const note=document.createElement('p');note.className='micro';note.textContent='This source supplied a regional or station-summary series. Native-cell trends, spatial consensus and monthly area coverage are not supplied. See the source and aggregation details for its meaning.';box.appendChild(note);return;}
   $("cell-tag").textContent =
-    `${sm.significant_cells}/${sm.total_cells} SIG · ${s.variable.name.split(" ")[0]}`;
+    `${sm.significant_cells.toLocaleString()} of ${sm.total_cells.toLocaleString()} cells changed clearly`;
 
   // server returns rising_cells / falling_cells (older payloads used rising /
   // falling) — tolerate both, and exclude no-data cells from "no trend"
@@ -2230,18 +2224,25 @@ function drawExpandedChart() {
   const hasCompare = !!(d.compare && d.compare.series && d.compare.series[state.expandedVarIdx]);
   const sB = hasCompare ? d.compare.series[state.expandedVarIdx] : null;
 
+  /* Constants live at module scope; a sliced or partial load still gets the
+     same identity colours rather than throwing. */
+  const AREA_C = typeof AREA_COLORS !== "undefined" ? AREA_COLORS : { a: "#68b8ff", b: "#e9c77a" };
+  const AREA_D = typeof AREA_DASH !== "undefined" ? AREA_DASH : { a: [7, 4], b: [2, 3] };
+  const observedColor = hasCompare ? AREA_C.a : accent;
   const datasets = [{
-    label: hasCompare ? `${d.region.name}: ${s.variable.name}` : s.variable.name,
+    label: hasCompare ? `A / ${d.region.name} · ${s.variable.name}` : s.variable.name,
     data: chartPoints,
-    borderColor: accent,
+    trendModel:s.overall,calendarStart:isYear?null:d.start,
+    $side:"a",$kind:"observed",$areaName:hasCompare?`A / ${d.region.name}`:s.variable.name,$unit:s.variable.unit,
+    borderColor: observedColor,
     backgroundColor: hasCompare ? "transparent" : grad,
     fill: !hasCompare,
     tension: 0.25,
     pointRadius: isYear ? 3.5 : 1.2,
     pointHoverRadius: 6,
-    pointBackgroundColor: accent,
-    borderWidth: 2,
-    spanGaps: true,
+    pointBackgroundColor: observedColor,
+    borderWidth: 2.2,
+    spanGaps: false,
   }];
 
   if (partialYears.length > 0) {
@@ -2274,11 +2275,12 @@ function drawExpandedChart() {
       lineFn = fitLine(ptPairs);
     }
     datasets.push({
-      label: hasCompare ? `Trend (${d.region.name})` : "Theil-Sen Trend Line",
+      label: hasCompare ? `A / ${d.region.name} · fitted trend` : `${s.variable.name} · fitted trend`,
       data: chartPoints.map((p) => ({ x: p.x, y: lineFn(p.x) })),
-      borderColor: "#ffffff",
-      borderDash: [6, 4],
-      borderWidth: 1.5,
+      $side:"a",$kind:"trend",$areaName:hasCompare?`A / ${d.region.name}`:s.variable.name,$unit:s.variable.unit,
+      borderColor: observedColor,
+      borderDash: AREA_D.a,
+      borderWidth: 1.9,
       pointRadius: 0,
       fill: false,
       tension: 0,
@@ -2300,18 +2302,19 @@ function drawExpandedChart() {
     }
 
     datasets.push({
-      label: `${d.compare.region.name}: ${sB.variable.name}`,
+      label: `B / ${d.compare.region.name} · ${sB.variable.name}`,
       data: chartPointsB,
-      borderColor: "#00e5ff",
-      borderDash: [5, 4],
+      trendModel:sB.overall,calendarStart:isYear?null:d.start,
+      $side:"b",$kind:"observed",$areaName:`B / ${d.compare.region.name}`,$unit:sB.variable.unit,
+      borderColor: AREA_C.b,
       backgroundColor: "transparent",
       fill: false,
       tension: 0.25,
       pointRadius: isYear ? 3.5 : 1.2,
       pointHoverRadius: 6,
-      pointBackgroundColor: "#00e5ff",
-      borderWidth: 2,
-      spanGaps: true,
+      pointBackgroundColor: AREA_C.b,
+      borderWidth: 2.2,
+      spanGaps: false,
     });
 
     const validPtsB = chartPointsB.filter((p) => p.y !== null && Number.isFinite(p.y));
@@ -2325,11 +2328,12 @@ function drawExpandedChart() {
         lineFnB = fitLine(ptPairsB);
       }
       datasets.push({
-        label: `Trend (${d.compare.region.name})`,
+        label: `B / ${d.compare.region.name} · fitted trend`,
         data: chartPointsB.map((p) => ({ x: p.x, y: lineFnB(p.x) })),
-        borderColor: "rgba(0, 229, 255, 0.75)",
-        borderDash: [3, 3],
-        borderWidth: 1.5,
+        $side:"b",$kind:"trend",$areaName:`B / ${d.compare.region.name}`,$unit:sB.variable.unit,
+        borderColor: AREA_C.b,
+        borderDash: AREA_D.b,
+        borderWidth: 1.9,
         pointRadius: 0,
         fill: false,
         tension: 0,
@@ -2404,7 +2408,8 @@ function drawExpandedChart() {
               const idx = Math.round(xVal);
               return `MONTH: ${d.months[idx] || ""}`;
             },
-            label: (c) => `${c.dataset.label}: ${num(c.parsed.y, 3)} ${s.variable.unit}`,
+            label: c => trendTooltip(c,s.variable.unit),
+            labelTextColor:c=>{const o=c.dataset.trendModel;if(!o?.ok)return "#cfe4d5";const x=c.dataset.calendarStart==null?c.parsed.x:c.dataset.calendarStart+c.parsed.x/12;return c.parsed.y>=o.intercept+o.slope*x?C.rise:C.fall;},
           },
         },
       },
@@ -2522,6 +2527,15 @@ function drawExpandedChart() {
       expTrendEl.textContent = "INSUFFICIENT DATA POINTS FOR STATISTICAL SIGNIFICANCE TESTING";
     }
   }
+  if (typeof chartSeriesKey === "function") {
+    chartSeriesKey(datasets.map((row) => ({
+      text: row.$kind === "trend" ? `${row.label} (dashed)`
+        : row.$kind === "partial" ? `${row.label}`
+        : `${row.label} (solid)`,
+      color: row.borderColor,
+      dashed: row.$kind === "trend",
+    })), $("expanded-series-key"));
+  }
 }
 
 function buildAnalysisCSV(d, variableIndex, isYear) {
@@ -2585,6 +2599,46 @@ function exportDataCSV() {
 /* ============================================================
    CHART
    ============================================================ */
+/* ---------------------------------------------------------------------------
+   Chart series identity. Area A and area B keep their own colours everywhere,
+   independent of whether the trend rises or falls (direction is carried by the
+   text labels, not by the line colour). Observed values are solid, the fitted
+   trend is dashed with a per-area dash so the two remain distinguishable in
+   greyscale and with colour-vision differences.
+   --------------------------------------------------------------------------- */
+const AREA_COLORS = { a: "#68b8ff", b: "#e9c77a" };
+const AREA_DASH = { a: [7, 4], b: [2, 3] };
+function chartSeriesKey(rows, container) {
+  if (!container) return;
+  container.replaceChildren();
+  for (const row of rows) {
+    const item = document.createElement("span");
+    const swatch = document.createElement("i");
+    swatch.style.borderTop = `2px solid ${row.color}`;
+    swatch.style.borderTopStyle = row.dashed ? "dashed" : "solid";
+    const text = document.createElement("span");
+    text.textContent = row.text;
+    item.append(swatch, text);
+    container.append(item);
+  }
+  container.hidden = rows.length === 0;
+}
+function chartTooltipLabel(c, fallbackUnit, fallbackName) {
+  const ds = (c && c.dataset) || {};
+  const unit = ds.$unit || fallbackUnit || "";
+  const area = ds.$areaName || fallbackName || "";
+  const value = num(c.parsed.y, 3);
+  if (ds.$kind === "trend") return `${area} · fitted trend ${value} ${unit}`;
+  if (ds.$kind === "partial") return `${area} · incomplete year, excluded from trend ${value} ${unit}`;
+  const fitted = c.chart && c.chart.$fitted && c.chart.$fitted[ds.$side];
+  const fitValue = fitted ? fitted[c.dataIndex] : null;
+  let extra = "";
+  if (Number.isFinite(fitValue)) {
+    const delta = c.parsed.y - fitValue;
+    extra = ` · ${delta >= 0 ? "+" : ""}${num(delta, 3)} ${unit} ${delta >= 0 ? "above" : "below"} fitted trend`;
+  }
+  return `${area} · observed ${value} ${unit}${extra}`;
+}
 function drawChart() {
   const d = state.result;
   if (!d) return;
@@ -2615,17 +2669,19 @@ function drawChart() {
   const hasCompare = !!(d.compare && d.compare.series && d.compare.series[state.activeVarIdx]);
   const sB = hasCompare ? d.compare.series[state.activeVarIdx] : null;
 
+  const observedColor = hasCompare ? AREA_COLORS.a : accent;
   const datasets = [{
-    label: hasCompare ? `${d.region.name}: ${s.variable.name}` : s.variable.name,
+    label: hasCompare ? `A / ${d.region.name} · ${s.variable.name}` : s.variable.name,
     data: values.map((v, i) => (partialFlags[i] ? null : v)),
-    borderColor: accent,
+    $side: "a", $kind: "observed", $areaName: hasCompare ? `A / ${d.region.name}` : s.variable.name, $unit: s.variable.unit,
+    borderColor: observedColor,
     backgroundColor: hasCompare ? "transparent" : grad,
     fill: !hasCompare,
     tension: 0.3,
-    pointRadius: isYear ? 0 : 0,
+    pointRadius: isYear ? 2.6 : 0,
     pointHoverRadius: 4,
-    borderWidth: 1.8,
-    spanGaps: true,
+    borderWidth: 2.1,
+    spanGaps: false,
   }];
 
   if (hasCompare && sB) {
@@ -2636,25 +2692,26 @@ function drawChart() {
       ? sB.yearly_timeseries.map((p) => !p.complete)
       : [];
     datasets.push({
-      label: `${d.compare.region.name}: ${sB.variable.name}`,
+      label: `B / ${d.compare.region.name} · ${sB.variable.name}`,
       data: valsB.map((v, i) => (partialFlagsB[i] ? null : v)),
-      borderColor: "#00e5ff",
-      borderDash: [5, 4],
+      $side: "b", $kind: "observed", $areaName: `B / ${d.compare.region.name}`, $unit: sB.variable.unit,
+      borderColor: AREA_C.b,
       backgroundColor: "transparent",
       fill: false,
       tension: 0.3,
-      pointRadius: isYear ? 0 : 0,
+      pointRadius: isYear ? 2.6 : 0,
       pointHoverRadius: 4,
-      borderWidth: 1.8,
-      spanGaps: true,
+      borderWidth: 2.1,
+      spanGaps: false,
     });
   }
 
   // Draw incomplete / trailing partial years as isolated points
   if (partialFlags.some(Boolean)) {
     datasets.push({
-      label: "Partial Year (Excluded from Trend)",
+      label: "Incomplete year (excluded from the trend)",
       data: values.map((v, i) => (partialFlags[i] ? v : null)),
+      $side: "a", $kind: "partial", $areaName: `A / ${d.region.name}`, $unit: s.variable.unit,
       showLine: false,
       borderColor: "transparent",
       backgroundColor: "#0c0e11",
@@ -2682,16 +2739,45 @@ function drawChart() {
     } else {
       line = fitLine(pts);
     }
+    const fittedA = values.map((_, i) => (partialFlags[i] ? null : line(i)));
     datasets.push({
-      label: hasCompare ? `Trend (${d.region.name})` : "Trend Line",
-      data: values.map((_, i) => (partialFlags[i] ? null : line(i))),
-      borderColor: "#e9ebed",
-      borderDash: [5, 4],
-      borderWidth: 1,
+      label: hasCompare ? `A / ${d.region.name} · fitted trend` : `${s.variable.name} · fitted trend`,
+      data: fittedA,
+      $side: "a", $kind: "trend", $areaName: hasCompare ? `A / ${d.region.name}` : s.variable.name, $unit: s.variable.unit,
+      borderColor: observedColor,
+      borderDash: AREA_D.a,
+      borderWidth: 1.7,
       pointRadius: 0,
       fill: false,
       tension: 0,
     });
+    if (hasCompare && sB) {
+      const oB = sB.overall || {};
+      let lineB;
+      if (oB.ok) {
+        const slopeB = oB.slope * (isYear ? 1 : 1 / 12);
+        const midB = valsB.filter((v) => v !== null && Number.isFinite(v)).reduce((a, v) => a + v, 0) /
+          Math.max(1, valsB.filter((v) => v !== null && Number.isFinite(v)).length);
+        const midIdxB = (valsB.length - 1) / 2;
+        lineB = (x) => midB + slopeB * (x - midIdxB);
+      } else {
+        const ptsB = valsB.map((v, i) => [i, v]).filter((p) => p[1] !== null && Number.isFinite(p[1]));
+        lineB = ptsB.length > 2 ? fitLine(ptsB) : null;
+      }
+      if (lineB) {
+        datasets.push({
+          label: `B / ${d.compare.region.name} · fitted trend`,
+          data: valsB.map((_, i) => (partialFlagsB[i] ? null : lineB(i))),
+          $side: "b", $kind: "trend", $areaName: `B / ${d.compare.region.name}`, $unit: sB.variable.unit,
+          borderColor: AREA_C.b,
+          borderDash: AREA_D.b,
+          borderWidth: 1.7,
+          pointRadius: 0,
+          fill: false,
+          tension: 0,
+        });
+      }
+    }
   }
 
   chart = new Chart(ctx, {
@@ -2714,8 +2800,7 @@ function drawChart() {
           bodyColor: "#dbe0e6",
           displayColors: false,
           callbacks: {
-            label: (c) =>
-              `${num(c.parsed.y, 3)} ${s.variable.unit}`,
+            label: (c) => chartTooltipLabel(c, s.variable.unit, s.variable.name),
           },
         },
       },
@@ -4051,31 +4136,9 @@ let ixState = {
 };
 
 function initInterconnectScreen() {
-  const screen = $("ix-screen");
-  if (!screen) return;
-
-  document.querySelectorAll("[data-ix-tab]").forEach((btn) => {
-    btn.addEventListener("click", () => setIxTab(btn.dataset.ixTab));
-  });
-
-  const closeBtn = $("ix-close");
-  if (closeBtn) closeBtn.addEventListener("click", closeInterconnectScreen);
-
-  const rerun = $("ix-rerun");
-  if (rerun) rerun.addEventListener("click", () => openInterconnectScreen({ force: true }));
-
-  const openBtn = $("btn-open-interconnect");
-  if (openBtn) openBtn.addEventListener("click", () => openInterconnectScreen());
-
-  screen.addEventListener("click", (e) => {
-    if (e.target === screen) closeInterconnectScreen();
-  });
-
-  window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && screen.classList.contains("open")) {
-      closeInterconnectScreen();
-    }
-  });
+  document.querySelectorAll('[data-ix-tab]').forEach(btn=>btn.addEventListener('click',()=>setIxTab(btn.dataset.ixTab)));
+  $('ix-close').onclick=()=>showInvestigationScreen('map');
+  $('ix-rerun').onclick=()=>{showInvestigationScreen('map');openDrawer(true);};
 }
 
 function setIxTab(tab) {
@@ -4090,19 +4153,14 @@ function setIxTab(tab) {
   });
 }
 
-function closeInterconnectScreen() {
-  const screen = $("ix-screen");
-  if (screen) screen.classList.remove("open");
-  setTimeout(() => { if (screen) screen.hidden = true; }, 280);
-}
+function closeInterconnectScreen() {showInvestigationScreen('map');}
 
 function ixDrivers() {
   const reg = currentRegion();
   const s = state.result && state.result.series
     ? state.result.series[state.activeVarIdx] : null;
-  const vId = s ? s.variable.id : (state.selected[0] || "T2M");
-  const vMeta = s ? s.variable
-    : ((state.catalog && state.catalog.variables.find((v) => v.id === vId)) || null);
+  const vId = state.selected[state.activeVarIdx] || state.selected[0] || (s ? s.variable.id : "T2M");
+  const vMeta = state.catalog?.variables.find(v=>v.id===vId) || (s?.variable.id===vId?s.variable:null);
   return { reg, vId, vMeta };
 }
 
@@ -4310,7 +4368,7 @@ function renderIxLocal(local, driverId) {
 function ixPairHTML(p, allPairs, driverId) {
   const isDriver = p.a.id === driverId || p.b.id === driverId;
   const sign = p.r > 0 ? "+" : "";
-  const color = p.phase === "in_phase" ? "var(--rise)" : "#42a5f5";
+  const color = p.phase === "in_phase" ? "var(--rise)" : "var(--fall)";
   const drv = p.driver && p.response
     ? '<span class="ix-pair-name">' + esc(nameOf(allPairs, p.driver)) + '</span>' +
       '<span class="ix-pair-arrow">→</span>' +
@@ -4327,6 +4385,8 @@ function ixPairHTML(p, allPairs, driverId) {
         (isDriver ? '<span class="ix-conf HIGH">SELECTED MEASUREMENT</span>' : "") +
         '<span class="ix-pair-r" style="color:' + color + '">' + sign + p.r.toFixed(2) + '</span>' +
       '</div>' +
+      '<div class="ix-pair-scale">RELATIONSHIP STRENGTH · unitless, −1 to +1' +
+        (p.partial_control ? ' · partial, ' + esc(p.partial_control) + ' held constant' : '') + '</div>' +
       '<div class="ix-pair-meta">' +
         '<span>LAG <b>' + (p.lag_months > 0 ? "+" : "") + p.lag_months + ' mo</b></span>' +
         '<span>p <b>' + pTxt + '</b></span>' +
@@ -4393,7 +4453,7 @@ function drawIxNetwork(vars, pairs, driverId) {
 
   const W = 460, H = 420;
   const cx = W / 2, cy = H / 2 - 4;
-  const R = Math.min(W, H) / 2 - 62;
+  const R = 120;
   const pos = {};
   nodes.forEach((v, i) => {
     const a = (i / nodes.length) * Math.PI * 2 - Math.PI / 2;
@@ -4406,7 +4466,7 @@ function drawIxNetwork(vars, pairs, driverId) {
     const A = pos[p.a.id], B = pos[p.b.id];
     if (!A || !B) return;
     const isPos = p.phase === "in_phase";
-    const stroke = isPos ? "#ff7a33" : "#42a5f5";
+    const stroke = isPos ? C.rise : C.fall;
     const w = Math.max(0.8, Math.min(4, Math.abs(p.r) * 7));
     const op = Math.max(0.28, Math.min(0.85, Math.abs(p.r) + 0.2));
     const mx = (A.x + B.x) / 2, my = (A.y + B.y) / 2;
@@ -4441,11 +4501,11 @@ function drawIxNetwork(vars, pairs, driverId) {
       '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + (r + 4) + '" fill="#05070a" />',
       '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + r + '" fill="' + p.color + '" fill-opacity="' + (isDriver ? 1 : 0.8) + '" stroke="' + (isDriver ? "#ffffff" : "none") + '" stroke-width="' + (isDriver ? 1.8 : 0) + '"/>'
     );
-    const anchor = p.x < cx - 8 ? "end" : (p.x > cx + 8 ? "start" : "middle");
-    const lx = p.x + (p.x < cx - 8 ? -14 : (p.x > cx + 8 ? 14 : 0));
-    parts.push(
-      '<text x="' + lx.toFixed(1) + '" y="' + (p.y + 4).toFixed(1) + '" text-anchor="' + anchor + '" font-family="ui-monospace, monospace" font-size="10" letter-spacing="0.04em" fill="' + (isDriver ? "#ffffff" : "#aeb5bd") + '" font-weight="' + (isDriver ? 700 : 500) + '">' + esc(shortVarLabel(v.id)) + '</text>'
-    );
+    const words=(v.name||v.id).split(/\s+/),lines=[''];
+    for(const word of words){if((lines[lines.length-1]+' '+word).trim().length>26)lines.push(word);else lines[lines.length-1]=(lines[lines.length-1]+' '+word).trim();}
+    const top=p.y<cy?p.y-22-(lines.length-1)*16:p.y+26;
+    parts.push('<text x="'+p.x.toFixed(1)+'" y="'+top.toFixed(1)+'" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#e1eee5">'+lines.map((line,i)=>'<tspan x="'+p.x.toFixed(1)+'" dy="'+(i?16:0)+'">'+esc(line)+'</tspan>').join('')+'</text>');
+
   });
 
   svg.innerHTML = parts.join("");
@@ -4558,13 +4618,137 @@ function renderIxAnomaly(global) {
     return;
   }
 
+  ixState.anomalySource = src;
+  ixState.anomalyEpisodes = episodes;
   eps.innerHTML = episodes.map((e, i) => '' +
-    '<div class="ix-episode">' +
+    '<button type="button" class="ix-episode" data-anomaly-episode="' + i + '" ' +
+      'aria-label="Open details for the ' + (e.side === "below" ? "below" : "above") + '-baseline episode beginning ' + esc(e.start) + '">' +
       '<span class="ix-ep-n">' + String(i + 1).padStart(2, "0") + '</span>' +
       '<span class="ix-ep-range">' + esc(e.start) + (e.end !== e.start ? " → " + esc(e.end) : "") + '</span>' +
       '<span class="ix-ep-peak">' + (e.peak_sigma > 0 ? "+" : "") + e.peak_sigma + 'σ</span>' +
       '<span class="ix-ep-len">' + e.months + ' MO</span>' +
-    '</div>').join("");
+      '<span class="ix-ep-side">' + (e.side === "below" ? "BELOW" : "ABOVE") + '</span>' +
+    '</button>').join("");
+  eps.querySelectorAll('[data-anomaly-episode]').forEach((button) => {
+    button.addEventListener("click", () => openAnomalyEpisode(Number(button.dataset.anomalyEpisode)));
+  });
+}
+
+/* Anomaly drill-down: the per-month evidence behind one highlighted episode.
+   The numbers come from the fitted baseline the run already used; nothing is
+   recomputed here and no attribution is inferred from the departure. */
+function openAnomalyEpisode(index) {
+  const src = ixState.anomalySource;
+  const episodes = ixState.anomalyEpisodes || [];
+  const episode = episodes[index];
+  if (!src || !episode) return;
+  const detail = src.anomaly_detail;
+  const report = src.anomaly_report || {};
+  const unit = src.variable?.unit || "";
+  const store = (src.provenance?.source || src.provenance?.dataset || "the stored source");
+  const dialog = document.createElement("dialog");
+  dialog.className = "anomaly-detail-dialog";
+  const title = document.createElement("h2");
+  title.textContent = (episode.side === "below" ? "Below-baseline episode" : "Above-baseline episode") +
+    " · " + src.variable?.name + " over " + src.region?.name;
+  const lead = document.createElement("p");
+  lead.textContent = "Months where the observed value sat " + (episode.side === "below" ? "below" : "above") +
+    " the fitted baseline (seasonal climatology plus the long-term trend fitted to the whole analysis period). " +
+    "The threshold is " + (detail?.threshold_sigma ?? 1) + "σ, where σ is the residual standard deviation" +
+    (report.sigma ? " (" + report.sigma + " " + unit + ")" : "") + ".";
+  dialog.append(title, lead);
+
+  if (!detail || !Array.isArray(detail.months)) {
+    const missing = document.createElement("p");
+    missing.textContent = "This run did not retain a per-month drill-down. Re-run the relationship analysis to build one. No numbers are invented here.";
+    dialog.append(missing);
+  } else {
+    const months = detail.months.filter((row) => {
+      if (!episode.start || !episode.end) return false;
+      return row.month >= episode.start && row.month <= episode.end;
+    });
+    const baseline = document.createElement("p");
+    baseline.className = "anomaly-baseline";
+    baseline.textContent = [
+      "Baseline period: " + (detail.baseline_period?.first_month || "?") + "–" + (detail.baseline_period?.last_month || "?"),
+      "Valid months: " + (detail.baseline_period?.valid_months ?? "?"),
+      "Missing months: " + (detail.baseline_period?.missing_months ?? "?"),
+      "Threshold: " + (detail.threshold_sigma ?? 1) + "σ",
+      "Source: " + store,
+    ].join(" · ");
+    dialog.append(baseline);
+
+    const table = document.createElement("table");
+    table.className = "anomaly-table";
+    const head = document.createElement("tr");
+    for (const label of ["Month", "Observed (" + unit + ")", "Expected baseline (" + unit + ")", "Departure (" + unit + ")", "Standardised (σ)"]) {
+      const cell = document.createElement("th");
+      cell.scope = "col";
+      cell.textContent = label;
+      head.append(cell);
+    }
+    const thead = document.createElement("thead");
+    thead.append(head);
+    const tbody = document.createElement("tbody");
+    for (const row of months) {
+      const tr = document.createElement("tr");
+      const cells = [row.month, num(row.observed, 3), num(row.expected, 3),
+        Number.isFinite(row.departure) ? (row.departure >= 0 ? "+" : "") + num(row.departure, 3) : "no observation",
+        Number.isFinite(row.sigma_units) ? (row.sigma_units >= 0 ? "+" : "") + row.sigma_units.toFixed(2) : "—"];
+      for (const value of cells) {
+        const td = document.createElement("td");
+        td.textContent = String(value);
+        tr.append(td);
+      }
+      if (episode.peak_month === row.month) tr.className = "peak";
+      tbody.append(tr);
+    }
+    table.append(thead, tbody);
+    const tableWrap = document.createElement("div");
+    tableWrap.className = "anomaly-table-wrap";
+    tableWrap.append(table);
+    dialog.append(tableWrap);
+
+    const reading = document.createElement("p");
+    reading.className = "anomaly-reading";
+    reading.textContent = "An unusual departure is a difference from this measurement's own fitted baseline, not an extreme-event " +
+      "or hazard assessment. This threshold alone cannot say whether a departure mattered, what caused it, or what happened " +
+      "as a result; that would need physical damage or exposure evidence, which this analysis does not contain.";
+    dialog.append(reading);
+  }
+
+  const links = (ixState.local?.pairs || []).filter((pair) =>
+    pair.a === src.variable?.id || pair.b === src.variable?.id || pair.var_a === src.variable?.id || pair.var_b === src.variable?.id);
+  const linked = document.createElement("div");
+  linked.className = "anomaly-links";
+  const linkedTitle = document.createElement("h3");
+  linkedTitle.textContent = "Explore possible linked variables";
+  const linkedNote = document.createElement("p");
+  linkedNote.textContent = links.length
+    ? "These are the statistical associations this run tested between the episode's variable and another measurement in the same area and months. An association is not an attribution: nothing here establishes that one variable caused the departure."
+    : "No surviving association with another measurement was found in this run. Attribution has not been established, and this anomaly alone does not identify a cause.";
+  linked.append(linkedTitle, linkedNote);
+  for (const pair of links.slice(0, 4)) {
+    const row = document.createElement("p");
+    const rValue = Number(pair.r);
+    row.textContent = (pair.a_name || pair.var_a || "series 1") + " ↔ " + (pair.b_name || pair.var_b || "series 2") +
+      " · relationship strength " + (Number.isFinite(rValue) ? (rValue >= 0 ? "+" : "") + rValue.toFixed(2) : "—") +
+      " on a −1 to +1 scale (unitless)" + (pair.lead_note ? " · " + pair.lead_note : "") +
+      (Number.isFinite(Number(pair.p_adjusted ?? pair.p)) ? " · adjusted p " + Number(pair.p_adjusted ?? pair.p).toPrecision(3) : "");
+    linked.append(row);
+  }
+  dialog.append(linked);
+
+  const close = document.createElement("button");
+  close.type = "button";
+  close.className = "toolbar-button";
+  close.textContent = "Close";
+  close.onclick = () => dialog.close();
+  dialog.append(close);
+  dialog.addEventListener("close", () => dialog.remove());
+  document.body.append(dialog);
+  dialog.showModal();
+  close.focus();
 }
 
 initInterconnectScreen();

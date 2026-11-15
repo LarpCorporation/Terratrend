@@ -1,0 +1,14 @@
+{
+  "job_id": "eed00ff6f05ae4de482b",
+  "status": "complete",
+  "record_id": "d18019fd8b6cf497f2c6dd14",
+  "area": "Ghana",
+  "start": 2016,
+  "end": 2024,
+  "source": "NASA GES DISC / MERRA-2",
+  "cached_subsets": 108,
+  "published_months": 108,
+  "per_decade": -0.4481666666666613,
+  "p": 0.6021675277481959,
+  "significant": false
+}

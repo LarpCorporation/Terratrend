@@ -101,7 +101,7 @@ class TestGiovanniData(unittest.TestCase):
         q=parse_qs(urlparse(g.request_url('T10M',BOX,2005,2024)).query)
         self.assertEqual(q['variable'],['M2IMNXASM_5_12_4_T10M'])
         self.assertAlmostEqual(g.decode_csv(csv_values('T10M'),'T10M',BOX['bbox'],2005,2016)[200501],10.)
-        self.assertEqual(data_sources.providers()[0]['id'],'nasa-merra2')
+        self.assertEqual(data_sources.providers()[0]['id'],'auto')
 
     def test_polygon_validation_happens_before_earthdata_or_remote_processing(self):
         import giovanni_data as gio

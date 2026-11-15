@@ -8,14 +8,14 @@ _LOCK=threading.RLock()
 
 
 def _check(service):
-    if service!='appeears':raise ValueError('Unsupported credential service')
+    if service not in {'appeears','groq'}:raise ValueError('Unsupported credential service')
 
 
 def _secret(action,service,value=None):
     tool=private._find_secret_tool()
     if not tool:return None
     args=[tool,action]
-    if action=='store':args+=['--label=TerraTrend AppEEARS']
+    if action=='store':args+=['--label=TerraTrend '+('AppEEARS' if service=='appeears' else 'Groq')]
     args+=['service','terratrend','account',service]
     try:
         r=subprocess.run(args,input=value,text=True,capture_output=True,timeout=5,check=False)

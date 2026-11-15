@@ -699,17 +699,33 @@ def explain_teleconnection(src_reg, src_var, dst_reg, dst_var, r, p):
     partial correlation, Granger F-tests, FDR control). The wording here is
     derived purely from the computed sign and strength, so it can never assert
     a mechanism the data did not support.
+
+    ``r`` is a unitless Pearson correlation on the -1..+1 scale, not a change
+    in physical units, and ``p`` is evidence against a no-association model --
+    not a measure of importance, danger or proof of causation. The returned
+    text says both things explicitly so a reader cannot mistake the effect
+    size, the significance and the interpretation for one another.
     """
     src = f"{src_var.get('name', 'the driver')} over {src_reg.get('name', 'the source region')}"
     dst = f"{dst_var.get('name', 'the response')} over {dst_reg.get('name', 'the target region')}"
     if r >= 0.65:
-        return (f"Strong in-phase link (r = {r:+.2f}, p = {p:.3f}): {src} and "
-                f"{dst} move together.")
-    if r <= -0.65:
-        return (f"Strong inverse link (r = {r:+.2f}, p = {p:.3f}): {src} rises "
-                f"while {dst} falls.")
-    if r > 0:
-        return (f"Positive link (r = {r:+.2f}, p = {p:.3f}): {src} tends to move "
-                f"with {dst}.")
-    return (f"Inverse link (r = {r:+.2f}, p = {p:.3f}): {src} tends to move "
-            f"opposite to {dst}.")
+        head = (f"Strong in-phase association (r = {r:+.2f}, p = {p:.3f}): "
+                f"{src} and {dst} tended to move together in the tested "
+                f"series.")
+    elif r <= -0.65:
+        head = (f"Strong inverse association (r = {r:+.2f}, p = {p:.3f}): "
+                f"{src} and {dst} tended to move in opposite directions in "
+                f"the tested series.")
+    elif r > 0:
+        head = (f"Positive association (r = {r:+.2f}, p = {p:.3f}): {src} "
+                f"tended to move with {dst}.")
+    else:
+        head = (f"Inverse association (r = {r:+.2f}, p = {p:.3f}): {src} "
+                f"tended to move opposite to {dst}.")
+    return head + (
+        " The score is dimensionless on a -1 to +1 scale, not a change in "
+        "measurement units. The p-value is evidence against a no-association "
+        "model; it does not measure practical importance, danger or causation, "
+        "and judging importance would need physical units plus exposure and "
+        "context."
+    )

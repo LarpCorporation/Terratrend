@@ -1,0 +1,43 @@
+{
+  "date_utc": "2026-11-15T17:14:33.304119+00:00",
+  "app_url": "http://127.0.0.1:8517/",
+  "backend_passed": 371,
+  "backend_skipped": 1,
+  "backend_subtests_passed": 43,
+  "frontend_passed": 102,
+  "syntax_and_whitespace": "passed",
+  "groq_live_verified": false,
+  "user_deferred_groq_connection": true,
+  "event_observation_downloads_started_in_browser_check": false,
+  "event_photo_downloads_live_verified": false,
+  "branch_source": "origin/events-and-ux",
+  "branch_commit": "5b5a94fc344e4aff25cdb266052ddee740685a4a",
+  "browser_checks": [
+    "Ghana all-compatible-fields plan and cancelled data review",
+    "real cached Ghana T2M 2016\u20132024 run, 108/108 cached monthly subsets",
+    "follow-up question about cause stays within evidence",
+    "normal app ASK plan",
+    "saved Ghana result Plain / Student / Researcher explanations",
+    "event story, named globe markers and editorial arcs",
+    "event request review with four named areas, cancelled before observation work",
+    "interactive event walkthrough 4/4 using actual actions; step 2 waits for a trusted click",
+    "unconnected Groq local explanation and private key form",
+    "no console errors on final check"
+  ],
+  "screenshots": [
+    "ask.jpg",
+    "reader-levels.jpg",
+    "events.jpg",
+    "events-walkthrough.jpg"
+  ],
+  "limitations": [
+    "User deferred entering Groq key; no live Groq call verified.",
+    "No new live event observation request or photo delivery was attempted; those paths were tested offline with fixtures.",
+    "AI selects verified local statements and proposes constrained requests; it has no unrestricted computer or shell access.",
+    "Statistical association and a time lead do not establish physical causation."
+  ],
+  "backend_new_module_line_percent_min": 88.8,
+  "backend_new_module_line_percent_max": 100.0,
+  "post_restart_http_checks": "health, privately restored NASA connection booleans, deferred Groq, scoped Ghana scan plan, six event previews",
+  "model_scope_regressions": "Four unsafe proposals rejected: added remote area, changed comparison area, expanded dates, broadened current primary area; four valid explicit/context requests retain the reviewed engine contract."
+}

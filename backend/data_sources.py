@@ -25,6 +25,7 @@ import appeears_data
 import station_data
 
 PROVIDER = ContextVar("terratrend_provider", default="legacy-live")
+AUTO_AREAS = ContextVar('terratrend_auto_areas', default=())
 STORE = Path(__file__).resolve().parent / "cache" / "imports"
 ALLOWED = {"giovanni": "Giovanni", "hydrology": "Hydrology Time Series",
            "appeears": "AppEEARS", "cdo": "Climate Data Online", "knmi": "KNMI Climate Explorer"}
@@ -38,9 +39,60 @@ LINKED_ROUTES.update({'T10M':'nasa-giovanni','QV10M':'nasa-giovanni'})
 
 
 def supported(provider):
-    if provider=='multi-source':return list(LINKED_ROUTES)
+    if provider in {'auto','multi-source'}:return list(LINKED_ROUTES)
     if provider in ADAPTERS:return list(ADAPTERS[provider].FIELDS)
     return [v['id'] for v in catalog.CATALOG]
+
+
+def _rectangle(feature):
+    try:giovanni_data.rectangle(feature);return True
+    except (ValueError,KeyError,TypeError):return False
+
+
+def automatic_route(variable,feature,areas=()):
+    label=next((v['name'] for v in catalog.CATALOG if v['id']==variable),variable)
+    route=LINKED_ROUTES.get(variable)
+    if not route:raise ValueError(f'{label} has no verified automatic data mapping yet. Choose an available measurement.')
+    if variable in {'T2M','QV2M'} and all(_rectangle(a) for a in (areas or [feature])):route='nasa-giovanni'
+    if route=='nasa-giovanni' and not _rectangle(feature):
+        raise ValueError(f"{feature['name']}: {label} needs a latitude/longitude rectangle. Use coordinate bounds or a rectangular preset; your existing boundary is retained.")
+    return route
+
+
+def request_areas(spec):
+    import geography
+    ids=spec.get('features',[]) if spec.get('operation')=='overview' else [spec.get('region'),spec.get('compare_region')]
+    if spec.get('relationship_scope')=='remote':ids=list(ids)+spec.get('target_regions',[])
+    return [geography.resolve(fid) for fid in dict.fromkeys(ids) if fid]
+
+
+def plan_request(spec):
+    """Read-only preflight. No observation download or boundary substitution."""
+    areas=request_areas(spec);provider=spec.get('provider','auto');operation=spec.get('operation','analyze')
+    fields=spec.get('relationship_variables') if operation=='interconnections' else spec.get('variables')
+    fields=fields or supported(provider)
+    routes={a['id']:{} for a in areas};issues=[];warnings=[];excluded=[]
+    for field in fields:
+        for a in areas:
+            try:
+                route=automatic_route(field,a,areas) if provider=='auto' else LINKED_ROUTES.get(field) if provider=='multi-source' else provider
+                if route in ADAPTERS and field not in ADAPTERS[route].FIELDS:raise ValueError('This measurement is not available in the advanced processing override. Choose Automatic processing.')
+                if route=='nasa-giovanni':giovanni_data.rectangle(a)
+                west,south,east,north=a['bbox'];width=(east-west)%360 if east<west else east-west
+                if route=='nasa-hydrology':hydrology_data.plan(a)
+                if route in {'nasa-appeears','noaa-cdo'} and (width*(north-south)>300 or east<west):
+                    raise ValueError('Choose a smaller country, region or focus box for this measurement. Continental requests are not submitted automatically.')
+                if route=='noaa-cdo' and operation=='overview':raise ValueError('Station summaries cannot color whole-area trends. Analyze the selected areas instead.')
+                routes[a['id']][field]=route
+            except (ValueError,KeyError) as e:
+                message=str(e) if str(e).startswith(a['name']) else a['name']+' / '+next((v['name'] for v in catalog.CATALOG if v['id']==field),field)+': '+str(e)
+                item={'region':a['id'],'variable':field,'message':message,'action':'bounds' if field in {'T10M','QV10M'} or provider=='nasa-giovanni' else 'smaller-area'}
+                (excluded if operation=='scan' else issues).append(item)
+    valid=[v for v in fields if all(v in routes[a['id']] for a in areas)]
+    if provider=='auto' and len(areas)>1 and any(routes[a['id']].get('T2M')=='nasa-merra2' or routes[a['id']].get('QV2M')=='nasa-merra2' for a in areas):
+        warnings.append('Temperature/humidity use the same native MERRA-2 product for both areas because at least one boundary is not a rectangle.')
+    if any('noaa-cdo' in r.values() for r in routes.values()):warnings.append('Station observations are fixed-cohort summaries, not whole-area averages.')
+    return {'routes':routes,'variables':valid,'issues':issues,'excluded':excluded,'warnings':warnings}
 
 
 def providers():
@@ -65,6 +117,9 @@ def providers():
             "description":"Combine source-qualified measurements, such as MERRA-2 soil moisture and MODIS vegetation. Each keeps its own definition and provenance. Select 2–3 measurements for local relationship screening; missing source connections stay explicit."},
            {"id": "project-cache", "name": "Existing project cache", "policy": "legacy_unverified",
             "description": "NASA POWER cache only. This access route has not been verified against the challenge resource list; no new downloads."}]
+    out.insert(0,{'id':'auto','name':'Automatic · choose compatible NASA / NOAA data','source':'Automatic NASA / NOAA routing',
+        'policy':'challenge_resource','configured':True,'variables':list(LINKED_ROUTES),
+        'description':'Chooses a verified source for each measurement and actual boundary. Prepared rectangle series are used when compatible; paired comparisons retain matching products. Actual sources accompany every result.'})
     if STORE.is_dir():
         for p in sorted(STORE.glob("*.json")):
             try:
@@ -165,6 +220,7 @@ def _cache_index():
 
 def fetch_region(variable, feature, start, end):
     provider = PROVIDER.get()
+    if provider=='auto':provider=automatic_route(variable,feature,AUTO_AREAS.get() or [feature])
     if provider=='multi-source':
         provider=LINKED_ROUTES.get(variable)
         if not provider:raise ValueError('No linked source mapping for this measurement')

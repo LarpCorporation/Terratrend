@@ -1,0 +1,12 @@
+Summary: 4.2/5 across five quality axes.
+
+Accuracy 4/5 — 303 tests pass plus 43 backend subtests; real cached API/browser checks preserve units, geometry and product identity. Remote validation is bounded to two Ghana rectangles, so it does not establish worldwide coverage.
+Completeness 4/5 — All fourteen approved UI items are implemented and exercised through relevant unit/API/browser paths. Full-reload result persistence is intentionally outside navigation retention and is explicitly documented.
+Clarity 4/5 — One workspace, explicit scope, familiar labels and units replace duplicate controls. Advanced provenance remains dense, but is separated from basic selection.
+Actionability 5/5 — The normal localhost app is running, both service connections restored, a deliverable browser tab remains open, and Help replays the walkthrough.
+Conciseness 4/5 — The final reply focuses on the changed flow; detailed evidence is in the report rather than the product's basic path.
+
+Overall 4.2/5. Critical issues (axes <=2): none.
+Self-check: The user can verify the main improvements directly; future full-reload persistence and broader live-geography validation remain concrete follow-ups, not completed claims.
+Top improvements: validate more service/geography combinations as used; consider full-reload result restoration in a separately scoped follow-up.
+Verdict: Deliver the implemented workflow with the documented persistence and scientific limits.

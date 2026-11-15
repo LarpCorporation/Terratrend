@@ -12,6 +12,9 @@
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="theme.css">
 <link rel="stylesheet" href="overhaul.css">
+<link rel="stylesheet" href="onboarding.css">
+<link rel="stylesheet" href="assistant.css">
+<link rel="stylesheet" href="events.css">
 </head>
 <body data-screen="map" data-drawer="closed">
 
@@ -39,6 +42,7 @@
     <a class="k-nav-link" href="#" data-kview="observatory">Analysis</a>
     <a class="k-nav-link" href="#" data-kview="compare">Compare</a>
     <a class="k-nav-link" href="#" data-kview="interconnect">Interconnections</a>
+    <a class="k-nav-link" href="#" data-kview="events">Events</a>
     <a class="k-nav-link" href="#" data-kview="sources">Data &amp; Methods</a>
   </nav>
 
@@ -57,11 +61,13 @@
     </div>
   </div>
 
-  <button class="k-cta" id="k-scan-cta" type="button" title="Run every variable against the selected region">Analyze</button>
+  <button class="toolbar-button" id="assistant-open" type="button" aria-expanded="false" aria-controls="assistant-panel">ASK</button>
+  <button class="toolbar-button" id="saved-open" type="button" aria-haspopup="dialog" aria-controls="saved-library" title="Open your saved investigations">SAVED</button>
+  <button class="toolbar-button" id="help-tour" type="button">HELP</button><button class="k-cta" id="k-scan-cta" type="button" title="Edit the areas, measurements and dates in your investigation">INVESTIGATE</button>
 </header>
 
 <nav class="k-subnav" aria-label="Map tools">
-  <button id="drawer-toggle" class="toolbar-button" type="button" aria-expanded="false" aria-controls="variables-drawer">☰ &nbsp; VARIABLES <span id="selected-variable-count">1</span></button>
+  <button id="drawer-toggle" class="toolbar-button" type="button" aria-expanded="false" aria-controls="variables-drawer">☰ &nbsp; INVESTIGATION <span id="selected-variable-count">1</span></button>
   <div class="geography-levels" role="group" aria-label="Geographic level">
     <button type="button" data-level="continent" class="active" aria-pressed="true">CONTINENT</button>
     <button type="button" data-level="subcontinent" aria-pressed="false">SUBCONTINENT</button>
@@ -70,7 +76,7 @@
   </div>
   <button id="geography-presets" class="toolbar-button" type="button" aria-pressed="false" title="Switch between geographic boundaries and curated focus boxes">◇ PRESETS</button>
   <label class="scope-control"><span id="scope-label">WITHIN</span><select id="geography-scope" aria-label="Geographic scope"></select></label>
-  <button id="analyze-layer" class="toolbar-button layer-action" type="button" title="Compute a separate result for each area in this layer">ANALYZE LAYER</button>
+
 </nav>
 
 
@@ -119,6 +125,7 @@
 
 <main class="hud-grid">
   <div id="selection-breadcrumb" class="selection-breadcrumb" aria-live="polite">WORLD / CONTINENTS</div>
+  <p id="saved-trend-note" class="saved-trend-note" role="status" aria-live="polite" hidden></p>
     <section class="panel k-region-card" id="k-region-card">
       <div class="krc-head" data-panel-header="k-region-card">
         <button class="panel-drag" type="button" data-panel-drag="k-region-card" aria-label="Move area panel: drag or use arrow keys" title="Drag to move · arrow keys to nudge">⠿</button>
@@ -128,9 +135,91 @@
       </div>
       <div id="area-panel-body" data-panel-body>
       <div class="area-pickers" aria-label="Choose analysis areas">
-        <div class="area-picker-row slot-a"><button id="pick-area-a" class="area-picker slot-a active" type="button" aria-pressed="true"><span class="slot-letter">A</span><span><small>PRIMARY AREA · PICK ON MAP</small><b id="picked-area-a">Choose an area</b></span><span aria-hidden="true">↗</span></button><button id="clear-area-a" class="area-clear" type="button" aria-label="Clear primary area A" title="Deselect area A" disabled>×</button></div>
-        <div class="area-picker-row slot-b"><button id="pick-area-b" class="area-picker slot-b" type="button" aria-pressed="false"><span class="slot-letter">B</span><span><small>COMPARISON · PICK ON MAP</small><b id="picked-area-b">Add a second area</b></span><span aria-hidden="true">↗</span></button><button id="clear-area-b" class="area-clear" type="button" aria-label="Clear comparison area B" title="Deselect area B" disabled>×</button></div>
+        <div class="area-picker-row slot-a"><button id="pick-area-a" class="area-picker slot-a active" type="button" aria-pressed="true"><span class="slot-letter">A</span><span><small>REGION · PICK ON MAP</small><b id="picked-area-a">Choose an area</b></span><span aria-hidden="true">↗</span></button><button id="clear-area-a" class="area-clear" type="button" aria-label="Clear primary area A" title="Deselect area A" disabled>×</button></div>
+        <div class="area-picker-row slot-b"><button id="pick-area-b" class="area-picker slot-b" type="button" aria-pressed="false"><span class="slot-letter">B</span><span><small>COMPARE WITH · PICK ON MAP</small><b id="picked-area-b">Add a second area</b></span><span aria-hidden="true">↗</span></button><button id="clear-area-b" class="area-clear" type="button" aria-label="Remove comparison area B" title="Remove comparison area B" disabled>×</button></div>
       </div>
+      <div class="comparison-affordance">
+        <button id="add-comparison-area" class="area-add" type="button">＋ Compare with another region</button>
+        <p class="comparison-hint" id="comparison-hint" role="status" aria-live="polite" hidden></p>
+      </div>
+  <aside class="investigation-controls" id="variables-drawer" aria-label="Investigation controls">
+<div class="drawer-heading" hidden><strong>YOUR INVESTIGATION</strong><button id="drawer-close" type="button" aria-label="Close variable drawer">×</button></div>
+
+    <!-- the "country panel": whatever the map is currently pointing at -->
+
+
+    <details id="measurement-picker" class="measurement-picker">
+      <summary><span>Measurements <span id="measurement-summary">Discover available trends</span></span><span class="ph-count" id="var-count">0 / 3</span></summary>
+      <label class="measurement-search">FIND A MEASUREMENT<input id="measurement-search" type="search" placeholder="Temperature, soil, vegetation…" autocomplete="off"></label>
+      <div class="sphere-filter-bar" id="sphere-filter-bar" role="group" aria-label="Filter variables by Earth sphere">
+    <button class="sphere-tab active" data-sphere="all" type="button">ALL</button>
+    <button class="sphere-tab" data-sphere="atmosphere" type="button">AIR</button>
+    <button class="sphere-tab" data-sphere="hydrosphere" type="button">WATER</button>
+    <button class="sphere-tab" data-sphere="land" type="button">LAND</button>
+    <button class="sphere-tab" data-sphere="energy" type="button">ENERGY</button>
+  </div>
+<div id="var-list" class="var-list"></div>
+      <p class="micro">Select up to 3 measurements, or leave this empty and Analyze to discover what is changing.</p>
+      <button id="defs-open" class="link-btn">WHAT DO THESE VARIABLES MEAN?</button>
+    </details>
+
+    <details id="area-list-picker" class="area-list-picker"><summary>Choose areas from a list</summary>
+      <div class="panel-head">
+        <span class="ph-label">02 · REGION</span>
+        <button id="toggle-compare-mode" class="hud-mode-pill" type="button">MODE: SINGLE</button>
+      </div>
+      <div class="region-select-group">
+        <button id="drawer-pick-a" class="drawer-area-pick slot-a" type="button">REGION · PICK ON MAP ↗</button>
+        <label class="hud-field-lbl" for="region">OR CHOOSE FROM THIS LAYER</label>
+        <select id="region" class="hud-select"></select>
+        <p class="micro" id="region-desc">—</p>
+      </div>
+      <div class="region-select-group" id="compare-region-group" style="display: none;">
+        <div class="region-contrast-divider"></div>
+        <button id="drawer-pick-b" class="drawer-area-pick slot-b" type="button">COMPARE WITH · PICK ON MAP ↗</button>
+        <label class="hud-field-lbl" for="compare-region">OR CHOOSE FROM THIS LAYER</label>
+        <select id="compare-region" class="hud-select"></select>
+        <p class="micro" id="compare-region-desc">—</p>
+      </div>
+    </details>
+
+    <section class="panel investigation-run">
+      <div class="panel-head">
+        <span class="ph-label">03 · PERIOD</span>
+      </div>
+      <div hidden>      <label class="hud-field-lbl" for="science-provider">DATA SOURCE</label><select id="science-provider" class="hud-select"><option value="project-cache">Existing project cache</option></select><p class="micro" id="provider-note">Automatic NASA data access is being checked.</p><button id="connect-source-open" class="link-btn" type="button">NASA CONNECTION & DATA COVERAGE ↗</button>
+</div>
+      <div class="year-row">
+        <label class="yr">
+          <span>FROM</span>
+          <input id="start" type="number" min="1985" max="2016" value="2005" step="1">
+        </label>
+        <div class="yr-line"></div>
+        <label class="yr">
+          <span>TO</span>
+          <input id="end" type="number" min="1993" max="2024" value="2024" step="1">
+        </label>
+      </div>
+      <button id="run" class="hud-btn">
+        <span class="btn-glitch"></span>
+        ANALYZE SELECTED AREA
+      </button>
+      <p id="run-requirement" class="run-requirement" role="status" aria-live="polite" hidden></p>
+
+      <button id="btn-open-interconnect" class="hud-btn interconnect-btn" title="Open the Earth system interconnections screen: local coupling, global impacts and driver anomalies">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="5" cy="6" r="2.4"/><circle cx="19" cy="6" r="2.4"/><circle cx="12" cy="18" r="2.4"/><path d="M7.4 6h9.2M6.2 8.1l4.6 7.8M17.8 8.1l-4.6 7.8"/></svg>
+        FIND RELATIONSHIPS
+      </button>
+    <div class="ix-search-scope"><label><input id="ix-remote-search" type="checkbox"> Also test relationships with B</label><span>Local relationships use A. Enable this to include the selected area B; data use is reviewed first.</span></div>
+      <details class="more-investigations"><summary>More investigations</summary><button id="scan" class="hud-btn ghost" type="button">DISCOVER ALL AVAILABLE MEASUREMENTS IN A</button><button id="analyze-layer" class="hud-btn ghost" type="button">ANALYZE EVERY DISPLAYED AREA</button><p id="layer-scope-note" class="micro">This separate action processes the displayed layer, not just A and B.</p></details>
+      <button id="btn-trace-impacts" type="button" hidden>VIEW RELATIONSHIPS</button>
+      <div id="compatibility-help" class="compatibility-help" role="alert" hidden></div>
+      <div id="status" class="hud-status" hidden></div>
+    </section>
+
+  </aside>
+
+      <details id="completed-result-summary" class="completed-result-summary"><summary>Last completed result</summary>
       <div class="krc-stat">
         <b id="krc-value">—</b>
         <span class="krc-unit" id="krc-unit">run an analysis</span>
@@ -143,7 +232,8 @@
       <div id="compare-selection-summary" class="compare-selection-summary" hidden></div>
       <div class="krc-bars" id="krc-bars"></div>
     <div id="selection-coverage" class="selection-coverage">Choose a variable and area, then analyze.</div>
-      <div class="selection-actions"><button id="card-analysis" type="button">OPEN ANALYSIS ↗</button><button id="card-connections" type="button">CONNECTIONS ↗</button></div>
+      <div class="selection-actions"><button id="card-analysis" type="button">VIEW SAVED RESULTS ↗</button><button id="card-connections" type="button">VIEW RELATIONSHIPS ↗</button></div>
+      </details>
       </div>
     </section>
 
@@ -185,93 +275,6 @@
   </aside>
 
   <!-- ============ LEFT COLUMN ============ -->
-  <aside class="col col-left" id="variables-drawer" aria-label="Investigation controls">
-<div class="drawer-heading"><strong>YOUR INVESTIGATION</strong><button id="drawer-close" type="button" aria-label="Close variable drawer">×</button></div>
-
-    <!-- the "country panel": whatever the map is currently pointing at -->
-
-
-    <section class="panel">
-      <div class="panel-head">
-        <span class="ph-label">01 · VARIABLES</span>
-        <span class="ph-count" id="var-count">1 / 3</span>
-      </div>
-      <div class="sphere-filter-bar" id="sphere-filter-bar" role="group" aria-label="Filter variables by Earth sphere">
-    <button class="sphere-tab active" data-sphere="all" type="button">ALL</button>
-    <button class="sphere-tab" data-sphere="atmosphere" type="button">ATM</button>
-    <button class="sphere-tab" data-sphere="hydrosphere" type="button">HYD</button>
-    <button class="sphere-tab" data-sphere="land" type="button">LND</button>
-    <button class="sphere-tab" data-sphere="energy" type="button">ENG</button>
-  </div>
-<div id="var-list" class="var-list"></div>
-      <p class="micro">Select up to 3 measurements, or leave this empty and Analyze to discover what is changing.</p>
-      <button id="defs-open" class="link-btn">WHAT DO THESE VARIABLES MEAN?</button>
-    </section>
-
-    <section class="panel">
-      <div class="panel-head">
-        <span class="ph-label">02 · REGION</span>
-        <button id="toggle-compare-mode" class="hud-mode-pill" type="button">MODE: SINGLE</button>
-      </div>
-      <div class="region-select-group">
-        <button id="drawer-pick-a" class="drawer-area-pick slot-a" type="button">A · PICK PRIMARY AREA ON MAP ↗</button>
-        <label class="hud-field-lbl" for="region">OR CHOOSE FROM THIS LAYER</label>
-        <select id="region" class="hud-select"></select>
-        <p class="micro" id="region-desc">—</p>
-      </div>
-      <div class="region-select-group" id="compare-region-group" style="display: none;">
-        <div class="region-contrast-divider"></div>
-        <button id="drawer-pick-b" class="drawer-area-pick slot-b" type="button">B · PICK COMPARISON AREA ON MAP ↗</button>
-        <label class="hud-field-lbl" for="compare-region">OR CHOOSE FROM THIS LAYER</label>
-        <select id="compare-region" class="hud-select"></select>
-        <p class="micro" id="compare-region-desc">—</p>
-      </div>
-    </section>
-
-    <section class="panel">
-      <div class="panel-head">
-        <span class="ph-label">03 · PERIOD</span>
-      </div>
-      <label class="hud-field-lbl" for="science-provider">DATA SOURCE</label><select id="science-provider" class="hud-select"><option value="project-cache">Existing project cache</option></select><p class="micro" id="provider-note">Automatic NASA data access is being checked.</p><button id="connect-source-open" class="link-btn" type="button">NASA CONNECTION & DATA COVERAGE ↗</button>
-      <div class="year-row">
-        <label class="yr">
-          <span>FROM</span>
-          <input id="start" type="number" min="1985" max="2016" value="2005" step="1">
-        </label>
-        <div class="yr-line"></div>
-        <label class="yr">
-          <span>TO</span>
-          <input id="end" type="number" min="1993" max="2024" value="2024" step="1">
-        </label>
-      </div>
-      <button id="run" class="hud-btn">
-        <span class="btn-glitch"></span>
-        ANALYZE SELECTED AREA
-      </button>
-      <button id="scan" class="hud-btn ghost">SCAN ALL VARIABLES</button>
-      <button id="btn-open-interconnect" class="hud-btn interconnect-btn" title="Open the Earth system interconnections screen: local coupling, global impacts and driver anomalies">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="5" cy="6" r="2.4"/><circle cx="19" cy="6" r="2.4"/><circle cx="12" cy="18" r="2.4"/><path d="M7.4 6h9.2M6.2 8.1l4.6 7.8M17.8 8.1l-4.6 7.8"/></svg>
-        INTERCONNECTIONS
-      </button>
-      <button id="btn-trace-impacts" class="hud-btn ghost" title="Quick 3D trace of remote cascading impacts on the globe">TRACE RELATIONSHIPS</button>
-      <div id="status" class="hud-status" hidden></div>
-    </section>
-
-    <section class="panel legend-panel">
-      <div class="panel-head">
-        <span class="ph-label">COLOR KEY</span>
-      </div>
-      <ul class="legend" id="legend-vars">
-        <li><i class="sw rise"></i>Rising · p &lt; 0.05</li>
-        <li><i class="sw fall"></i>Falling · p &lt; 0.05</li>
-        <li><i class="sw flat"></i>No significant trend</li>
-      </ul>
-      <div class="legend-sep"></div>
-      <ul class="legend" id="legend-active"></ul>
-    </section>
-
-  </aside>
-
   <!-- ============ CENTER GLOBE ============ -->
   <section class="col col-center">
     <div class="globe-wrap">
@@ -361,9 +364,19 @@
   <aside class="col col-right" id="analysis-screen" aria-label="Analysis results">
     <div class="analysis-page-heading"><div><span class="eyebrow" id="analysis-context">YOUR INVESTIGATION</span><h2 id="analysis-page-title">A closer look at change.</h2><p id="analysis-page-description">Analyze a selection to inspect its evidence.</p></div><button id="analysis-back" class="toolbar-button" type="button">← BACK TO MAP</button></div>
     <div class="analysis-evidence-tabs" role="group" aria-label="Analysis view"><button type="button" data-analysis-evidence="graphs" class="active" aria-pressed="true">GRAPHS & STATISTICS</button><button type="button" data-analysis-evidence="satellite" aria-pressed="false">SATELLITE IMAGERY</button></div>
+    <ul id="legend-active" class="legend analysis-series-key" aria-label="Measurements in this result"></ul>
     <div class="analysis-empty" id="analysis-empty"><span class="eyebrow">NO RESULT YET</span><h3>Let the data tell the story.</h3><p>Select an area and a variable on the map, then choose Analyze.</p><button id="analysis-empty-map" class="hud-btn" type="button">CHOOSE AN AREA</button></div>
 
-    <section class="panel">
+    <section class="panel plain-verdict" id="plain-verdict" hidden>
+      <div class="pv-top"><span class="eyebrow">WHAT THIS MEANS</span><span class="pv-region" id="pv-region"></span></div>
+      <h3 class="pv-headline" id="pv-headline">—</h3>
+      <p class="pv-detail" id="pv-detail"></p>
+      <p class="pv-explain" id="pv-explain"></p>
+      <button class="pv-toggle" id="toggle-tech" type="button" aria-expanded="false" aria-controls="pv-stats">Show the statistics</button>
+      <pre class="pv-stats" id="pv-stats" hidden></pre>
+    </section>
+
+    <section class="panel tech-panel" id="signal-panel">
       <div class="panel-head">
         <span class="ph-label">REGIONAL SIGNAL</span>
         <div class="panel-head-actions">
@@ -389,7 +402,7 @@
       </div>
     </section>
 
-    <section class="panel">
+    <section class="panel tech-panel">
       <div class="panel-head">
         <span class="ph-label">VARIABLE SIGNALS</span>
       </div>
@@ -415,6 +428,7 @@
         <canvas id="chart"></canvas>
         <span class="chart-expand-badge" id="chart-expand-badge">EXPAND</span>
       </div>
+      <p class="chart-series-key" id="chart-series-key" aria-label="Chart series key" hidden></p>
     </section>
 
     <!-- EARTH SYSTEM COUPLING PANEL -->
@@ -482,8 +496,8 @@
 <footer class="hud-foot">
   <div class="foot-left">
     <div class="k-legend" id="k-legend">
-      <span class="k-legend-item"><i class="k-legend-swatch" style="background:#ff3ea5;box-shadow:0 0 7px #ff3ea5"></i>Rising · p&lt;0.05</span>
-      <span class="k-legend-item"><i class="k-legend-swatch" style="background:#38d9ff;box-shadow:0 0 7px #38d9ff"></i>Falling · p&lt;0.05</span>
+      <span class="k-legend-item"><i class="k-legend-swatch" style="background:var(--rise);box-shadow:0 0 7px var(--rise)"></i>Rising · p&lt;0.05</span>
+      <span class="k-legend-item"><i class="k-legend-swatch" style="background:var(--fall);box-shadow:0 0 7px var(--fall)"></i>Falling · p&lt;0.05</span>
       <span class="k-legend-item"><i class="k-legend-swatch" style="background:#4a5f54"></i>Not significant</span>
     </div>
     <span class="fl-sep" id="k-foot-sep">/</span>
@@ -699,6 +713,7 @@
           <span class="cz-hint">Scroll / wheel to zoom · Swipe / drag to pan · Double-click to reset</span>
         </div>
       </div>
+      <p class="chart-series-key" id="expanded-series-key" aria-label="Expanded chart series key" hidden></p>
       <div class="expanded-chart-container">
         <canvas id="chart-expanded"></canvas>
       </div>
@@ -842,7 +857,7 @@
 </div>
 
 <!-- ============ EARTH SYSTEM INTERCONNECTIONS SCREEN ============ -->
-<div id="ix-screen" class="ix-screen" hidden role="dialog" aria-modal="true" aria-labelledby="ix-title">
+<section id="ix-screen" class="ix-screen" hidden aria-labelledby="ix-title">
   <div class="ix-inner">
 
     <header class="ix-head">
@@ -853,12 +868,15 @@
       </div>
       <div class="ix-head-actions">
         <span class="ix-period" id="ix-period">—</span>
-        <button id="ix-rerun" class="ix-btn">RECOMPUTE</button>
-        <button id="ix-close" class="ix-close" aria-label="Close interconnections screen">&times;</button>
+        <button id="ix-run-remote" class="ix-btn" type="button" hidden>RUN REMOTE RELATIONSHIPS</button>
+        <button id="ix-rerun" class="ix-btn" type="button">EDIT INVESTIGATION</button>
+        <button id="ix-close" class="ix-btn" type="button">BACK TO MAP</button>
       </div>
     </header>
-    <div class="ix-search-scope"><label><input id="ix-remote-search" type="checkbox"> Include remote areas</label><span>Off: local relationships only. Remote screening requests additional observations and shows a separate data-use review.</span></div>
-    <div class="ix-hero" id="ix-hero"></div>
+
+    <p class="ix-remote-context" id="ix-remote-context" role="status" aria-live="polite" hidden></p>
+
+    <details class="relationship-diagnostics"><summary>Search details and anomaly summary</summary><div class="ix-hero" id="ix-hero"></div></details>
 
     <nav class="ix-tabs" role="tablist" aria-label="Interconnection views">
       <button class="ix-tab on" data-ix-tab="local" role="tab" aria-selected="true">
@@ -928,13 +946,22 @@
     </footer>
 
   </div>
-</div>
+</section>
 
+
+<section id="events-screen" class="events-screen" aria-label="Earth events" hidden>
+  <aside class="events-rail" aria-label="Documented events">
+    <div class="events-rail-head"><p class="eyebrow">EARTH EVENTS</p><h2>Follow an Earth-system story.</h2><p id="events-lede" class="events-lede">Choose a documented event to explore its pathways.</p></div>
+    <div id="events-list" class="events-list"></div><p id="events-disclaimer" class="events-rail-foot"></p>
+  </aside>
+  <div id="events-stage" class="events-stage" aria-hidden="true"></div>
+  <div id="events-detail" class="events-detail" role="region" aria-live="polite" aria-label="Event detail"><p class="events-placeholder">Choose an event. Observation checks start only after you review a request.</p></div>
+</section>
 
 <section id="data-methods-screen" class="methods-screen" aria-label="Data and methods" hidden>
   <div class="analysis-page-heading"><div><span class="eyebrow">OPEN DATA · VISIBLE METHODS</span><h2>Know what is behind the map.</h2><p>Geographic boundaries define the area. Scientific datasets define what we can say about it.</p></div><button id="methods-back" class="toolbar-button" type="button">← BACK TO MAP</button></div>
   <div class="methods-grid">
-    <article class="method-card"><span class="eyebrow">PROCESSING SETTINGS</span><h3>Choose your scientific data.</h3><label for="methods-provider">DATA SOURCE AND PROCESSING</label><select id="methods-provider" class="processing-select" aria-describedby="methods-provider-note"></select><p id="methods-provider-note" role="status"></p><p class="micro">Native MERRA-2: eight measurements clipped to the selected boundary. Giovanni: monthly temperature and humidity at 2 m and 10 m for rectangles, local relationships and batches of preset boxes. AppEEARS: monthly polygon NDVI/EVI summaries. Hydrology: monthly GLDAS native-cell histories. NOAA: fixed-cohort station observations, not whole-area averages. Linked datasets: combine source-qualified measurements over the same area and calendar. Each source keeps its own resolution, weighting and quality limits; values need not match. No source silently falls back to a larger raw-data download.</p><a href="https://www.spaceappschallenge.org/2026/challenges/earth-system-trend-detective/?tab=resources" target="_blank" rel="noopener">Official challenge resources ↗</a></article>
+    <article class="method-card"><span class="eyebrow">PROCESSING SETTINGS</span><h3>Automatic processing, visible sources.</h3><label for="methods-provider">ADVANCED PROCESSING OVERRIDE</label><select id="methods-provider" class="processing-select" aria-describedby="methods-provider-note"></select><p id="methods-provider-note" role="status"></p><p class="micro">Native MERRA-2: eight measurements clipped to the selected boundary. Giovanni: monthly temperature and humidity at 2 m and 10 m for rectangles, local relationships and batches of preset boxes. AppEEARS: monthly polygon NDVI/EVI summaries. Hydrology: monthly GLDAS native-cell histories. NOAA: fixed-cohort station observations, not whole-area averages. Linked datasets: combine source-qualified measurements over the same area and calendar. Each source keeps its own resolution, weighting and quality limits; values need not match. No source silently falls back to a larger raw-data download.</p><a href="https://www.spaceappschallenge.org/2026/challenges/earth-system-trend-detective/?tab=resources" target="_blank" rel="noopener">Official challenge resources ↗</a></article>
     <article class="method-card"><span class="eyebrow">01 / SCIENTIFIC EVIDENCE</span><h3>Sources you can trace.</h3><p>TerraTrend automatically discovers monthly NASA MERRA-2 observations through CMR and downloads native-grid subsets from GES DISC, the archive behind the challenge’s Giovanni resource. Each result retains the dataset citation, units, native cell spacing, coverage and geographic boundary version.</p><div class="resource-links"><a href="https://giovanni.gsfc.nasa.gov/" target="_blank" rel="noopener">Giovanni ↗</a><a href="https://disc.gsfc.nasa.gov/information/tools?title=Hydrology%20Time%20Series" target="_blank" rel="noopener">Hydrology Time Series ↗</a><a href="https://appeears.earthdatacloud.nasa.gov/" target="_blank" rel="noopener">AppEEARS ↗</a><a href="https://www.ncei.noaa.gov/cdo-web/" target="_blank" rel="noopener">Climate Data Online ↗</a><a href="https://climexp.knmi.nl/" target="_blank" rel="noopener">KNMI Climate Explorer ↗</a></div><p class="micro">NASA POWER is another NASA service. Its existing point-cache files remain available for continuity. A live POWER option still needs verified mappings and native-grid coverage checks; this map workflow makes no new POWER requests.</p></article>
     <article class="method-card"><span class="eyebrow">02 / THE MEASUREMENT</span><h3>Whole areas. Honest coverage.</h3><p>In native mode, grid cells are clipped to the chosen boundary and weighted by their overlap and latitude. At least 80% area support and complete calendar years are required. Giovanni mode uses NASA’s rectangle averages and does not report monthly spatial support. Small regions can share a coarse source cell: a sharp boundary does not add scientific resolution.</p><p>Theil–Sen measures the trend; Mann–Kendall tests significance. Monthly seasonality, confidence intervals and autocorrelation checks are available in Analysis. Paired calendar-aligned series support A/B comparisons.</p><p class="micro">Remote links represent statistical associations and possible lead relationships, not established physical causes or measured wind trajectories. Anomaly relationships do not by themselves explain a long-term trend.</p></article>
     <article class="method-card"><span class="eyebrow">03 / GEOGRAPHIC REFERENCE</span><h3>One boundary, every view.</h3><p>Global country boundaries use Natural Earth 1:50m, including the disconnected parts present at that resolution. Continental and subcontinental layers follow UN country membership; transcontinental countries remain whole in this scheme.</p><p>All 16 Ghana regions are bundled. Other countries load first-level administrative boundaries on demand through geoBoundaries gbOpen when available. Reference boundaries are separate from scientific measurements.</p><a href="https://www.naturalearthdata.com/about/terms-of-use/" target="_blank" rel="noopener">Natural Earth · public domain ↗</a><a href="https://github.com/virgoaugustine/Ghana-GeoJSON-data" target="_blank" rel="noopener">Ghana boundary attribution ↗</a><a href="https://www.geoboundaries.org/" target="_blank" rel="noopener">geoBoundaries ↗</a></article>
@@ -963,18 +990,42 @@
     </form></details></article>
   </div>
 </section>
-<div class="map-bottom-bar"><div id="active-variable-strip" class="active-variable-strip" aria-label="Active map variable"></div><div class="map-color-key"><span><i class="rise-dot"></i>INCREASING</span><span><i class="fall-dot"></i>DECREASING</span><span><i class="neutral-dot"></i>NOT SIGNIFICANT</span><span><i class="missing-dot"></i>INSUFFICIENT DATA</span></div></div>
+<div class="map-bottom-bar"><div id="active-variable-strip" class="active-variable-strip" aria-label="Active map variable"></div><div class="map-color-key"><span><i class="rise-dot"></i>INCREASING</span><span><i class="fall-dot"></i>DECREASING</span><span><i class="neutral-dot"></i>NOT SIGNIFICANT</span><span><i class="missing-dot"></i>INSUFFICIENT DATA</span><span><i class="none-dot"></i>NOT YET ANALYZED</span></div></div>
 <div id="data-review-modal" class="modal-backdrop" hidden>
   <section class="modal-window data-review-window" role="dialog" aria-modal="true" aria-labelledby="data-review-title" aria-describedby="data-review-purpose data-review-note">
-    <div class="modal-header"><div><span class="mh-tag">BEFORE YOU START · DATA USE</span><h2 id="data-review-title">Review this analysis.</h2></div><button id="data-review-close" class="modal-close-btn" type="button" aria-label="Close data-use review">×</button></div>
+    <div class="modal-header"><div><span class="mh-tag">ONE QUICK CHECK</span><h2 id="data-review-title">Ready when you are.</h2></div><button id="data-review-close" class="modal-close-btn" type="button" aria-label="Close data-use review">×</button></div>
     <div class="data-review-body"><p id="data-review-scope"></p><p id="data-review-purpose"></p>
-      <div class="data-review-estimate"><div><span>ESTIMATED DOWNLOAD · EMPTY CACHE</span><strong id="data-review-size"></strong></div><p id="data-review-files"></p></div>
-      <p class="data-review-label">MEASUREMENTS INCLUDED</p><ul id="data-review-variables"></ul><p id="data-review-note" class="micro"></p>
-      <div class="data-review-actions"><button id="data-review-cancel" class="hud-btn ghost" type="button">GO BACK</button><button id="data-review-start" class="hud-btn" type="button">START THIS REQUEST</button></div>
+      <p class="data-review-label">MEASUREMENTS INCLUDED</p><ul id="data-review-variables"></ul>
+      <details class="data-review-details" id="data-review-details"><summary>Download size and data details</summary>
+        <div class="data-review-estimate"><div><span>ESTIMATED TRANSFER IF NOTHING IS ALREADY SAVED</span><strong id="data-review-size"></strong></div><p id="data-review-files"></p></div>
+        <p id="data-review-note" class="micro"></p>
+      </details>
+      <div class="data-review-actions"><button id="data-review-cancel" class="hud-btn ghost" type="button">GO BACK</button><button id="data-review-start" class="hud-btn" type="button">GET THE RESULT</button></div>
     </div>
   </section>
 </div>
 <div id="work-progress" class="work-progress" role="status" hidden><span class="spin"></span><div><strong id="work-progress-title">Analyzing</strong><span id="work-progress-detail"></span></div><button id="cancel-work" type="button">CANCEL</button></div>
+
+<dialog id="saved-library" class="saved-library" aria-labelledby="saved-library-title">
+  <div class="saved-library-head">
+    <div>
+      <span class="eyebrow">LOCAL STORAGE · THIS COMPUTER</span>
+      <h2 id="saved-library-title">Saved investigations</h2>
+      <p>Your completed analyses, comparisons, discoveries and relationship checks. Open one to return to it.</p>
+    </div>
+    <button id="saved-close" class="toolbar-button" type="button" aria-label="Close saved investigations">×</button>
+  </div>
+  <div class="saved-library-body">
+    <label for="saved-search">FIND A SAVED INVESTIGATION</label>
+    <input id="saved-search" type="search" placeholder="Ghana, precipitation, 2016…" autocomplete="off">
+    <p class="saved-storage" id="saved-storage" role="status">Loading…</p>
+    <ul id="saved-list"></ul>
+  </div>
+  <div class="saved-library-foot">
+    <span id="saved-count">0 saved results</span>
+    <span>Nothing here starts a new analysis.</span>
+  </div>
+</dialog>
 
 <script src="vendor/three.min.js"></script>
 <script src="vendor/chart.umd.min.js"></script>
@@ -985,8 +1036,12 @@
 <script src="app.js"></script>
 <script src="data-review.js"></script>
 <script src="workflow.js"></script>
+<script src="workspace.js"></script>
 <script src="selection-tools.js"></script>
 <script src="map-panels.js"></script>
+<script src="onboarding.js"></script>
+<script src="assistant.js"></script>
+<script src="events.js"></script>
 <div id="sr-live" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
 </body>
 </html>
