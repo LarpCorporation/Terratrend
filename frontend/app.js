@@ -2363,6 +2363,17 @@ async function initGlobe() {
   buildGridLines();
   buildAtmosphere();
   buildRegionMesh();
+  buildEarthSurface();
+  buildStarfield();
+
+  // the photographic globe is the default; fall back to dots if textures fail
+  const styleBtn = $("globe-style-btn");
+  if (styleBtn) {
+    styleBtn.addEventListener("click", () => {
+      applyGlobeStyle(appliedStyle === "photo" ? "dots" : "photo");
+    });
+  }
+  applyGlobeStyle();  // dots until the textures finish loading
 
   // invisible sphere used to convert a click into a lat/lon
   pickSphere = new THREE.Mesh(
@@ -2433,22 +2444,151 @@ function buildGridLines() {
   const mat = new THREE.LineBasicMaterial({
     color: C.globeLine, transparent: true, opacity: 0.5,
   });
+  gridLines = [];
 
   for (let lat = -60; lat <= 60; lat += 30) {
     const pts = [];
     for (let lon = -180; lon <= 180; lon += 3) {
       pts.push(latLonToVec3(lat, lon, R * 0.999));
     }
-    globeGroup.add(new THREE.Line(
-      new THREE.BufferGeometry().setFromPoints(pts), mat));
+    const line = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints(pts), mat);
+    gridLines.push(line);
+    globeGroup.add(line);
   }
   for (let lon = -180; lon < 180; lon += 30) {
     const pts = [];
     for (let lat = -90; lat <= 90; lat += 3) {
       pts.push(latLonToVec3(lat, lon, R * 0.999));
     }
-    globeGroup.add(new THREE.Line(
-      new THREE.BufferGeometry().setFromPoints(pts), mat));
+    const line = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints(pts), mat);
+    gridLines.push(line);
+    globeGroup.add(line);
+  }
+}
+
+/* ---------- photoreal Earth (NASA Blue Marble + night lights) ---------- */
+const EARTH_TEXTURES = {
+  day: "https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg",
+  night: "https://unpkg.com/three-globe/example/img/earth-night.jpg",
+};
+let earthMesh = null;
+let starField = null;
+let textureState = "idle";   // idle | loading | ready | failed
+let globeStyle = "photo";    // what the user wants
+let appliedStyle = "dots";   // what is actually on screen
+
+function buildEarthSurface() {
+  textureState = "loading";
+  const loader = new THREE.TextureLoader();
+  loader.setCrossOrigin("anonymous");
+
+  const onFail = () => {
+    // no textures (offline / CDN blocked): quietly stay on the dot globe
+    textureState = "failed";
+    applyGlobeStyle("dots");
+  };
+
+  let loaded = 0;
+  const onLoad = () => {
+    loaded += 1;
+    if (loaded < 2) return;
+    textureState = "ready";
+    applyGlobeStyle();
+  };
+
+  const day = loader.load(EARTH_TEXTURES.day, onLoad, undefined, onFail);
+  const night = loader.load(EARTH_TEXTURES.night, onLoad, undefined, onFail);
+  for (const t of [day, night]) {
+    t.colorSpace = THREE.SRGBColorSpace;
+    t.anisotropy = 4;
+  }
+
+  earthMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(0.999, 96, 96),
+    new THREE.ShaderMaterial({
+      uniforms: {
+        uDay: { value: day },
+        uNight: { value: night },
+        // fixed sun in world space: the terminator stays put while the globe
+        // rotates under it, which is what reads as a real planet
+        uSunDir: { value: new THREE.Vector3(0.52, 0.22, 0.83).normalize() },
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        varying vec3 vNormalW;
+        void main() {
+          vUv = uv;
+          vNormalW = normalize(mat3(modelMatrix) * normal);
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }`,
+      fragmentShader: `
+        uniform sampler2D uDay;
+        uniform sampler2D uNight;
+        uniform vec3 uSunDir;
+        varying vec2 vUv;
+        varying vec3 vNormalW;
+        void main() {
+          vec3 n = normalize(vNormalW);
+          float lam = dot(n, normalize(uSunDir));
+          float dayMix = smoothstep(-0.22, 0.28, lam);
+          vec3 dayCol = texture2D(uDay, vUv).rgb;
+          vec3 nightCol = texture2D(uNight, vUv).rgb;
+          // lift the daylight side so the planet reads bright like the reference
+          vec3 lit = dayCol * (0.95 + 1.15 * max(lam, 0.0));
+          vec3 dark = nightCol * 1.35 + dayCol * 0.10;
+          gl_FragColor = vec4(mix(dark, lit, dayMix), 1.0);
+        }`,
+    }),
+  );
+  earthMesh.visible = false;
+  globeGroup.add(earthMesh);
+}
+
+function buildStarfield() {
+  const COUNT = 1600;
+  const pos = new Float32Array(COUNT * 3);
+  for (let i = 0; i < COUNT; i++) {
+    const r = 16 + Math.random() * 24;
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(2 * Math.random() - 1);
+    pos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+    pos[i * 3 + 1] = r * Math.cos(phi);
+    pos[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+  starField = new THREE.Points(geo, new THREE.PointsMaterial({
+    color: 0xaebfcc, size: 0.085, sizeAttenuation: true,
+    transparent: true, opacity: 0.8, depthWrite: false,
+  }));
+  starField.visible = false;
+  scene.add(starField);
+}
+
+/* switch between the photographic Earth and the original dot matrix.
+   Call with no argument to (re)apply whatever the user last chose. */
+function applyGlobeStyle(style) {
+  if (style) globeStyle = style;
+  const wantPhoto = globeStyle === "photo" && textureState === "ready";
+  appliedStyle = wantPhoto ? "photo" : "dots";
+
+  if (landPoints) landPoints.visible = !wantPhoto;
+  if (earthMesh) earthMesh.visible = wantPhoto;
+  if (haloMesh) haloMesh.visible = !wantPhoto;
+  if (starField) starField.visible = wantPhoto;
+  if (Array.isArray(gridLines)) {
+    gridLines.forEach((line) => { line.visible = !wantPhoto; });
+  }
+
+  const btn = $("globe-style-btn");
+  if (btn) {
+    btn.hidden = textureState !== "ready";
+    btn.textContent = wantPhoto ? "◐ PHOTOREAL" : "◌ DOTS";
+    btn.title = wantPhoto
+      ? "Showing NASA Blue Marble + night lights — click for the dot globe"
+      : "Showing the dot-matrix globe — click for the photographic Earth";
   }
 }
 

@@ -327,6 +327,18 @@ body {
 #globe canvas { display: block; }
 
 .globe-overlay { position: absolute; inset: 0; pointer-events: none; }
+
+/* globe renderer switch (photoreal / dot matrix) */
+.globe-style-btn {
+  position: absolute; top: 14px; right: 16px;
+  pointer-events: auto; cursor: pointer;
+  background: rgba(8, 9, 10, .72); color: var(--hi-dim);
+  border: 1px solid var(--line-hot);
+  padding: 4px 9px;
+  font-family: var(--font); font-size: .5rem; letter-spacing: .14em;
+  transition: color .13s, border-color .13s;
+}
+.globe-style-btn:hover { color: var(--text-bright); border-color: var(--hi); }
 .corner {
   position: absolute; width: 18px; height: 18px;
   border: 1px solid var(--hi); opacity: .45;
