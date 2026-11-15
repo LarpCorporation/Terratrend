@@ -112,7 +112,11 @@
         RUN ANALYSIS
       </button>
       <button id="scan" class="hud-btn ghost">SCAN ALL VARIABLES</button>
-      <button id="btn-trace-impacts" class="hud-btn ghost telecon-btn" title="Discover remote cascading impacts and teleconnections across the Earth">TRACE GLOBAL IMPACTS</button>
+      <button id="btn-open-interconnect" class="hud-btn interconnect-btn" title="Open the Earth system interconnections screen: local coupling, global impacts and driver anomalies">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="5" cy="6" r="2.4"/><circle cx="19" cy="6" r="2.4"/><circle cx="12" cy="18" r="2.4"/><path d="M7.4 6h9.2M6.2 8.1l4.6 7.8M17.8 8.1l-4.6 7.8"/></svg>
+        INTERCONNECTIONS
+      </button>
+      <button id="btn-trace-impacts" class="hud-btn ghost" title="Quick 3D trace of remote cascading impacts on the globe">QUICK GLOBE TRACE</button>
       <div id="status" class="hud-status" hidden></div>
     </section>
 
@@ -281,7 +285,7 @@
       </div>
       <p class="micro" id="telecon-summary-text">Discover how this region's trends ripple across the globe. Click "TRACE GLOBAL IMPACTS" to detect cross-regional connections and 3D rays.</p>
       <div id="telecon-mini-list" class="telecon-mini-list"></div>
-      <button id="btn-open-ledger" class="hud-btn ghost mini telecon-ledger-btn" style="display: none;">VIEW IMPACT LEDGER</button>
+      <button id="btn-open-ledger" class="hud-btn ghost mini telecon-ledger-btn" style="display: none;">OPEN FULL ANALYSIS</button>
     </section>
 
     <section class="panel">
@@ -666,6 +670,95 @@
       <span>Statistical cross-correlation with Student's t significance (p &lt; 0.05) across NASA POWER multidecadal grid points.</span>
       <button id="ledger-done" class="modal-btn">CLOSE LEDGER</button>
     </div>
+  </div>
+</div>
+
+<!-- ============ EARTH SYSTEM INTERCONNECTIONS SCREEN ============ -->
+<div id="ix-screen" class="ix-screen" hidden role="dialog" aria-modal="true" aria-labelledby="ix-title">
+  <div class="ix-inner">
+
+    <header class="ix-head">
+      <div class="ix-head-left">
+        <span class="ix-tag">EARTH SYSTEM NETWORK · COMPUTED INTERCONNECTIONS</span>
+        <h2 id="ix-title">INTERCONNECTIONS</h2>
+        <p class="ix-sub" id="ix-sub">Select a region and a driver variable to trace how it moves the rest of the Earth system.</p>
+      </div>
+      <div class="ix-head-actions">
+        <span class="ix-period" id="ix-period">—</span>
+        <button id="ix-rerun" class="ix-btn">RECOMPUTE</button>
+        <button id="ix-close" class="ix-close" aria-label="Close interconnections screen">&times;</button>
+      </div>
+    </header>
+
+    <div class="ix-hero" id="ix-hero"></div>
+
+    <nav class="ix-tabs" role="tablist" aria-label="Interconnection views">
+      <button class="ix-tab on" data-ix-tab="local" role="tab" aria-selected="true">
+        <span class="ixt-num">01</span>
+        <span class="ixt-label">LOCAL COUPLING</span>
+        <span class="ixt-hint">How variables drive each other here</span>
+      </button>
+      <button class="ix-tab" data-ix-tab="global" role="tab" aria-selected="false">
+        <span class="ixt-num">02</span>
+        <span class="ixt-label">GLOBAL IMPACTS</span>
+        <span class="ixt-hint">Where the driver ripples to</span>
+      </button>
+      <button class="ix-tab" data-ix-tab="anomaly" role="tab" aria-selected="false">
+        <span class="ixt-num">03</span>
+        <span class="ixt-label">DRIVER ANOMALY</span>
+        <span class="ixt-hint">When it ran above its own trend</span>
+      </button>
+    </nav>
+
+    <div class="ix-body">
+
+      <section class="ix-panel on" data-ix-panel="local">
+        <div class="ix-panel-head">
+          <h3>WITHIN-REGION COUPLING</h3>
+          <p id="ix-local-sub">Directed influence between variables measured in this region.</p>
+        </div>
+        <div class="ix-local-grid">
+          <div class="ix-net-wrap">
+            <svg id="ix-net" class="ix-net" viewBox="0 0 460 420" role="img" aria-label="Local coupling network"></svg>
+            <div class="ix-net-legend">
+              <span><i class="ix-dot rise"></i>POSITIVE</span>
+              <span><i class="ix-dot fall"></i>INVERSE</span>
+              <span>ARROW = COMPUTED LEAD</span>
+            </div>
+          </div>
+          <div class="ix-pair-list" id="ix-pair-list"></div>
+        </div>
+      </section>
+
+      <section class="ix-panel" data-ix-panel="global">
+        <div class="ix-panel-head">
+          <h3>GLOBAL IMPACT RIPPLES</h3>
+          <p id="ix-global-sub">Remote regions whose variables respond to this driver's anomalies.</p>
+        </div>
+        <div class="ix-global-list" id="ix-global-list"></div>
+      </section>
+
+      <section class="ix-panel" data-ix-panel="anomaly">
+        <div class="ix-panel-head">
+          <h3>DRIVER ANOMALY EPISODES</h3>
+          <p id="ix-anomaly-sub">When this variable departed from its own seasonal cycle and trend.</p>
+        </div>
+        <div class="ix-anomaly-summary" id="ix-anomaly-summary"></div>
+        <div class="ix-anomaly-strip" id="ix-anomaly-strip"></div>
+        <div class="ix-episode-list" id="ix-episode-list"></div>
+      </section>
+
+      <div class="ix-empty" id="ix-empty" hidden>
+        <h4>NO SIGNIFICANT LINKS DETECTED</h4>
+        <p>The driver's anomalies do not explain any remote variable beyond what chance and the shared seasonal cycle already account for. That is a real scientific result, not a failure — it means this signal is localized.</p>
+      </div>
+
+    </div>
+
+    <footer class="ix-foot">
+      <span id="ix-method">—</span>
+    </footer>
+
   </div>
 </div>
 

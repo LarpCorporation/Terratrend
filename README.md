@@ -38,7 +38,8 @@ TerraTrend does all four in one interactive observatory.
 | **Select up to 3 variables** | Signals stack in the right rail, each with its own color |
 | **Earth System Coupling** | When 2+ variables are selected, automatically diagnoses cross-sphere physical interactions (VPD expansion, greenhouse radiative trapping, hydrological sensitivity) |
 | **Regional Contrast Mode** | Compare two distinct geographic regions (Region A vs Region B) simultaneously on the 3D globe and trend observatory |
-| **Trace Global Impacts** | Click `TRACE GLOBAL IMPACTS` to detect remote planetary cascading ripple effects across global climate zones (e.g. Pacific Trade Winds driving West African heatwaves or Amazon drought) with 3D Great-Circle glowing connection arcs |
+| **Earth System Interconnections** | Click `INTERCONNECTIONS` to open a dedicated analysis screen with three focused views: **Local Coupling** (which variables drive which, inside the selected region), **Global Impacts** (where that driver's anomalies ripple to across the planet, with lag and effect size), and **Driver Anomaly** (when the driver ran above or below its own trend). Every link is computed — see below |
+| **Quick Globe Trace** | Click `QUICK GLOBE TRACE` for the fast 3D view: remote ripple effects across global climate zones drawn as Great-Circle glowing arcs |
 | **Earth System Impact Ledger** | Comprehensive modal ranking remote teleconnections with Pearson r, Student's t p-values, physical mechanisms, and 1-click `INVESTIGATE` contrast triggers |
 | **Click a signal or color key** | The globe swaps to that variable's grid analysis |
 | **Hover a grid cell** | Tooltip with lat/lon, slope/decade, p-value, trend verdict |
@@ -56,7 +57,8 @@ TerraTrend does all four in one interactive observatory.
 | Multi-Sphere System Framework | Filter variables by Atmosphere (ATM), Hydrosphere (HYD), Land (LND), and Energy (ENG) across 3 functional groups |
 | Automated Trend Discovery Mode | One-click `SCAN ALL VARIABLES` systematically queries and ranks all 16 variables by trend slope and grid consensus |
 | Cross-Variable Physical Coupling | Automated thermodynamic coupling detection (VPD expansion, greenhouse radiative trapping, hydrological sensitivity, moisture convergence) with Pearson r |
-| Planetary Teleconnection Detective | Dynamic `TRACE GLOBAL IMPACTS` engine scanning multi-sphere driver variables across 7 global climate zones, quantifying remote ripple effects (r, p < 0.05), rendering 3D Great-Circle connection arcs, and providing physical mechanism explanations |
+| Earth System Interconnectivity | Dedicated `INTERCONNECTIONS` screen computing how variables drive each other, locally and globally. **Nothing is hard-coded**: seasonal + trend decomposition isolates anomalies, lagged cross-correlation (±6 mo local, ±24 mo global) establishes direction, first-order partial correlation removes the T2M confounder, two-way Granger F-tests rank who leads, event compositing measures the remote effect size in σ, and Benjamini–Hochberg FDR controls false discoveries at q=0.10 across each scan. Implementation: `backend/interconnect.py` |
+| Planetary Teleconnection Detective | Dynamic `QUICK GLOBE TRACE` engine scanning multi-sphere driver variables across 7 global climate zones, quantifying remote ripple effects on anomaly series (r, lag, effect size, p < 0.05), rendering 3D Great-Circle connection arcs, and providing physical mechanism explanations |
 | Regional Contrast (A vs B) | Simultaneous dual-region comparison on the 3D globe and trend observatory with differential slope, co-trend correlation, and divergence verdicts |
 | Visualize change over time | Interactive yearly/monthly series with Theil-Sen trend lines, partial-year guards through 2026, and multi-region comparisons |
 | What is changing | Plain-language verdict per variable (rising / falling / stable) + in-app scientific glossary |

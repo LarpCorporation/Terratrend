@@ -102,7 +102,7 @@ async function boot() {
   const traceBtn = $("btn-trace-impacts");
   if (traceBtn) traceBtn.addEventListener("click", traceGlobalImpacts);
   const ledgerBtn = $("btn-open-ledger");
-  if (ledgerBtn) ledgerBtn.addEventListener("click", openImpactLedger);
+  if (ledgerBtn) ledgerBtn.addEventListener("click", () => openInterconnectScreen({ force: true }));
   const ledgerClose = $("ledger-close");
   if (ledgerClose) ledgerClose.addEventListener("click", closeImpactLedger);
   const ledgerDone = $("ledger-done");
@@ -561,7 +561,7 @@ async function traceGlobalImpacts() {
     variable: vId,
     start: $("start").value,
     end: $("end").value,
-    min_r: "0.38",
+    min_r: "0.15",
   });
 
   try {
@@ -3579,3 +3579,532 @@ function animateGlobe() {
 }
 
 boot();
+
+/* ============================================================
+   EARTH SYSTEM INTERCONNECTIONS SCREEN
+   The main deliverable: local coupling, global impacts and the
+   driver's own anomaly history, each in its own focused view
+   instead of crammed into the rail.
+   ============================================================ */
+let ixState = {
+  local: null,
+  global: null,
+  anomaly: null,
+  tab: "local",
+  loading: false,
+};
+
+function initInterconnectScreen() {
+  const screen = $("ix-screen");
+  if (!screen) return;
+
+  document.querySelectorAll("[data-ix-tab]").forEach((btn) => {
+    btn.addEventListener("click", () => setIxTab(btn.dataset.ixTab));
+  });
+
+  const closeBtn = $("ix-close");
+  if (closeBtn) closeBtn.addEventListener("click", closeInterconnectScreen);
+
+  const rerun = $("ix-rerun");
+  if (rerun) rerun.addEventListener("click", () => openInterconnectScreen({ force: true }));
+
+  const openBtn = $("btn-open-interconnect");
+  if (openBtn) openBtn.addEventListener("click", () => openInterconnectScreen());
+
+  screen.addEventListener("click", (e) => {
+    if (e.target === screen) closeInterconnectScreen();
+  });
+
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && screen.classList.contains("open")) {
+      closeInterconnectScreen();
+    }
+  });
+}
+
+function setIxTab(tab) {
+  ixState.tab = tab;
+  document.querySelectorAll("[data-ix-tab]").forEach((b) => {
+    const on = b.dataset.ixTab === tab;
+    b.classList.toggle("on", on);
+    b.setAttribute("aria-selected", on ? "true" : "false");
+  });
+  document.querySelectorAll("[data-ix-panel]").forEach((p) => {
+    p.classList.toggle("on", p.dataset.ixPanel === tab);
+  });
+}
+
+function closeInterconnectScreen() {
+  const screen = $("ix-screen");
+  if (screen) screen.classList.remove("open");
+  setTimeout(() => { if (screen) screen.hidden = true; }, 280);
+}
+
+function ixDrivers() {
+  const reg = currentRegion();
+  const s = state.result && state.result.series
+    ? state.result.series[state.activeVarIdx] : null;
+  const vId = s ? s.variable.id : (state.selected[0] || "T2M");
+  const vMeta = s ? s.variable
+    : ((state.catalog && state.catalog.variables.find((v) => v.id === vId)) || null);
+  return { reg, vId, vMeta };
+}
+
+async function openInterconnectScreen(opts = {}) {
+  const screen = $("ix-screen");
+  if (!screen) return;
+  const { reg, vId, vMeta } = ixDrivers();
+  if (!reg) {
+    flashHint("PICK A REGION FIRST");
+    return;
+  }
+
+  screen.hidden = false;
+  requestAnimationFrame(() => screen.classList.add("open"));
+  setIxTab(ixState.tab);
+
+  if (ixState.loading) return;
+  if (!opts.force && ixState.local && ixState.global
+      && ixState.regionId === reg.id && ixState.varId === vId) {
+    return;
+  }
+
+  ixState.loading = true;
+  ixState.regionId = reg.id;
+  ixState.varId = vId;
+  ixState.regName = reg.name;
+  ixState.varName = vMeta ? vMeta.name : vId;
+  ixState.varUnit = vMeta ? vMeta.unit : "";
+
+  $("ix-sub").textContent =
+    "How " + ixState.varName + " over " + reg.name + " is wired into the Earth system - computed from NASA POWER data, not from a list of expected relationships.";
+  $("ix-period").textContent = $("start").value + "-" + $("end").value;
+  $("ix-hero").innerHTML = ixHeroHTML(reg, vMeta || { name: vId }, null, null);
+  showIxPanels(true);
+
+  const rerun = $("ix-rerun");
+  if (rerun) rerun.disabled = true;
+
+  try {
+    await loadInterconnectData(reg, vId);
+  } finally {
+    ixState.loading = false;
+    if (rerun) rerun.disabled = false;
+  }
+}
+
+function showIxPanels(loading) {
+  if (loading) {
+    $("ix-pair-list").innerHTML =
+      '<div class="ix-loading"><span class="spin"></span>TESTING EVERY VARIABLE PAIR IN THIS REGION...</div>';
+    $("ix-global-list").innerHTML =
+      '<div class="ix-loading"><span class="spin"></span>SCANNING GLOBAL REGIONS WITH +/-24 MONTH LAGS...</div>';
+    $("ix-anomaly-summary").innerHTML = "";
+    $("ix-anomaly-strip").innerHTML = "";
+    $("ix-episode-list").innerHTML = "";
+    $("ix-empty").classList.remove("on");
+    $("ix-net").innerHTML = "";
+  }
+}
+
+async function loadInterconnectData(reg, vId) {
+  const couplingUrl = "/api/coupling?" + new URLSearchParams({
+    region: reg.id,
+    start: $("start").value,
+    end: $("end").value,
+  });
+  const teleUrl = "/api/teleconnections?" + new URLSearchParams({
+    region: reg.id,
+    variable: vId,
+    start: $("start").value,
+    end: $("end").value,
+  });
+
+  const [couplingRes, teleconRes] = await Promise.allSettled([
+    fetch(couplingUrl),
+    fetch(teleUrl),
+  ]);
+
+  let local = null;
+  if (couplingRes.status === "fulfilled" && couplingRes.value.ok) {
+    try { local = await couplingRes.value.json(); } catch (e) { local = null; }
+  }
+  let global = null;
+  if (teleconRes.status === "fulfilled" && teleconRes.value.ok) {
+    try { global = await teleconRes.value.json(); } catch (e) { global = null; }
+  }
+
+  ixState.local = local;
+  ixState.global = global;
+  ixState.anomaly = global && global.source ? global.source : null;
+
+  const methodEl = $("ix-method");
+  if (methodEl) {
+    const cm = local && local.method ? local.method : "";
+    const tm = global && global.method ? global.method : "";
+    methodEl.textContent = [cm, tm].filter(Boolean).join("  ·  ") ||
+      "Computed from NASA POWER monthly grids.";
+  }
+
+  renderIxHero(local, global);
+  renderIxLocal(local, vId);
+  renderIxGlobal(global, vId);
+  renderIxAnomaly(global);
+}
+
+function ixHeroHTML(reg, varMeta, local, global) {
+  const pairs = local && local.pairs ? local.pairs : [];
+  const strong = pairs.filter((p) => p.confidence === "HIGH").length;
+  const conns = global && global.teleconnections ? global.teleconnections : [];
+  const rep = global && global.source ? global.source.anomaly_report : null;
+  const peak = rep ? (rep.peak_sigma > 0 ? "+" : "") + rep.peak_sigma + "σ" : "...";
+
+  return '' +
+    '<div class="ix-hero-cell lead">' +
+      '<span class="ixh-lbl">DRIVER VARIABLE</span>' +
+      '<span class="ixh-val">' + esc(varMeta.name || "—") + '</span>' +
+      '<span class="ixh-sub">' + esc(reg.name) + ' · ' + esc(varMeta.unit || "") + '</span>' +
+    '</div>' +
+    '<div class="ix-hero-cell">' +
+      '<span class="ixh-lbl">LOCAL COUPLINGS</span>' +
+      '<span class="ixh-val">' + (ixState.loading && !local ? "..." : pairs.length) + '</span>' +
+      '<span class="ixh-sub">' + strong + ' high-confidence</span>' +
+    '</div>' +
+    '<div class="ix-hero-cell">' +
+      '<span class="ixh-lbl">GLOBAL RIPPLES</span>' +
+      '<span class="ixh-val">' + (ixState.loading && !global ? "..." : conns.length) + '</span>' +
+      '<span class="ixh-sub">after effect + FDR gates</span>' +
+    '</div>' +
+    '<div class="ix-hero-cell">' +
+      '<span class="ixh-lbl">PEAK ANOMALY</span>' +
+      '<span class="ixh-val">' + peak + '</span>' +
+      '<span class="ixh-sub">' + (rep ? "in " + esc(rep.peak_month) : "computing") + '</span>' +
+    '</div>' +
+    '<div class="ix-hero-cell">' +
+      '<span class="ixh-lbl">PAIRS TESTED</span>' +
+      '<span class="ixh-val">' + (global && global.summary ? global.summary.total_scanned : "—") + '</span>' +
+      '<span class="ixh-sub">remote region × variable</span>' +
+    '</div>';
+}
+
+function renderIxHero(local, global) {
+  const { reg, vMeta } = ixDrivers();
+  const el = $("ix-hero");
+  if (el) el.innerHTML = ixHeroHTML(reg, vMeta || { name: ixState.varName, unit: ixState.varUnit }, local, global);
+}
+
+function renderIxLocal(local, driverId) {
+  const pairs = local && local.pairs ? local.pairs : [];
+  const vars = local && local.variables ? local.variables : [];
+  drawIxNetwork(vars, pairs, driverId);
+
+  const list = $("ix-pair-list");
+  if (!list) return;
+  const sub = $("ix-local-sub");
+
+  // The driver's own couplings are the reason the user opened this screen;
+  // everything else measured in the region is secondary and stays behind a
+  // disclosure instead of being dumped into the same list.
+  const mine = pairs.filter((p) => p.driver === driverId || p.response === driverId
+    || p.a.id === driverId || p.b.id === driverId);
+  const others = pairs.filter((p) => mine.indexOf(p) === -1);
+  const driverVar = vars.find((v) => v.id === driverId) || { name: driverId, id: driverId };
+
+  if (sub && local) {
+    sub.textContent =
+      "Every pair of variables measured in " + local.region.name +
+      " is tested. " + mine.length + " involve the selected driver " + driverVar.name +
+      "; " + others.length + " are couplings between the other variables.";
+  }
+
+  if (!pairs.length) {
+    list.innerHTML =
+      '<div class="ix-empty on"><h4>NO LOCAL COUPLING SURVIVED THE TESTS</h4>' +
+      '<p>Within ' + esc(local && local.region ? local.region.name : "this region") +
+      ', no pair of variables stayed correlated above the effect-size gate after the seasonal cycle, the shared trend and the temperature confounder were removed. Its variables are behaving independently.</p></div>';
+    return;
+  }
+
+  let html = '<div class="ix-group"><h4 class="ix-group-title">DRIVER COUPLINGS · ' +
+    esc(driverVar.name.toUpperCase()) + '</h4>';
+  if (!mine.length) {
+    html += '<p class="ix-group-empty">The driver does not couple significantly to any other variable measured here. That is itself a finding: ' +
+      esc(driverVar.name) + ' varies independently within this region.</p>';
+  } else {
+    html += mine.map((p) => ixPairHTML(p, pairs, driverId)).join("");
+  }
+  html += '</div>';
+
+  if (others.length) {
+    html += '<details class="ix-group ix-more">' +
+      '<summary><span class="ix-more-label">OTHER COUPLINGS IN THIS REGION</span>' +
+      '<span class="ix-more-count">' + others.length + ' pairs</span>' +
+      '<span class="ix-chev">▸</span></summary>' +
+      '<div class="ix-more-body">' +
+      others.map((p) => ixPairHTML(p, pairs, driverId)).join("") +
+      '</div></details>';
+  }
+
+  list.innerHTML = html;
+}
+
+function ixPairHTML(p, allPairs, driverId) {
+  const isDriver = p.a.id === driverId || p.b.id === driverId;
+  const sign = p.r > 0 ? "+" : "";
+  const color = p.phase === "in_phase" ? "var(--rise)" : "#42a5f5";
+  const drv = p.driver && p.response
+    ? '<span class="ix-pair-name">' + esc(nameOf(allPairs, p.driver)) + '</span>' +
+      '<span class="ix-pair-arrow">→</span>' +
+      '<span class="ix-pair-name">' + esc(nameOf(allPairs, p.response)) + '</span>'
+    : '<span class="ix-pair-name">' + esc(p.a.name) + '</span>' +
+      '<span class="ix-pair-arrow">⇄</span>' +
+      '<span class="ix-pair-name">' + esc(p.b.name) + '</span>';
+  const pTxt = p.p < 0.001 ? "<0.001" : p.p.toFixed(3);
+  const prTxt = p.r_partial === null || p.r_partial === undefined ? "—" : p.r_partial.toFixed(2);
+  return '' +
+    '<div class="ix-pair ' + p.phase + '">' +
+      '<div class="ix-pair-top">' +
+        drv +
+        (isDriver ? '<span class="ix-conf HIGH">INVOLVES DRIVER</span>' : "") +
+        '<span class="ix-pair-r" style="color:' + color + '">' + sign + p.r.toFixed(2) + '</span>' +
+      '</div>' +
+      '<div class="ix-pair-meta">' +
+        '<span>LAG <b>' + (p.lag_months > 0 ? "+" : "") + p.lag_months + ' mo</b></span>' +
+        '<span>p <b>' + pTxt + '</b></span>' +
+        '<span>PARTIAL r <b>' + prTxt + '</b></span>' +
+        '<span class="ix-conf ' + p.confidence + '">' + p.confidence + ' CONFIDENCE</span>' +
+      '</div>' +
+      '<div class="ix-pair-note">' + esc(p.lag_note) + '. ' + esc(p.mechanism) + '</div>' +
+    '</div>';
+}
+
+/* NASA POWER parameter ids are long (ALLSKY_SFC_LW_DWN). The ring is a map,
+   not a legend, so trim to something that fits while staying recognisable. */
+const IX_SHORT = {
+  ALLSKY_SFC_LW_DWN: "LW DWN",
+  ALLSKY_SFC_SW_DNI: "SW DNI",
+  ALLSKY_SFC_SW_DWN: "SW DWN",
+  PRECTOTCORR: "PRECIP",
+  EVPTRNS: "EVPTRANS",
+  EVLAND: "EVLAND",
+  GWETROOT: "GW ROOT",
+  GWETTOP: "GW TOP",
+  RH2M: "RH2M",
+  QV2M: "QV2M",
+  WS2M: "WS2M",
+  T2M: "T2M",
+  T2M_MAX: "T2M MAX",
+  T2M_MIN: "T2M MIN",
+  T2M_RANGE: "T2M RNG",
+  TS: "TS",
+  PS: "PS",
+};
+function shortVarLabel(id) {
+  return IX_SHORT[id] || String(id).replace(/^ALLSKY_SFC_/, "").replace(/_/g, " ");
+}
+
+function nameOf(pairs, id) {
+  for (const p of pairs) {
+    if (p.a.id === id) return p.a.name;
+    if (p.b.id === id) return p.b.name;
+  }
+  return id;
+}
+
+function drawIxNetwork(vars, pairs, driverId) {
+  const svg = $("ix-net");
+  if (!svg) return;
+  if (!vars.length) { svg.innerHTML = ""; return; }
+
+  // Draw only the pairs that involve the driver, plus the strongest few
+  // couplings among the others. Every chord in the full 16-variable graph
+  // made the picture unreadable; this keeps it legible while the list beside
+  // it still accounts for every tested pair.
+  const mine = pairs.filter((p) => p.a.id === driverId || p.b.id === driverId
+    || p.driver === driverId || p.response === driverId);
+  const rest = pairs.filter((p) => mine.indexOf(p) === -1)
+    .sort((x, y) => Math.abs(y.r) - Math.abs(x.r))
+    .slice(0, 6);
+  const shown = mine.concat(rest);
+  const shownIds = new Set([driverId]);
+  shown.forEach((p) => { shownIds.add(p.a.id); shownIds.add(p.b.id); });
+  // keep the node ring stable: only label nodes that actually appear
+  const nodes = vars.filter((v) => shownIds.has(v.id));
+
+  const W = 460, H = 420;
+  const cx = W / 2, cy = H / 2 - 4;
+  const R = Math.min(W, H) / 2 - 62;
+  const pos = {};
+  nodes.forEach((v, i) => {
+    const a = (i / nodes.length) * Math.PI * 2 - Math.PI / 2;
+    pos[v.id] = { x: cx + Math.cos(a) * R, y: cy + Math.sin(a) * R, color: v.color || "#889" };
+  });
+
+  const parts = [];
+
+  shown.forEach((p) => {
+    const A = pos[p.a.id], B = pos[p.b.id];
+    if (!A || !B) return;
+    const isPos = p.phase === "in_phase";
+    const stroke = isPos ? "#ff7a33" : "#42a5f5";
+    const w = Math.max(0.8, Math.min(4, Math.abs(p.r) * 7));
+    const op = Math.max(0.28, Math.min(0.85, Math.abs(p.r) + 0.2));
+    const mx = (A.x + B.x) / 2, my = (A.y + B.y) / 2;
+    const dx = mx - cx, dy = my - cy;
+    const bow = 0.28;
+    const cxp = mx + dx * bow, cyp = my + dy * bow;
+    parts.push(
+      '<path d="M ' + A.x.toFixed(1) + ' ' + A.y.toFixed(1) + ' Q ' + cxp.toFixed(1) + ' ' + cyp.toFixed(1) + ' ' + B.x.toFixed(1) + ' ' + B.y.toFixed(1) + '" fill="none" stroke="' + stroke + '" stroke-width="' + w.toFixed(2) + '" stroke-opacity="' + op.toFixed(2) + '"/>'
+    );
+    const resp = p.response;
+    let tip = null, ctrl = { x: cxp, y: cyp };
+    if (resp === p.b.id) tip = B;
+    else if (resp === p.a.id) tip = A;
+    if (tip) {
+      const vx = tip.x - ctrl.x, vy = tip.y - ctrl.y;
+      const len = Math.hypot(vx, vy) || 1;
+      const ux = vx / len, uy = vy / len;
+      const px = -uy, py = ux;
+      const bx = tip.x - ux * 14, by = tip.y - uy * 14;
+      parts.push(
+        '<path d="M ' + tip.x.toFixed(1) + ' ' + tip.y.toFixed(1) + ' L ' + (bx + px * 4.5).toFixed(1) + ' ' + (by + py * 4.5).toFixed(1) + ' L ' + (bx - px * 4.5).toFixed(1) + ' ' + (by - py * 4.5).toFixed(1) + ' Z" fill="' + stroke + '" fill-opacity="' + Math.min(0.95, op + 0.15).toFixed(2) + '"/>'
+      );
+    }
+  });
+
+  nodes.forEach((v) => {
+    const p = pos[v.id];
+    if (!p) return;
+    const isDriver = v.id === driverId;
+    const r = isDriver ? 11 : 7.5;
+    parts.push(
+      '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + (r + 4) + '" fill="#05070a" />',
+      '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + r + '" fill="' + p.color + '" fill-opacity="' + (isDriver ? 1 : 0.8) + '" stroke="' + (isDriver ? "#ffffff" : "none") + '" stroke-width="' + (isDriver ? 1.8 : 0) + '"/>'
+    );
+    const anchor = p.x < cx - 8 ? "end" : (p.x > cx + 8 ? "start" : "middle");
+    const lx = p.x + (p.x < cx - 8 ? -14 : (p.x > cx + 8 ? 14 : 0));
+    parts.push(
+      '<text x="' + lx.toFixed(1) + '" y="' + (p.y + 4).toFixed(1) + '" text-anchor="' + anchor + '" font-family="ui-monospace, monospace" font-size="10" letter-spacing="0.04em" fill="' + (isDriver ? "#ffffff" : "#aeb5bd") + '" font-weight="' + (isDriver ? 700 : 500) + '">' + esc(shortVarLabel(v.id)) + '</text>'
+    );
+  });
+
+  svg.innerHTML = parts.join("");
+}
+
+function renderIxGlobal(global, driverId) {
+  const list = $("ix-global-list");
+  if (!list) return;
+  const conns = global && global.teleconnections ? global.teleconnections : [];
+  const sum = global && global.summary ? global.summary : {};
+  const sub = $("ix-global-sub");
+
+  if (sub && global) {
+    sub.textContent =
+      "Tested " + (sum.total_scanned || 0) + " remote region x variable pairs with lags up to +/-24 months. " +
+      conns.length + " survived the correlation, effect-size and FDR gates. " +
+      "Effect size is how far the remote variable sat off its own baseline during this driver's surges.";
+  }
+
+  $("ix-empty").classList.toggle("on", conns.length === 0);
+
+  if (!conns.length) {
+    list.innerHTML = "";
+    return;
+  }
+
+  const maxEff = Math.max.apply(null, conns.map((c) => Math.abs((c.composite || {}).effect_sigma || 0)).concat([0.5]));
+
+  list.innerHTML = conns.map((c) => {
+    const comp = c.composite || {};
+    const eff = comp.effect_sigma || 0;
+    const width = Math.min(50, (Math.abs(eff) / maxEff) * 50);
+    const effColor = eff >= 0 ? "var(--rise)" : "#42a5f5";
+    const rColor = c.direction === "direct" ? "var(--rise)" : "#42a5f5";
+    const left = eff >= 0 ? "50%" : (50 - width) + "%";
+    const pTxt = c.p < 0.001 ? "<.001" : c.p.toFixed(3);
+    return '' +
+      '<div class="ix-globe-row ' + c.direction + '">' +
+        '<div class="ixg-where">' +
+          '<span class="ixg-region">' + esc(c.target_region.name) + '</span>' +
+          '<span class="ixg-var">' + esc(c.target_variable.name) + ' · ' + esc(c.target_variable.sphere_code || "") + '</span>' +
+        '</div>' +
+        '<div class="ixg-effect">' +
+          '<span class="ixg-eff-lbl">REMOTE RESPONSE</span>' +
+          '<div class="ixg-eff-bar">' +
+            '<div class="ixg-eff-fill" style="left:' + left + ';width:' + width + '%;background:' + effColor + '"></div>' +
+          '</div>' +
+          '<span class="ixg-eff-val">' + (eff >= 0 ? "+" : "") + eff.toFixed(2) + 'σ vs its baseline</span>' +
+        '</div>' +
+        '<div class="ixg-stat">' +
+          '<span class="n" style="color:' + rColor + '">' + (c.r >= 0 ? "+" : "") + c.r.toFixed(2) + '</span>' +
+          '<span class="l">r · p=' + pTxt + '</span>' +
+        '</div>' +
+        '<div class="ixg-stat">' +
+          '<span class="n" style="color:#e9ebed">' + (c.lag_months > 0 ? "+" : "") + c.lag_months + ' mo</span>' +
+          '<span class="l">' + esc(c.lead_note || "") + '</span>' +
+        '</div>' +
+        '<div class="ixg-mech">' + esc(c.mechanism) + '</div>' +
+      '</div>';
+  }).join("");
+}
+
+function renderIxAnomaly(global) {
+  const src = global && global.source ? global.source : null;
+  const rep = src ? src.anomaly_report : null;
+  const yearly = src && src.anomaly_yearly ? src.anomaly_yearly : [];
+  const summary = $("ix-anomaly-summary");
+  const strip = $("ix-anomaly-strip");
+  const eps = $("ix-episode-list");
+  const sub = $("ix-anomaly-sub");
+  if (!summary) return;
+
+  if (!rep) {
+    summary.innerHTML = "";
+    strip.innerHTML = "";
+    eps.innerHTML = '<div class="ix-empty on"><h4>NOT ENOUGH MONTHS TO DECOMPOSE</h4><p>A seasonal decomposition needs at least three years of complete monthly data.</p></div>';
+    return;
+  }
+
+  if (sub && src) {
+    sub.textContent =
+      src.variable.name + " over " + src.region.name +
+      ", after its monthly seasonal cycle and its long-term trend are removed. " +
+      "What is left is how far each month departed from where that region's own history says it should have been.";
+  }
+
+  const pctAbove = rep.total_months ? (100 * rep.months_above / rep.total_months).toFixed(0) : "0";
+  summary.innerHTML = '' +
+    '<div class="ix-astat"><span class="v">' + rep.total_months + '</span><span class="l">MONTHS ANALYSED</span></div>' +
+    '<div class="ix-astat"><span class="v" style="color:var(--rise)">' + rep.months_above + '</span><span class="l">ABOVE TREND (' + pctAbove + '%)</span></div>' +
+    '<div class="ix-astat"><span class="v" style="color:#42a5f5">' + rep.months_below + '</span><span class="l">BELOW TREND</span></div>' +
+    '<div class="ix-astat"><span class="v">' + (rep.peak_sigma > 0 ? "+" : "") + rep.peak_sigma + 'σ</span><span class="l">PEAK · ' + esc(rep.peak_month) + '</span></div>' +
+    '<div class="ix-astat"><span class="v">' + rep.episodes.length + '</span><span class="l">EPISODES</span></div>';
+
+  const maxAbs = Math.max.apply(null, yearly.map((y) => Math.abs(y.value)).concat([0.001]));
+  strip.innerHTML = yearly.map((y) => {
+    const frac = Math.abs(y.value) / maxAbs;
+    const h = Math.max(2, frac * 40);
+    const pos = y.value >= 0;
+    return '<div class="ix-anom-bar" title="' + y.year + ': ' + (y.value > 0 ? "+" : "") + y.value.toFixed(3) + '">' +
+      '<div class="ix-anom-fill" style="height:' + h + 'px;' + (pos ? "bottom:50%" : "top:50%") + ';background:' + (pos ? "var(--rise)" : "#42a5f5") + '"></div>' +
+    '</div>';
+  }).join("");
+
+  const episodes = (rep.episodes || []).slice().sort(
+    (a, b) => Math.abs(b.peak_sigma) - Math.abs(a.peak_sigma)).slice(0, 14);
+
+  if (!episodes.length) {
+    eps.innerHTML = '<div class="ix-empty on"><h4>NO SUSTAINED SURGES</h4><p>This variable never ran more than one standard deviation from its own trend for a whole month.</p></div>';
+    return;
+  }
+
+  eps.innerHTML = episodes.map((e, i) => '' +
+    '<div class="ix-episode">' +
+      '<span class="ix-ep-n">' + String(i + 1).padStart(2, "0") + '</span>' +
+      '<span class="ix-ep-range">' + esc(e.start) + (e.end !== e.start ? " → " + esc(e.end) : "") + '</span>' +
+      '<span class="ix-ep-peak">' + (e.peak_sigma > 0 ? "+" : "") + e.peak_sigma + 'σ</span>' +
+      '<span class="ix-ep-len">' + e.months + ' MO</span>' +
+    '</div>').join("");
+}
+
+initInterconnectScreen();

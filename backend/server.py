@@ -13,12 +13,14 @@ from urllib.parse import parse_qs, urlparse
 
 import catalog
 import gibs
+import interconnect
 import literature
 import power_client
 from analysis import (
     analyze_series, seasonal_mk,
     analyze_cross_coupling, analyze_regional_contrast,
-    calculate_pearson, pearson_significance, explain_teleconnection
+    calculate_pearson, pearson_significance, explain_teleconnection,
+    PHYSICAL_COUPLINGS
 )
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -76,6 +78,22 @@ def _annualize(month_labels, values):
 
 def _complete_years(yearly_ts):
     return [p["value"] for p in yearly_ts if p["complete"]]
+
+
+def _yearly_anomalies(values, month_labels):
+    """Average a monthly anomaly series down to per-year anomaly points."""
+    by_year = {}
+    for lbl, v in zip(month_labels, values):
+        if v is None:
+            continue
+        by_year.setdefault(int(lbl[:4]), []).append(v)
+    out = []
+    for y, vs in sorted(by_year.items()):
+        out.append({
+            "year": y,
+            "value": round(sum(vs) / len(vs), 4),
+        })
+    return out
 
 
 def _region_series(grid, months):
@@ -400,7 +418,118 @@ def run_scan(variables, region, start, end, nx=5, ny=5):
     }
 
 
-def run_teleconnections(source_region, source_var, target_regions=None, target_vars=None, start=2005, end=MAX_YEAR, min_r=0.38):
+def run_coupling_analysis(region_id, variables, start, end):
+    """Directed coupling diagnostics between all requested variables in one
+    region.
+
+    Detection is fully computed (see interconnect.analyze_local_couplings):
+    seasonal decomposition, lagged cross-correlation for direction, partial
+    correlation controlling for temperature, and two-way Granger F-tests.
+    """
+    if end - start < 5:
+        raise ValueError("Need at least 6 years of data (end - start >= 5)")
+    reg = next((r for r in catalog.REGIONS if r["id"] == region_id), None)
+    if not reg:
+        raise KeyError(f"Unknown region {region_id}")
+
+    vars_ = []
+    for vid in variables:
+        v = next((x for x in catalog.CATALOG if x["id"] == vid), None)
+        if v:
+            vars_.append(v)
+    if len(vars_) < 2:
+        raise ValueError("Need at least two variables to diagnose coupling")
+
+    grids = {}
+    for var in vars_:
+        try:
+            grids[var["id"]] = power_client.fetch_grid(
+                var["id"], reg["bbox"], start, end, 5, 5)
+        except Exception:
+            grids[var["id"]] = None
+
+    all_months = set()
+    for g in grids.values():
+        if not g:
+            continue
+        for lo in g:
+            for la in g[lo]:
+                all_months.update(g[lo][la].keys())
+    months = sorted(m for m in all_months
+                    if len(str(m)) == 6 and str(m)[4:] != "13")
+    month_labels = _month_labels(months)
+
+    series_by_var = {}
+    for var in vars_:
+        g = grids.get(var["id"])
+        if not g:
+            continue
+        series_by_var[var["id"]] = _region_series(g, months)
+
+    pairs = interconnect.analyze_local_couplings(reg, series_by_var, month_labels)
+
+    var_meta = {v["id"]: v for v in vars_}
+    out_pairs = []
+    for p in pairs:
+        a = var_meta.get(p["a"])
+        b = var_meta.get(p["b"])
+        if not a or not b:
+            continue
+        lexicon = PHYSICAL_COUPLINGS.get(frozenset({p["a"], p["b"]}), {})
+        title = lexicon.get("title") or f"{a['name']} ↔ {b['name']}"
+        mechanism = lexicon.get("description", "")
+        if p["phase"] == "divergent" and "divergent" in lexicon:
+            mechanism = lexicon["divergent"]
+        elif p["phase"] == "in_phase" and "in_phase" in lexicon:
+            mechanism = lexicon["in_phase"]
+        if not mechanism:
+            mechanism = interconnect.describe_coupling(
+                var_meta.get(p["a"], {}), var_meta.get(p["b"], {}), p)
+        out_pairs.append({
+            "a": {"id": a["id"], "name": a["name"], "unit": a["unit"],
+                  "color": a["color"], "sphere": a.get("sphere"),
+                  "sphere_code": a.get("sphere_code")},
+            "b": {"id": b["id"], "name": b["name"], "unit": b["unit"],
+                  "color": b["color"], "sphere": b.get("sphere"),
+                  "sphere_code": b.get("sphere_code")},
+            "r": p["r"],
+            "r_lagged": p["r_lagged"],
+            "p": p["p"],
+            "lag_months": p["lag_months"],
+            "driver": p["driver"],
+            "response": p["response"],
+            "lag_note": p["lag_note"],
+            "r_partial": p["r_partial"],
+            "p_partial": p["p_partial"],
+            "granger_a_b": p["granger_a_b"],
+            "granger_b_a": p["granger_b_a"],
+            "phase": p["phase"],
+            "strength": p["strength"],
+            "confidence": p["confidence"],
+            "title": title,
+            "mechanism": mechanism,
+        })
+
+    return {
+        "region": reg,
+        "start": start,
+        "end": end,
+        "variables": [{
+            "id": v["id"], "name": v["name"], "unit": v["unit"],
+            "color": v["color"], "sphere": v.get("sphere"),
+            "sphere_code": v.get("sphere_code"),
+        } for v in vars_],
+        "pairs": out_pairs,
+        "method": (
+            "Seasonal decomposition (monthly climatology + linear trend removed) · "
+            "lagged cross-correlation (±6 mo) for direction · first-order partial "
+            "correlation (T2M confounder) · two-way Granger F-test (3 lags) · α=0.05"
+        ),
+        "sources": ["NASA POWER (MERRA-2 / GPCP / CERES)"],
+    }
+
+
+def run_teleconnections(source_region, source_var, target_regions=None, target_vars=None, start=2005, end=MAX_YEAR, min_r=0.15, min_effect=0.25):
     """Scan and discover cross-regional teleconnections and planetary ripple effects.
 
     Given an origin region and driver variable, cross-correlates its timeline
@@ -453,6 +582,20 @@ def run_teleconnections(source_region, source_var, target_regions=None, target_v
     src_yearly = _annualize(month_labels, src_region_ts)
     ts_src = _complete_years(src_yearly)
 
+    # Anomaly view of the driver: the seasonal cycle and the region's own
+    # long-term trend are removed, so what remains is "when did this variable
+    # run hotter/colder than its own history says it should have". Remote
+    # responses are then measured against that, not against a shared trend
+    # (two unrelated rising series correlate by coincidence).
+    try:
+        src_decomp = interconnect.decompose_monthly(src_region_ts)
+        src_anom = src_decomp["values"]
+        src_anomaly_report = interconnect.anomaly_report(src_anom, month_labels)
+    except ValueError:
+        src_decomp = None
+        src_anom = None
+        src_anomaly_report = None
+
     connections = []
     scanned_count = 0
 
@@ -460,18 +603,37 @@ def run_teleconnections(source_region, source_var, target_regions=None, target_v
         for var_tgt in candidate_vars:
             scanned_count += 1
             try:
+                if src_anom is None:
+                    continue
                 grid_tgt = power_client.fetch_grid(var_tgt["id"], reg_tgt["bbox"], start, end, 5, 5)
                 tgt_region_ts = _region_series(grid_tgt, months)
                 tgt_yearly = _annualize(month_labels, tgt_region_ts)
-                ts_tgt = _complete_years(tgt_yearly)
+                try:
+                    tgt_decomp = interconnect.decompose_monthly(tgt_region_ts)
+                except ValueError:
+                    continue
+                diag = interconnect.impact_pair(
+                    src_anom, tgt_decomp["values"], month_labels)
+                if not diag:
+                    continue
 
-                r = calculate_pearson(ts_src, ts_tgt)
-                p = pearson_significance(r, len(ts_src))
+                r = diag["r"]
+                p = diag["p"]
 
-                if abs(r) >= min_r and p < 0.05:
-                    strength = "STRONG" if abs(r) >= 0.65 else ("MODERATE" if abs(r) >= 0.50 else "NOTABLE")
+                # Three gates, because with ~260 monthly samples a |r| of 0.2
+                # is already "significant" — significance alone would report
+                # most of the scan. A link must be (a) correlated after both
+                # seasons and trend are removed, (b) unlikely to be chance, and
+                # (c) large enough to matter: the target must sit measurably
+                # off its own baseline during the driver's surges.
+                eff = abs((diag.get("composite") or {}).get("effect_sigma") or 0)
+                if abs(diag["r_lagged"]) >= min_r and p < 0.01 and eff >= min_effect:
+                    strength = ("STRONG" if abs(diag["r_lagged"]) >= 0.45
+                                else ("MODERATE" if abs(diag["r_lagged"]) >= 0.28
+                                      else "NOTABLE"))
                     direction = "direct" if r > 0 else "inverse"
-                    mechanism = explain_teleconnection(reg_src, var_src, reg_tgt, var_tgt, r, p)
+                    mechanism = interconnect.mechanism_sentence(
+                        reg_src, var_src, reg_tgt, var_tgt, diag)
 
                     # Compute center coords for 3D arcs
                     src_lat = (reg_src["bbox"][1] + reg_src["bbox"][3]) / 2.0
@@ -508,17 +670,34 @@ def run_teleconnections(source_region, source_var, target_regions=None, target_v
                             "sphere_code": var_tgt.get("sphere_code", "ATM"),
                         },
                         "r": round(r, 3),
+                        "r_lagged": diag["r_lagged"],
                         "p": round(p, 4),
+                        "lag_months": diag["lag_months"],
+                        "lead_note": diag["lead_note"],
+                        "composite": diag["composite"],
                         "direction": direction,
                         "strength": strength,
                         "mechanism": mechanism,
                         "source_yearly": src_yearly,
                         "target_yearly": tgt_yearly,
+                        "target_anomaly_yearly": _yearly_anomalies(
+                            tgt_decomp["values"], month_labels),
                     })
             except Exception:
                 continue
 
-    connections.sort(key=lambda x: abs(x["r"]), reverse=True)
+    # Family-wise false-discovery control. Scanning ~50 remote
+    # region/variable pairs at alpha=0.05 guarantees a handful of coincidences;
+    # only pairs that survive Benjamini-Hochberg across the whole scan are
+    # reported, so a "discovery" is not just the luckiest test in the batch.
+    scanned_p = [c["p"] for c in connections]
+    n_survive = interconnect.benjamini_hochberg(scanned_p, q=0.10)
+    ranked = sorted(connections, key=lambda c: c["p"])
+    kept_ids = {id(c) for c in ranked[:n_survive]}
+    rejected = len(connections) - len(kept_ids)
+    connections = [c for c in connections if id(c) in kept_ids]
+
+    connections.sort(key=lambda x: abs(x["r_lagged"]), reverse=True)
 
     strongest_direct = next((c for c in connections if c["direction"] == "direct"), None)
     strongest_inverse = next((c for c in connections if c["direction"] == "inverse"), None)
@@ -530,10 +709,16 @@ def run_teleconnections(source_region, source_var, target_regions=None, target_v
             "start": start,
             "end": end,
             "yearly_timeseries": src_yearly,
+            "anomaly_report": src_anomaly_report,
+            "anomaly_yearly": _yearly_anomalies(src_anom or [], month_labels),
+            "month_labels": month_labels,
         },
         "summary": {
             "total_scanned": scanned_count,
             "significant_count": len(connections),
+            "fdr_rejected": rejected,
+            "fdr_q": 0.10,
+            "min_effect_sigma": min_effect,
             "strongest_direct": {
                 "region": strongest_direct["target_region"]["name"],
                 "variable": strongest_direct["target_variable"]["name"],
@@ -546,6 +731,11 @@ def run_teleconnections(source_region, source_var, target_regions=None, target_v
             } if strongest_inverse else None,
         },
         "teleconnections": connections,
+        "method": (
+            "Seasonal + trend decomposition of the driver · lagged "
+            "cross-correlation of anomalies (±24 mo) · composite response of "
+            "each target during driver +1σ months · α=0.05"
+        ),
         "sources": ["NASA POWER (MERRA-2 / GPCP / CERES)"],
     }
 
@@ -629,7 +819,8 @@ class Handler(BaseHTTPRequestHandler):
                 target_regions = [r.strip() for r in target_regions_raw.split(",") if r.strip()] if target_regions_raw else None
                 target_vars_raw = q.get("target_vars", [""])[0]
                 target_vars = [v.strip() for v in target_vars_raw.split(",") if v.strip()] if target_vars_raw else None
-                min_r = float(q.get("min_r", [0.38])[0])
+                min_r = float(q.get("min_r", [0.15])[0])
+                min_effect = float(q.get("min_effect", [0.25])[0])
                 res = run_teleconnections(
                     source_reg, source_var,
                     target_regions=target_regions,
@@ -637,6 +828,21 @@ class Handler(BaseHTTPRequestHandler):
                     start=_int(q, "start", 2005),
                     end=_int(q, "end", MAX_YEAR),
                     min_r=min_r,
+                    min_effect=min_effect,
+                )
+                return self._json(200, res)
+            if path == "/api/coupling":
+                region = q.get("region", [""])[0]
+                if not region:
+                    return self._json(400, {"error": "region required"})
+                raw = q.get("variables", [""])[0]
+                if raw.strip():
+                    variables = [v.strip() for v in raw.split(",") if v.strip()]
+                else:
+                    variables = [v["id"] for v in catalog.CATALOG]
+                res = run_coupling_analysis(
+                    region, variables,
+                    _int(q, "start", 2005), _int(q, "end", MAX_YEAR),
                 )
                 return self._json(200, res)
             if path == "/api/scan":
