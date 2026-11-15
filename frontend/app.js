@@ -2763,10 +2763,12 @@ function renderGlobeRegions(d) {
         ? "#3a3f45"
         : (c.direction === "falling" ? C.fall : C.rise);
 
-      const base = isActive ? 0.019 : 0.008;
-      const size = base + Math.min(isActive ? 0.016 : 0.004,
-        Math.abs(c.slope) * 0.04);
-      const geo = new THREE.SphereGeometry(size, 8, 8);
+      // marked down for the textured globe: the old sizes were tuned for the
+      // dot matrix and read as blobs on top of real terrain
+      const base = isActive ? 0.0105 : 0.005;
+      const size = base + Math.min(isActive ? 0.0085 : 0.0025,
+        Math.abs(c.slope) * 0.02);
+      const geo = new THREE.SphereGeometry(size, 10, 10);
       const mat = new THREE.MeshBasicMaterial({
         color: colour,
         transparent: true,
