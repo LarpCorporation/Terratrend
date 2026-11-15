@@ -1,0 +1,16 @@
+{
+  "pid": 2295755,
+  "url": "http://127.0.0.1:8517",
+  "temporary_8518_stopped": true,
+  "connections": {
+    "earthdata": {
+      "configured": true,
+      "remembered": true
+    },
+    "appeears": {
+      "configured": true,
+      "remembered": true
+    }
+  },
+  "restarted_utc": "2026-11-15T07:45:34Z"
+}

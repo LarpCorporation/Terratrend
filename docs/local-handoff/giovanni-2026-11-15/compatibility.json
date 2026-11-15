@@ -1,0 +1,50 @@
+{
+  "status": "unsupported",
+  "replacement_verified": false,
+  "ready_to_validate": false,
+  "configured_variable_count": 867,
+  "missing_fields": [
+    "T2M",
+    "TS",
+    "QV2M",
+    "PS",
+    "GWETROOT",
+    "GWETTOP",
+    "EVLAND",
+    "PRECTOTCORR"
+  ],
+  "collections": [
+    {
+      "product": "M2TMNXSLV",
+      "concept_id": "C1276812859-GES_DISC",
+      "area_averaging": false,
+      "exact_shape_request": false,
+      "metadata_url": "https://harmony.earthdata.nasa.gov/capabilities?collectionId=C1276812859-GES_DISC&version=3"
+    },
+    {
+      "product": "M2TMNXLND",
+      "concept_id": "C1276812856-GES_DISC",
+      "area_averaging": false,
+      "exact_shape_request": false,
+      "metadata_url": "https://harmony.earthdata.nasa.gov/capabilities?collectionId=C1276812856-GES_DISC&version=3"
+    },
+    {
+      "product": "M2TMNXFLX",
+      "concept_id": "C1276812868-GES_DISC",
+      "area_averaging": false,
+      "exact_shape_request": false,
+      "metadata_url": "https://harmony.earthdata.nasa.gov/capabilities?collectionId=C1276812868-GES_DISC&version=3"
+    }
+  ],
+  "requirement": "Same monthly MERRA-2 5.12.4 fields and unsimplified selected polygons",
+  "validation_remaining": [
+    "Fractional boundary/latitude weighting and holes/islands",
+    "Monthly valid-area coverage and complete-year handling",
+    "Independent monthly values and trend-statistic comparison",
+    "Native-cell evidence and spatial-analysis feature preservation"
+  ],
+  "checked_utc": "2026-11-15T01:27:55.555736+00:00",
+  "catalogue_url": "https://api.giovanni.earthdata.nasa.gov/configured-variables",
+  "observation_downloads": 0,
+  "earthdata_credentials_used": false
+}

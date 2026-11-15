@@ -1,0 +1,97 @@
+{
+  "verified_utc": "2026-11-15T02:39:23.504194+00:00",
+  "implemented": "Optional Giovanni rectangle summaries and remembered Earthdata connection",
+  "tests": {
+    "backend_passed": 182,
+    "backend_optional_network_skipped": 1,
+    "backend_subtests_passed": 24,
+    "frontend_passed": 64
+  },
+  "line_coverage_standard_library_trace": {
+    "earthdata_credentials": 97.1,
+    "giovanni_capabilities": 96.2,
+    "giovanni_data": 94.8
+  },
+  "live": {
+    "dataset": "M2IMNXASM",
+    "version": "5.12.4",
+    "variables": [
+      "T2M",
+      "QV2M"
+    ],
+    "period": [
+      2016,
+      2024
+    ],
+    "rectangle_A": [
+      -2,
+      6,
+      0,
+      8
+    ],
+    "rectangle_B": [
+      -1,
+      8,
+      0,
+      10
+    ],
+    "series": 4,
+    "monthly_values_checked": 432,
+    "all_values_match_source_csv": true,
+    "csv_bytes": 14014,
+    "csv_bytes_exclude_metadata_and_status_traffic": true,
+    "cache_reuse_after_restart": true
+  },
+  "native_cache": {
+    "before_files": 1167,
+    "after_files": 1167,
+    "before_bytes": 35428316,
+    "after_bytes": 35428316
+  },
+  "credential_restore": {
+    "restarted_without_token_input": [
+      {
+        "port": 8518,
+        "pid": 1113618,
+        "automatic_restore": true,
+        "credential_storage": "desktop keyring",
+        "providers": [
+          "nasa-merra2",
+          "nasa-giovanni",
+          "project-cache"
+        ]
+      },
+      {
+        "port": 8517,
+        "pid": 1113711,
+        "automatic_restore": true,
+        "credential_storage": "desktop keyring",
+        "providers": [
+          "nasa-merra2",
+          "nasa-giovanni",
+          "project-cache"
+        ]
+      }
+    ],
+    "final_primary_url": "http://127.0.0.1:8517/",
+    "temporary_8518_stopped_after_verification": true
+  },
+  "key_values_in_evidence": false,
+  "challenge_resource_links_verified": 13,
+  "scope_limits": [
+    "Giovanni cloud rectangle mode supports two different monthly assimilation fields, not all eight original fields",
+    "Giovanni monthly spatial support and native-cell trends are not supplied",
+    "Other shapes, geographic layers and interconnections continue through native mode",
+    "Live POWER access was not added",
+    "Per-measurement significance is exploratory; no causal or future-impact claim"
+  ],
+  "ui_verified": {
+    "url": "http://127.0.0.1:8517/",
+    "automatic_connection_restored": true,
+    "two_rectangles_and_both_variables": true,
+    "nonsignificant_label_is_not_stable": true,
+    "regional_cell_limitation_displayed": true,
+    "screenshot": "../screenshots/2026-11-15-giovanni-live-comparison.jpg"
+  },
+  "finished_utc": "2026-11-15T05:36:05.754786+00:00"
+}

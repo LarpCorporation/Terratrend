@@ -1,0 +1,1055 @@
+{
+  "local": {
+    "region": {
+      "id": "country:gha",
+      "name": "Ghana",
+      "level": "country",
+      "parent": "subcontinent:western_africa",
+      "geometry_version": "35339921e7a23101",
+      "bbox": [
+        -3.243896,
+        4.762451,
+        1.187207,
+        11.166895
+      ],
+      "surface": "land",
+      "desc": "Ghana \u00b7 country \u00b7 full boundary selection",
+      "iso3": "GHA",
+      "iso2": "GH",
+      "continent": "continent:africa",
+      "center": [
+        -1.036941,
+        7.717639
+      ],
+      "boundary_source": "Natural Earth 1:50m",
+      "boundary_scheme": "UN regional grouping",
+      "children": [
+        "region:gha:upper_west",
+        "region:gha:upper_east",
+        "region:gha:north_east",
+        "region:gha:savannah",
+        "region:gha:northern",
+        "region:gha:oti",
+        "region:gha:bono_east",
+        "region:gha:bono",
+        "region:gha:western_north",
+        "region:gha:ahafo",
+        "region:gha:ashanti",
+        "region:gha:eastern",
+        "region:gha:volta",
+        "region:gha:western",
+        "region:gha:central",
+        "region:gha:greater_accra"
+      ]
+    },
+    "start": 2016,
+    "end": 2024,
+    "variables": [
+      {
+        "id": "GWETROOT",
+        "name": "Root-Zone Soil Moisture",
+        "unit": "0\u20131",
+        "color": "#9bd36a",
+        "sphere": "land",
+        "sphere_code": "LND"
+      },
+      {
+        "id": "NDVI",
+        "name": "Vegetation Greenness (NDVI)",
+        "unit": "index",
+        "color": "#8bcf66",
+        "sphere": "land",
+        "sphere_code": "LND"
+      }
+    ],
+    "pairs": [],
+    "source_errors": {},
+    "analysable_variables": [
+      "GWETROOT",
+      "NDVI"
+    ],
+    "source_anomaly": {
+      "region": {
+        "id": "country:gha",
+        "name": "Ghana",
+        "level": "country",
+        "parent": "subcontinent:western_africa",
+        "geometry_version": "35339921e7a23101",
+        "bbox": [
+          -3.243896,
+          4.762451,
+          1.187207,
+          11.166895
+        ],
+        "surface": "land",
+        "desc": "Ghana \u00b7 country \u00b7 full boundary selection",
+        "iso3": "GHA",
+        "iso2": "GH",
+        "continent": "continent:africa",
+        "center": [
+          -1.036941,
+          7.717639
+        ],
+        "boundary_source": "Natural Earth 1:50m",
+        "boundary_scheme": "UN regional grouping",
+        "children": [
+          "region:gha:upper_west",
+          "region:gha:upper_east",
+          "region:gha:north_east",
+          "region:gha:savannah",
+          "region:gha:northern",
+          "region:gha:oti",
+          "region:gha:bono_east",
+          "region:gha:bono",
+          "region:gha:western_north",
+          "region:gha:ahafo",
+          "region:gha:ashanti",
+          "region:gha:eastern",
+          "region:gha:volta",
+          "region:gha:western",
+          "region:gha:central",
+          "region:gha:greater_accra"
+        ]
+      },
+      "variable": {
+        "id": "GWETROOT",
+        "name": "Root-Zone Soil Moisture",
+        "unit": "0\u20131",
+        "color": "#9bd36a",
+        "mission": "MERRA-2",
+        "group": "water",
+        "sphere": "land",
+        "sphere_code": "LND",
+        "sphere_name": "Land & Biosphere",
+        "desc": "Water content of the root zone as a fraction of saturation (0 = dry, 1 = saturated)",
+        "plain": "How much water is stored in the soil around plant roots, from 0 (bone dry) to 1 (saturated).",
+        "trend_means": "Falling is the signature of agricultural drought \u2014 the water crops actually live on."
+      },
+      "anomaly_report": {
+        "sigma": 0.0303,
+        "months_above": 16,
+        "months_below": 13,
+        "total_months": 108,
+        "peak_sigma": -3.05,
+        "peak_month": "2024-09",
+        "episodes": [
+          {
+            "start": "2017-06",
+            "end": "2017-07",
+            "months": 2,
+            "peak_sigma": 1.35,
+            "peak_month": "2017-07"
+          },
+          {
+            "start": "2018-09",
+            "end": "2018-09",
+            "months": 1,
+            "peak_sigma": 1.63,
+            "peak_month": "2018-09"
+          },
+          {
+            "start": "2019-10",
+            "end": "2019-12",
+            "months": 3,
+            "peak_sigma": 2.39,
+            "peak_month": "2019-11"
+          },
+          {
+            "start": "2020-06",
+            "end": "2020-06",
+            "months": 1,
+            "peak_sigma": 1.07,
+            "peak_month": "2020-06"
+          },
+          {
+            "start": "2021-11",
+            "end": "2021-11",
+            "months": 1,
+            "peak_sigma": 1.12,
+            "peak_month": "2021-11"
+          },
+          {
+            "start": "2022-05",
+            "end": "2022-05",
+            "months": 1,
+            "peak_sigma": 1.27,
+            "peak_month": "2022-05"
+          },
+          {
+            "start": "2022-09",
+            "end": "2022-10",
+            "months": 2,
+            "peak_sigma": 1.54,
+            "peak_month": "2022-10"
+          },
+          {
+            "start": "2023-08",
+            "end": "2023-12",
+            "months": 5,
+            "peak_sigma": 2.11,
+            "peak_month": "2023-08"
+          }
+        ],
+        "narrative": "ran above its own trend in 16 of 108 months (15%); below it in 13; peak -3.1\u03c3 in 2024-09; across 8 distinct episodes."
+      },
+      "anomaly_yearly": [
+        {
+          "year": 2016,
+          "value": -0.0111
+        },
+        {
+          "year": 2017,
+          "value": -0.0096
+        },
+        {
+          "year": 2018,
+          "value": 0.0051
+        },
+        {
+          "year": 2019,
+          "value": 0.0137
+        },
+        {
+          "year": 2020,
+          "value": -0.0012
+        },
+        {
+          "year": 2021,
+          "value": -0.0007
+        },
+        {
+          "year": 2022,
+          "value": 0.0228
+        },
+        {
+          "year": 2023,
+          "value": 0.0181
+        },
+        {
+          "year": 2024,
+          "value": -0.0372
+        }
+      ],
+      "month_labels": [
+        "2016-01",
+        "2016-02",
+        "2016-03",
+        "2016-04",
+        "2016-05",
+        "2016-06",
+        "2016-07",
+        "2016-08",
+        "2016-09",
+        "2016-10",
+        "2016-11",
+        "2016-12",
+        "2017-01",
+        "2017-02",
+        "2017-03",
+        "2017-04",
+        "2017-05",
+        "2017-06",
+        "2017-07",
+        "2017-08",
+        "2017-09",
+        "2017-10",
+        "2017-11",
+        "2017-12",
+        "2018-01",
+        "2018-02",
+        "2018-03",
+        "2018-04",
+        "2018-05",
+        "2018-06",
+        "2018-07",
+        "2018-08",
+        "2018-09",
+        "2018-10",
+        "2018-11",
+        "2018-12",
+        "2019-01",
+        "2019-02",
+        "2019-03",
+        "2019-04",
+        "2019-05",
+        "2019-06",
+        "2019-07",
+        "2019-08",
+        "2019-09",
+        "2019-10",
+        "2019-11",
+        "2019-12",
+        "2020-01",
+        "2020-02",
+        "2020-03",
+        "2020-04",
+        "2020-05",
+        "2020-06",
+        "2020-07",
+        "2020-08",
+        "2020-09",
+        "2020-10",
+        "2020-11",
+        "2020-12",
+        "2021-01",
+        "2021-02",
+        "2021-03",
+        "2021-04",
+        "2021-05",
+        "2021-06",
+        "2021-07",
+        "2021-08",
+        "2021-09",
+        "2021-10",
+        "2021-11",
+        "2021-12",
+        "2022-01",
+        "2022-02",
+        "2022-03",
+        "2022-04",
+        "2022-05",
+        "2022-06",
+        "2022-07",
+        "2022-08",
+        "2022-09",
+        "2022-10",
+        "2022-11",
+        "2022-12",
+        "2023-01",
+        "2023-02",
+        "2023-03",
+        "2023-04",
+        "2023-05",
+        "2023-06",
+        "2023-07",
+        "2023-08",
+        "2023-09",
+        "2023-10",
+        "2023-11",
+        "2023-12",
+        "2024-01",
+        "2024-02",
+        "2024-03",
+        "2024-04",
+        "2024-05",
+        "2024-06",
+        "2024-07",
+        "2024-08",
+        "2024-09",
+        "2024-10",
+        "2024-11",
+        "2024-12"
+      ]
+    },
+    "conditional_drivers": {
+      "ok": false,
+      "reason": "No directional candidates with joint coverage"
+    },
+    "provenance": {
+      "GWETROOT": {
+        "provider": "nasa-merra2",
+        "source": "NASA GES DISC / MERRA-2",
+        "resource": "Giovanni",
+        "dataset": "M2TMNXLND",
+        "collection_version": "5.12.4",
+        "field": "GWETROOT",
+        "policy": "challenge_resource",
+        "access": "Automatic CMR discovery \u2192 authenticated OPeNDAP native-grid subset \u2192 local cache",
+        "citation": "https://disc.gsfc.nasa.gov/datasets/M2TMNXLND_5.12.4/summary",
+        "dlon": 0.625,
+        "dlat": 0.5,
+        "geometry_version": "35339921e7a23101",
+        "aggregation": "Native-cell polygon overlap \u00d7 cos(latitude); at least 80% selected area each month",
+        "expected_cells": 85,
+        "available_cells": 85,
+        "available_area_fraction": 1.0,
+        "first_observed_month": 201601,
+        "last_observed_month": 202412,
+        "published_months": 108,
+        "requested_months": 108,
+        "cached_subsets": 108,
+        "retrieved_utc": "2026-11-15T07:16:31.605681+00:00",
+        "quality": "Provider fill values/masks excluded; model reanalysis, not a direct measurement at every location",
+        "granules": [
+          {
+            "id": "G1278016522-GES_DISC",
+            "month": 201601,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201601.nc4",
+            "updated": "2019-07-08T05:56:08.000Z"
+          },
+          {
+            "id": "G1278016523-GES_DISC",
+            "month": 201602,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201602.nc4",
+            "updated": "2019-07-08T05:56:08.000Z"
+          },
+          {
+            "id": "G1278016508-GES_DISC",
+            "month": 201603,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201603.nc4",
+            "updated": "2019-07-08T18:17:47.000Z"
+          },
+          {
+            "id": "G1278016509-GES_DISC",
+            "month": 201604,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201604.nc4",
+            "updated": "2019-07-08T18:17:47.000Z"
+          },
+          {
+            "id": "G1279432203-GES_DISC",
+            "month": 201605,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201605.nc4",
+            "updated": "2019-07-08T18:17:47.000Z"
+          },
+          {
+            "id": "G1286004881-GES_DISC",
+            "month": 201606,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201606.nc4",
+            "updated": "2019-07-08T18:17:48.000Z"
+          },
+          {
+            "id": "G1295754520-GES_DISC",
+            "month": 201607,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201607.nc4",
+            "updated": "2019-07-08T09:28:23.000Z"
+          },
+          {
+            "id": "G1327958097-GES_DISC",
+            "month": 201608,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201608.nc4",
+            "updated": "2019-07-08T09:28:23.000Z"
+          },
+          {
+            "id": "G1337068318-GES_DISC",
+            "month": 201609,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201609.nc4",
+            "updated": "2019-07-08T09:28:23.000Z"
+          },
+          {
+            "id": "G1344863889-GES_DISC",
+            "month": 201610,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201610.nc4",
+            "updated": "2019-07-08T09:28:24.000Z"
+          },
+          {
+            "id": "G1358037182-GES_DISC",
+            "month": 201611,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201611.nc4",
+            "updated": "2019-07-08T13:18:53.000Z"
+          },
+          {
+            "id": "G1363323868-GES_DISC",
+            "month": 201612,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201612.nc4",
+            "updated": "2019-07-08T13:18:54.000Z"
+          },
+          {
+            "id": "G1371084288-GES_DISC",
+            "month": 201701,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201701.nc4",
+            "updated": "2019-07-08T13:19:06.000Z"
+          },
+          {
+            "id": "G1375846442-GES_DISC",
+            "month": 201702,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201702.nc4",
+            "updated": "2019-07-08T13:19:06.000Z"
+          },
+          {
+            "id": "G1381079813-GES_DISC",
+            "month": 201703,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201703.nc4",
+            "updated": "2019-07-09T01:06:02.000Z"
+          },
+          {
+            "id": "G1386434329-GES_DISC",
+            "month": 201704,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201704.nc4",
+            "updated": "2019-07-09T01:06:02.000Z"
+          },
+          {
+            "id": "G1397110469-GES_DISC",
+            "month": 201705,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201705.nc4",
+            "updated": "2019-07-09T01:06:03.000Z"
+          },
+          {
+            "id": "G1405723563-GES_DISC",
+            "month": 201706,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201706.nc4",
+            "updated": "2019-07-09T07:09:18.000Z"
+          },
+          {
+            "id": "G1412871340-GES_DISC",
+            "month": 201707,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201707.nc4",
+            "updated": "2019-07-09T07:09:19.000Z"
+          },
+          {
+            "id": "G1419909025-GES_DISC",
+            "month": 201708,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201708.nc4",
+            "updated": "2019-07-09T07:09:19.000Z"
+          },
+          {
+            "id": "G1428122974-GES_DISC",
+            "month": 201709,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201709.nc4",
+            "updated": "2019-07-09T13:57:35.000Z"
+          },
+          {
+            "id": "G1439414445-GES_DISC",
+            "month": 201710,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201710.nc4",
+            "updated": "2019-07-09T13:57:36.000Z"
+          },
+          {
+            "id": "G1444583126-GES_DISC",
+            "month": 201711,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201711.nc4",
+            "updated": "2019-07-09T13:57:36.000Z"
+          },
+          {
+            "id": "G1450811095-GES_DISC",
+            "month": 201712,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201712.nc4",
+            "updated": "2019-07-09T13:57:36.000Z"
+          },
+          {
+            "id": "G1456888729-GES_DISC",
+            "month": 201801,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201801.nc4",
+            "updated": "2019-07-09T22:19:30.000Z"
+          },
+          {
+            "id": "G1459576437-GES_DISC",
+            "month": 201802,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201802.nc4",
+            "updated": "2019-07-09T22:19:30.000Z"
+          },
+          {
+            "id": "G1513202326-GES_DISC",
+            "month": 201803,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201803.nc4",
+            "updated": "2019-07-09T22:19:30.000Z"
+          },
+          {
+            "id": "G1519256023-GES_DISC",
+            "month": 201804,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201804.nc4",
+            "updated": "2019-07-10T02:12:08.000Z"
+          },
+          {
+            "id": "G1531236253-GES_DISC",
+            "month": 201805,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201805.nc4",
+            "updated": "2019-07-10T02:12:08.000Z"
+          },
+          {
+            "id": "G1537709921-GES_DISC",
+            "month": 201806,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201806.nc4",
+            "updated": "2019-07-10T02:12:08.000Z"
+          },
+          {
+            "id": "G1543914732-GES_DISC",
+            "month": 201807,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201807.nc4",
+            "updated": "2019-07-10T02:12:09.000Z"
+          },
+          {
+            "id": "G1548732241-GES_DISC",
+            "month": 201808,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201808.nc4",
+            "updated": "2019-07-10T05:46:34.000Z"
+          },
+          {
+            "id": "G1562009723-GES_DISC",
+            "month": 201809,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201809.nc4",
+            "updated": "2019-07-10T05:46:34.000Z"
+          },
+          {
+            "id": "G1573447026-GES_DISC",
+            "month": 201810,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201810.nc4",
+            "updated": "2019-07-10T05:46:34.000Z"
+          },
+          {
+            "id": "G1579143153-GES_DISC",
+            "month": 201811,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201811.nc4",
+            "updated": "2019-07-10T05:46:35.000Z"
+          },
+          {
+            "id": "G1587901761-GES_DISC",
+            "month": 201812,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201812.nc4",
+            "updated": "2019-07-10T09:41:03.000Z"
+          },
+          {
+            "id": "G1592915930-GES_DISC",
+            "month": 201901,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201901.nc4",
+            "updated": "2019-07-10T09:41:03.000Z"
+          },
+          {
+            "id": "G1599354126-GES_DISC",
+            "month": 201902,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201902.nc4",
+            "updated": "2019-07-10T09:41:03.000Z"
+          },
+          {
+            "id": "G1607191732-GES_DISC",
+            "month": 201903,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201903.nc4",
+            "updated": "2019-05-14T19:48:09.000Z"
+          },
+          {
+            "id": "G1614304858-GES_DISC",
+            "month": 201904,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201904.nc4",
+            "updated": "2019-05-21T19:27:06.000Z"
+          },
+          {
+            "id": "G1619642516-GES_DISC",
+            "month": 201905,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201905.nc4",
+            "updated": "2019-06-17T13:08:20.000Z"
+          },
+          {
+            "id": "G1625134727-GES_DISC",
+            "month": 201906,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201906.nc4",
+            "updated": "2019-07-18T17:46:31.000Z"
+          },
+          {
+            "id": "G1629933140-GES_DISC",
+            "month": 201907,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201907.nc4",
+            "updated": "2019-08-20T16:50:42.000Z"
+          },
+          {
+            "id": "G1634082919-GES_DISC",
+            "month": 201908,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201908.nc4",
+            "updated": "2019-09-18T13:09:31.000Z"
+          },
+          {
+            "id": "G1646919849-GES_DISC",
+            "month": 201909,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201909.nc4",
+            "updated": "2019-10-20T17:09:59.000Z"
+          },
+          {
+            "id": "G1657504206-GES_DISC",
+            "month": 201910,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201910.nc4",
+            "updated": "2019-11-18T16:38:22.000Z"
+          },
+          {
+            "id": "G1676894826-GES_DISC",
+            "month": 201911,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201911.nc4",
+            "updated": "2019-12-23T17:19:47.000Z"
+          },
+          {
+            "id": "G1682744324-GES_DISC",
+            "month": 201912,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.201912.nc4",
+            "updated": "2020-01-17T16:46:06.000Z"
+          },
+          {
+            "id": "G1694793088-GES_DISC",
+            "month": 202001,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202001.nc4",
+            "updated": "2020-02-18T17:05:42.000Z"
+          },
+          {
+            "id": "G1711019120-GES_DISC",
+            "month": 202002,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202002.nc4",
+            "updated": "2020-03-24T16:56:32.000Z"
+          },
+          {
+            "id": "G1724181533-GES_DISC",
+            "month": 202003,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202003.nc4",
+            "updated": "2020-04-18T01:25:25.000Z"
+          },
+          {
+            "id": "G1747139795-GES_DISC",
+            "month": 202004,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202004.nc4",
+            "updated": "2020-05-19T13:06:42.000Z"
+          },
+          {
+            "id": "G1871136418-GES_DISC",
+            "month": 202005,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202005.nc4",
+            "updated": "2020-06-21T14:12:15.000Z"
+          },
+          {
+            "id": "G1906391779-GES_DISC",
+            "month": 202006,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202006.nc4",
+            "updated": "2020-07-18T22:11:57.000Z"
+          },
+          {
+            "id": "G1929627674-GES_DISC",
+            "month": 202007,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202007.nc4",
+            "updated": "2020-08-20T23:32:02.000Z"
+          },
+          {
+            "id": "G1941947407-GES_DISC",
+            "month": 202008,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202008.nc4",
+            "updated": "2020-09-19T16:44:56.000Z"
+          },
+          {
+            "id": "G1962851425-GES_DISC",
+            "month": 202009,
+            "title": "M2TMNXLND.5.12.4:MERRA2_401.tavgM_2d_lnd_Nx.202009.nc4",
+            "updated": "2020-11-05T00:16:51.000Z"
+          },
+          {
+            "id": "G1970114757-GES_DISC",
+            "month": 202010,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202010.nc4",
+            "updated": "2020-11-24T03:26:06.000Z"
+          },
+          {
+            "id": "G1985131465-GES_DISC",
+            "month": 202011,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202011.nc4",
+            "updated": "2020-12-20T22:26:07.000Z"
+          },
+          {
+            "id": "G1994442367-GES_DISC",
+            "month": 202012,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202012.nc4",
+            "updated": "2021-01-18T22:11:54.000Z"
+          },
+          {
+            "id": "G2011583083-GES_DISC",
+            "month": 202101,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202101.nc4",
+            "updated": "2021-02-23T21:42:33.000Z"
+          },
+          {
+            "id": "G2022784781-GES_DISC",
+            "month": 202102,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202102.nc4",
+            "updated": "2021-03-17T21:17:31.000Z"
+          },
+          {
+            "id": "G2037444160-GES_DISC",
+            "month": 202103,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202103.nc4",
+            "updated": "2021-04-20T17:37:18.000Z"
+          },
+          {
+            "id": "G2055129312-GES_DISC",
+            "month": 202104,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202104.nc4",
+            "updated": "2021-05-19T15:24:10.000Z"
+          },
+          {
+            "id": "G2073777985-GES_DISC",
+            "month": 202105,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202105.nc4",
+            "updated": "2021-06-22T01:03:01.000Z"
+          },
+          {
+            "id": "G2181546163-GES_DISC",
+            "month": 202106,
+            "title": "M2TMNXLND.5.12.4:MERRA2_401.tavgM_2d_lnd_Nx.202106.nc4",
+            "updated": "2021-12-10T23:52:18.000Z"
+          },
+          {
+            "id": "G2184594602-GES_DISC",
+            "month": 202107,
+            "title": "M2TMNXLND.5.12.4:MERRA2_401.tavgM_2d_lnd_Nx.202107.nc4",
+            "updated": "2021-12-15T20:50:08.000Z"
+          },
+          {
+            "id": "G2185010319-GES_DISC",
+            "month": 202108,
+            "title": "M2TMNXLND.5.12.4:MERRA2_401.tavgM_2d_lnd_Nx.202108.nc4",
+            "updated": "2021-12-16T15:12:54.000Z"
+          },
+          {
+            "id": "G2185375915-GES_DISC",
+            "month": 202109,
+            "title": "M2TMNXLND.5.12.4:MERRA2_401.tavgM_2d_lnd_Nx.202109.nc4",
+            "updated": "2021-12-17T07:47:31.000Z"
+          },
+          {
+            "id": "G2186269091-GES_DISC",
+            "month": 202110,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202110.nc4",
+            "updated": "2021-12-18T17:59:00.000Z"
+          },
+          {
+            "id": "G2188982482-GES_DISC",
+            "month": 202111,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202111.nc4",
+            "updated": "2021-12-23T04:49:25.000Z"
+          },
+          {
+            "id": "G2205155502-GES_DISC",
+            "month": 202112,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202112.nc4",
+            "updated": "2022-01-21T00:54:09.000Z"
+          },
+          {
+            "id": "G2224550584-GES_DISC",
+            "month": 202201,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202201.nc4",
+            "updated": "2022-02-26T21:53:02.000Z"
+          },
+          {
+            "id": "G2239268256-GES_DISC",
+            "month": 202202,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202202.nc4",
+            "updated": "2022-03-21T13:30:52.000Z"
+          },
+          {
+            "id": "G2253844147-GES_DISC",
+            "month": 202203,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202203.nc4",
+            "updated": "2022-04-19T20:47:09.000Z"
+          },
+          {
+            "id": "G2273286741-GES_DISC",
+            "month": 202204,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202204.nc4",
+            "updated": "2022-05-17T15:06:48.000Z"
+          },
+          {
+            "id": "G2298145535-GES_DISC",
+            "month": 202205,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202205.nc4",
+            "updated": "2022-06-18T16:56:34.000Z"
+          },
+          {
+            "id": "G2355127623-GES_DISC",
+            "month": 202206,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202206.nc4",
+            "updated": "2022-07-19T15:59:10.000Z"
+          },
+          {
+            "id": "G2430724838-GES_DISC",
+            "month": 202207,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202207.nc4",
+            "updated": "2022-08-31T16:23:47.000Z"
+          },
+          {
+            "id": "G2466229449-GES_DISC",
+            "month": 202208,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202208.nc4",
+            "updated": "2022-09-17T18:55:40.000Z"
+          },
+          {
+            "id": "G2516356549-GES_DISC",
+            "month": 202209,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202209.nc4",
+            "updated": "2022-10-17T22:55:30.000Z"
+          },
+          {
+            "id": "G2551271322-GES_DISC",
+            "month": 202210,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202210.nc4",
+            "updated": "2022-11-21T14:37:11.000Z"
+          },
+          {
+            "id": "G2569034401-GES_DISC",
+            "month": 202211,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202211.nc4",
+            "updated": "2022-12-21T21:04:08.000Z"
+          },
+          {
+            "id": "G2591283700-GES_DISC",
+            "month": 202212,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202212.nc4",
+            "updated": "2023-01-17T20:53:11.000Z"
+          },
+          {
+            "id": "G2613628749-GES_DISC",
+            "month": 202301,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202301.nc4",
+            "updated": "2023-02-17T23:51:22.000Z"
+          },
+          {
+            "id": "G2638666093-GES_DISC",
+            "month": 202302,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202302.nc4",
+            "updated": "2023-03-22T19:48:02.000Z"
+          },
+          {
+            "id": "G2660107978-GES_DISC",
+            "month": 202303,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202303.nc4",
+            "updated": "2023-04-19T17:21:17.000Z"
+          },
+          {
+            "id": "G2695587507-GES_DISC",
+            "month": 202304,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202304.nc4",
+            "updated": "2023-05-22T17:33:36.000Z"
+          },
+          {
+            "id": "G2716936206-GES_DISC",
+            "month": 202305,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202305.nc4",
+            "updated": "2023-06-20T21:56:52.000Z"
+          },
+          {
+            "id": "G2735019110-GES_DISC",
+            "month": 202306,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202306.nc4",
+            "updated": "2023-07-18T18:43:11.000Z"
+          },
+          {
+            "id": "G2755414723-GES_DISC",
+            "month": 202307,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202307.nc4",
+            "updated": "2023-08-21T21:08:49.000Z"
+          },
+          {
+            "id": "G2769519921-GES_DISC",
+            "month": 202308,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202308.nc4",
+            "updated": "2023-09-19T20:38:34.000Z"
+          },
+          {
+            "id": "G2788249916-GES_DISC",
+            "month": 202309,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202309.nc4",
+            "updated": "2023-10-23T19:19:39.000Z"
+          },
+          {
+            "id": "G2805673881-GES_DISC",
+            "month": 202310,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202310.nc4",
+            "updated": "2023-11-22T17:57:53.000Z"
+          },
+          {
+            "id": "G2820944034-GES_DISC",
+            "month": 202311,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202311.nc4",
+            "updated": "2023-12-20T13:02:52.000Z"
+          },
+          {
+            "id": "G2840726900-GES_DISC",
+            "month": 202312,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202312.nc4",
+            "updated": "2024-01-21T18:10:59.000Z"
+          },
+          {
+            "id": "G2873638212-GES_DISC",
+            "month": 202401,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202401.nc4",
+            "updated": "2024-02-22T16:02:24.000Z"
+          },
+          {
+            "id": "G2904902895-GES_DISC",
+            "month": 202402,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202402.nc4",
+            "updated": "2024-03-21T20:25:22.000Z"
+          },
+          {
+            "id": "G2963013841-GES_DISC",
+            "month": 202403,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202403.nc4",
+            "updated": "2024-04-30T23:36:57.000Z"
+          },
+          {
+            "id": "G3019469875-GES_DISC",
+            "month": 202404,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202404.nc4",
+            "updated": "2024-05-20T12:48:17.000Z"
+          },
+          {
+            "id": "G3126067807-GES_DISC",
+            "month": 202405,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202405.nc4",
+            "updated": "2024-06-24T16:09:48.000Z"
+          },
+          {
+            "id": "G3171553596-GES_DISC",
+            "month": 202406,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202406.nc4",
+            "updated": "2024-07-23T14:11:27.000Z"
+          },
+          {
+            "id": "G3201382673-GES_DISC",
+            "month": 202407,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202407.nc4",
+            "updated": "2024-08-19T00:46:29.000Z"
+          },
+          {
+            "id": "G3243906512-GES_DISC",
+            "month": 202408,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202408.nc4",
+            "updated": "2024-09-19T20:20:02.000Z"
+          },
+          {
+            "id": "G3274569365-GES_DISC",
+            "month": 202409,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202409.nc4",
+            "updated": "2024-10-24T17:36:43.000Z"
+          },
+          {
+            "id": "G3301213093-GES_DISC",
+            "month": 202410,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202410.nc4",
+            "updated": "2024-11-20T21:54:49.000Z"
+          },
+          {
+            "id": "G3336747405-GES_DISC",
+            "month": 202411,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202411.nc4",
+            "updated": "2024-12-20T01:52:22.000Z"
+          },
+          {
+            "id": "G3381657958-GES_DISC",
+            "month": 202412,
+            "title": "M2TMNXLND.5.12.4:MERRA2_400.tavgM_2d_lnd_Nx.202412.nc4",
+            "updated": "2025-01-25T15:59:06.000Z"
+          }
+        ]
+      },
+      "NDVI": {
+        "provider": "nasa-appeears",
+        "source": "NASA AppEEARS / Terra MODIS",
+        "resource": "AppEEARS",
+        "dataset": "MOD13A3",
+        "collection_version": "061",
+        "field": "_1_km_monthly_NDVI",
+        "policy": "challenge_resource",
+        "citation": "https://doi.org/10.5067/MODIS/MOD13A3.061",
+        "access": "AppEEARS polygon processing; statistics CSV only, no raster downloads",
+        "aggregation": "AppEEARS monthly polygon summary mean; physical index values supplied by NASA, no additional raster scaling",
+        "quality": "Monthly vegetation composites; fill and range checks applied. No additional per-pixel VI quality filtering or monthly valid-area audit; exploratory screening.",
+        "geometry_version": "35339921e7a23101",
+        "spatial_detail_available": false,
+        "monthly_area_coverage_known": false,
+        "resolution": "1 km",
+        "cache_hit": true,
+        "remote_job_id": "e6035808-30f9-4410-b427-b32ca11f014b",
+        "retrieved_utc": "2026-11-15T07:15:08.138931+00:00",
+        "first_observed_month": 201601,
+        "last_observed_month": 202412
+      }
+    },
+    "method": "Seasonal decomposition (monthly climatology + linear trend removed) \u00b7 lagged cross-correlation (\u00b16 mo) for direction \u00b7 first-order partial correlation (T2M confounder) \u00b7 two-way Granger F-test (3 lags) \u00b7 \u03b1=0.05",
+    "sources": [
+      "NASA GES DISC / MERRA-2",
+      "NASA AppEEARS / Terra MODIS"
+    ]
+  },
+  "global": null,
+  "scope": "local"
+}

@@ -5,6 +5,7 @@ Run:  python server.py  [port]
 """
 import datetime
 import json
+import math
 import sys
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -14,8 +15,11 @@ from urllib.parse import parse_qs, urlparse
 import catalog
 import gibs
 import interconnect
-import literature
 import power_client
+import geography
+import spatial
+import data_sources
+import jobs
 from analysis import (
     analyze_series, seasonal_mk,
     analyze_cross_coupling, analyze_regional_contrast,
@@ -30,6 +34,7 @@ MAX_VARS = 3
 MIN_YEAR = 1981
 MAX_YEAR = datetime.date.today().year   # data currency follows the calendar
 MIN_MONTHS_PER_YEAR = 12               # a year must be complete to enter a trend
+MIN_POINT_COVERAGE = 0.80              # fraction of grid points that must report
 
 MIME = {
     ".html": "text/html; charset=utf-8",
@@ -38,6 +43,10 @@ MIME = {
     ".json": "application/json; charset=utf-8",
     ".svg": "image/svg+xml",
     ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".glsl": "text/plain; charset=utf-8",
+    ".geojson": "application/geo+json; charset=utf-8",
     ".ico": "image/x-icon",
     ".woff2": "font/woff2",
 }
@@ -49,6 +58,10 @@ def _month_labels(months):
         s = str(m)
         out.append(f"{s[:4]}-{s[4:]}")
     return out
+
+
+def calendar_months(start,end):
+    return [year*100+month for year in range(start,end+1) for month in range(1,13)]
 
 
 def _annualize(month_labels, values):
@@ -97,32 +110,71 @@ def _yearly_anomalies(values, month_labels):
 
 
 def _region_series(grid, months):
-    """Area-average of the grid for each month."""
+    """Area-average of the grid for each month.
+
+    Also returns how many grid points contributed to each month, so callers can
+    reject years where only a subset of the box reported. Averaging 4 of 25
+    points and averaging 25 of 25 are different measurements of different
+    places; silently mixing them bends the trend.
+    """
+    if hasattr(grid,"regional_series"):
+        values=[grid.regional_series.get(m) for m in months]
+        return values,[1. if value is not None else 0. for value in values]
+    if isinstance(grid, spatial.Grid):
+        return spatial.weighted_series(grid, months)
     out = []
+    counts = []
     for m in months:
         vals = []
         for lo in grid:
             for la in grid[lo]:
-                v = grid[lo][la].get(m)
+                v = grid[lo][la].get(m,grid[lo][la].get(str(m)))
                 if v is not None:
                     vals.append(v)
+        counts.append(len(vals))
         out.append(round(sum(vals) / len(vals), 4) if vals else None)
-    return out
+    return out, counts
+
+
+def _coverage_threshold(grid):
+    """Minimum grid points that must report before a month counts as regional."""
+    if isinstance(grid, spatial.Grid):
+        return grid.expected_weight * MIN_POINT_COVERAGE
+    total = sum(len(grid[lo]) for lo in grid)
+    return max(1, int(math.ceil(total * MIN_POINT_COVERAGE)))
+
+
+def covered_region_series(grid, months):
+    values,counts=_region_series(grid,months)
+    need=_coverage_threshold(grid)
+    return [v if count>=need else None for v,count in zip(values,counts)]
 
 
 def analyze_variable(var, grid, months, month_labels):
     """Build the per-variable analysis block (series, cells, summary)."""
-    region_ts = _region_series(grid, months)
+    region_ts, month_counts = _region_series(grid, months)
+    need = _coverage_threshold(grid)
+
+    # A month is usable only when enough of the box actually reported. This
+    # guards against the mixed-spatial-support artefact where early years are
+    # averaged over a handful of points and later years over the full grid.
+    thin = [i for i, c in enumerate(month_counts) if 0 < c < need]
+    for i in thin:
+        region_ts[i] = None
+
     yearly_ts = _annualize(month_labels, region_ts)
-    # trend uses complete years only (see _annualize)
-    annual_values = _complete_years(yearly_ts)
+    annual_points = [p for p in yearly_ts if p["complete"]]
+    annual_values = [p["value"] for p in annual_points]
 
     cells = []
     for lo in sorted(grid):
         for la in sorted(grid[lo]):
-            raw = [grid[lo][la].get(m) for m in months]
-            ann = _complete_years(_annualize(month_labels, raw))
-            a = analyze_series(ann)
+            if len(cells)%128==0:jobs.check_cancelled()
+            raw = [grid[lo][la].get(m,grid[lo][la].get(str(m))) for m in months]
+            ann_points = [p for p in _annualize(month_labels, raw) if p["complete"]]
+            ann = [p["value"] for p in ann_points]
+            a = analyze_series(
+                ann, percent_ok=catalog.percent_change_ok(var["id"]), xs=[p["year"] for p in ann_points])
             cell = {"lon": lo, "lat": la, "n": a.get("n", 0)}
             if a.get("ok"):
                 cell.update({
@@ -138,12 +190,13 @@ def analyze_variable(var, grid, months, month_labels):
                     "methods_agree": a.get("methods_agree"),
                 })
             else:
-                cell.update({"slope": 0.0, "direction": "nodata",
+                cell.update({"slope": None, "direction": "nodata",
                             "significant": False, "p": 1.0,
-                            "per_decade": 0.0, "stars": ""})
+                            "per_decade": None, "stars": ""})
             cells.append(cell)
 
-    overall = analyze_series(annual_values)
+    overall = analyze_series(
+        annual_values, percent_ok=catalog.percent_change_ok(var["id"]), xs=[p["year"] for p in annual_points])
     seasonal = seasonal_mk(region_ts, period=12)
     # The observatory modal reads these three straight off `overall`; keep them
     # there as well as in the `seasonal` tuple so the seasonal MK cross-check is
@@ -154,7 +207,8 @@ def analyze_variable(var, grid, months, month_labels):
     overall["seasonal_significant"] = ssig
 
     return {
-        "variable": var,
+        "variable": {**var,"dataset":grid.provenance.get("dataset"),"source_field":grid.provenance.get("field")} if getattr(grid,"provenance",{}) else var,
+        "provenance": getattr(grid, "provenance", {}),
         "monthly_timeseries": [
             {"month": m, "value": v} for m, v in zip(month_labels, region_ts)
         ],
@@ -162,7 +216,7 @@ def analyze_variable(var, grid, months, month_labels):
         "cells": cells,
         "overall": overall,
         "seasonal": seasonal,
-        "summary": _summarize(cells),
+        "summary": {**_summarize(cells),"spatial_detail_available":not hasattr(grid,"regional_series")},
     }
 
 
@@ -185,15 +239,51 @@ def _summarize(cells):
     }
 
 
-def run_analysis(variables, region, start, end, nx=5, ny=5, compare_region=None):
-    """Core analysis pipeline across one or more variables."""
+def resolve_region(region):
+    return next((r for r in catalog.REGIONS if r["id"] == region), None) or geography.resolve(region)
+
+
+def fetch_region(var_id, region, start, end, nx=5, ny=5):
+    if region.get("geometry"):
+        return data_sources.fetch_region(var_id, region, start, end)
+    if data_sources.PROVIDER.get() != "legacy-live":
+        fid = "focus:" + region["id"]
+        if fid not in geography._FEATURES:
+            x0,y0,x1,y1=region["bbox"]
+            geography._FEATURES[fid]=geography._feature(fid,region["name"],"focus",{
+                "type":"Polygon","coordinates":[[[x0,y0],[x1,y0],[x1,y1],[x0,y1],[x0,y0]]]})
+        return data_sources.fetch_region(var_id,geography._FEATURES[fid],start,end)
+    return power_client.fetch_grid(var_id, region["bbox"], start, end, nx, ny)
+
+
+def region_metadata(region):
+    return {k:v for k,v in region.items() if k != "geometry"}
+
+
+def run_analysis(variables, region, start, end, nx=5, ny=5, compare_region=None,
+                 bbox=None):
+    """Core analysis pipeline across one or more variables.
+
+    bbox: optional [lon0, lat0, lon1, lat1]. When present the analysis runs on
+    that exact area, which is what makes a globe click honest.
+    """
     if end - start < 8:
         raise ValueError("Need at least 9 years of data (end - start >= 8)")
+    if start < MIN_YEAR:
+        raise ValueError(f"Data window must start at or after {MIN_YEAR}")
     if end > MAX_YEAR:
         raise ValueError(f"Data available through {MAX_YEAR}")
 
-    reg = next((r for r in catalog.REGIONS if r["id"] == region), None)
-    if not reg:
+    reg = resolve_region(region)
+    if bbox:
+        reg = {
+            "id": "custom",
+            "name": "Selected Area",
+            "bbox": bbox,
+            "desc": "Area chosen on the globe",
+            "surface": "land",
+        }
+    elif not reg:
         raise KeyError(f"Unknown region {region}")
 
     vars_ = []
@@ -211,27 +301,25 @@ def run_analysis(variables, region, start, end, nx=5, ny=5, compare_region=None)
     last_valid = None
 
     for var in vars_:
-        grid = power_client.fetch_grid(var["id"], reg["bbox"], start, end, nx, ny)
+        grid = fetch_region(var["id"], reg, start, end, nx, ny)
 
         if months is None:
             all_months = set()
             for lo in grid:
                 for la in grid[lo]:
                     all_months.update(grid[lo][la].keys())
-            months = sorted(m for m in all_months
-                            if len(str(m)) == 6 and str(m)[4:] != "13")
+            months = calendar_months(start,end)
             month_labels = _month_labels(months)
             if month_labels:
                 first_valid = month_labels[0]
                 last_valid = month_labels[-1]
 
         block = analyze_variable(var, grid, months, month_labels)
-        try:
-            block["literature"] = literature.search_papers(
-                var["id"], reg["name"])
-        except Exception as e:  # noqa: BLE001
-            block["literature"] = {"ok": False, "error": str(e), "papers": []}
         series.append(block)
+        if len(series)==1:
+            available=[p["month"] for p in block["monthly_timeseries"] if p["value"] is not None]
+            first_valid=available[0] if available else None
+            last_valid=available[-1] if available else None
 
     couplings = []
     if len(series) >= 2:
@@ -239,23 +327,28 @@ def run_analysis(variables, region, start, end, nx=5, ny=5, compare_region=None)
             for j in range(i + 1, len(series)):
                 block_a = series[i]
                 block_b = series[j]
-                ts_a = [p["value"] for p in block_a["yearly_timeseries"]]
-                ts_b = [p["value"] for p in block_b["yearly_timeseries"]]
+                common = sorted({p["year"] for p in block_a["yearly_timeseries"] if p["complete"]} & {p["year"] for p in block_b["yearly_timeseries"] if p["complete"]})
+                aa = {p["year"]:p["value"] for p in block_a["yearly_timeseries"]}
+                bb = {p["year"]:p["value"] for p in block_b["yearly_timeseries"]}
+                ts_a = [aa[y] for y in common]
+                ts_b = [bb[y] for y in common]
                 c = analyze_cross_coupling(
                     block_a["variable"], block_b["variable"],
                     ts_a, ts_b,
                     block_a["overall"], block_b["overall"]
                 )
+                c["description"]="Co-trend association. Possible mechanism: "+c.get("description","")
+                c["evidence_type"]="co_trend_association"
                 couplings.append(c)
 
     compare_data = None
     if compare_region and compare_region != region:
-        reg_b = next((r for r in catalog.REGIONS if r["id"] == compare_region), None)
+        reg_b = resolve_region(compare_region)
         if reg_b:
             compare_series = []
             contrasts = []
             for i, var in enumerate(vars_):
-                grid_b = power_client.fetch_grid(var["id"], reg_b["bbox"], start, end, nx, ny)
+                grid_b = fetch_region(var["id"], reg_b, start, end, nx, ny)
                 block_b = analyze_variable(var, grid_b, months, month_labels)
                 compare_series.append(block_b)
                 contrast = analyze_regional_contrast(
@@ -268,19 +361,19 @@ def run_analysis(variables, region, start, end, nx=5, ny=5, compare_region=None)
                 contrasts.append(contrast)
 
             compare_data = {
-                "region": reg_b,
+                "region": region_metadata(reg_b),
                 "series": compare_series,
                 "contrasts": contrasts,
             }
 
     satellite_data = None
     try:
-        satellite_data = gibs.get_satellite_evidence(reg, start, end)
+        satellite_data = gibs.get_satellite_evidence(reg, start, end) if data_sources.PROVIDER.get() == "legacy-live" else {"enabled": False, "reason": "Imagery route not enabled by the challenge source policy"}
     except Exception as e:  # noqa: BLE001
         satellite_data = {"error": str(e)}
 
     out = {
-        "region": reg, "start": start, "end": end,
+        "region": region_metadata(reg), "start": start, "end": end,
         "months": month_labels,
         "series": series,
         "grid": {"nx": nx, "ny": ny, "bbox": reg["bbox"]},
@@ -295,7 +388,8 @@ def run_analysis(variables, region, start, end, nx=5, ny=5, compare_region=None)
                 if not y.get("complete", True)
             ],
         },
-        "sources": ["NASA POWER (MERRA-2 / GPCP / CERES)", "NASA GIBS (MODIS / VIIRS)", "OpenAlex"],
+        "sources": list(dict.fromkeys([b.get("provenance", {}).get("source", "NASA POWER (legacy)") for b in series])),
+        "provenance": [b.get("provenance", {}) for b in series],
     }
     if compare_data:
         out["compare"] = compare_data
@@ -315,7 +409,7 @@ def run_scan(variables, region, start, end, nx=5, ny=5):
     if end > MAX_YEAR:
         raise ValueError(f"Data available through {MAX_YEAR}")
 
-    reg = next((r for r in catalog.REGIONS if r["id"] == region), None)
+    reg = resolve_region(region)
     if not reg:
         raise KeyError(f"Unknown region {region}")
 
@@ -337,12 +431,12 @@ def run_scan(variables, region, start, end, nx=5, ny=5):
             break
         still_failed = []
         for var in pending:
+            jobs.progress(len(rows_by_id),len(vars_),"Testing "+var["name"])
             try:
-                grid = power_client.fetch_grid(var["id"], reg["bbox"],
-                                               start, end, nx, ny)
+                grid = fetch_region(var["id"], reg, start, end, nx, ny)
             except Exception as e:  # noqa: BLE001
-                still_failed.append(var)
-                if attempt == 1:
+                if data_sources.PROVIDER.get()=="legacy-live":still_failed.append(var)
+                if attempt == 1 or data_sources.PROVIDER.get()!="legacy-live":
                     rows_by_id[var["id"]] = {
                         "id": var["id"], "name": var["name"],
                         "unit": var["unit"], "color": var["color"],
@@ -359,8 +453,7 @@ def run_scan(variables, region, start, end, nx=5, ny=5):
                 for lo in grid:
                     for la in grid[lo]:
                         all_months.update(grid[lo][la].keys())
-                months = sorted(m for m in all_months
-                                if len(str(m)) == 6 and str(m)[4:] != "13")
+                months = calendar_months(start,end)
                 month_labels = _month_labels(months)
 
             block = analyze_variable(var, grid, months, month_labels)
@@ -383,8 +476,9 @@ def run_scan(variables, region, start, end, nx=5, ny=5):
                 "stars": o.get("stars", ""),
                 "cells_sig": sm["significant_cells"],
                 "cells_total": sm["total_cells"],
+                "provenance": block.get("provenance",{}),
             }
-            time.sleep(0.15)  # stay inside POWER's limiter
+            if data_sources.PROVIDER.get()=="legacy-live":time.sleep(0.15)
 
         pending = still_failed
         if pending:
@@ -400,7 +494,7 @@ def run_scan(variables, region, start, end, nx=5, ny=5):
 
     ok_rows = [r for r in rows if r.get("ok")]
     return {
-        "region": reg, "start": start, "end": end,
+        "region": region_metadata(reg), "start": start, "end": end,
         "grid": {"nx": nx, "ny": ny, "bbox": reg["bbox"]},
         "window": {"last_month": None, "partial_years": []},
         "scanned": rows,
@@ -414,11 +508,11 @@ def run_scan(variables, region, start, end, nx=5, ny=5):
                            if r["significant"] and r["direction"] == "falling"),
             "strongest": ok_rows[0]["name"] if ok_rows else None,
         },
-        "sources": ["NASA POWER (MERRA-2 / GPCP / CERES)"],
+        "sources": list(dict.fromkeys(r.get("provenance",{}).get("source","No source data") for r in rows)),
     }
 
 
-def run_coupling_analysis(region_id, variables, start, end):
+def run_coupling_analysis(region_id, variables, start, end, target_variable=None):
     """Directed coupling diagnostics between all requested variables in one
     region.
 
@@ -428,7 +522,7 @@ def run_coupling_analysis(region_id, variables, start, end):
     """
     if end - start < 5:
         raise ValueError("Need at least 6 years of data (end - start >= 5)")
-    reg = next((r for r in catalog.REGIONS if r["id"] == region_id), None)
+    reg = resolve_region(region_id)
     if not reg:
         raise KeyError(f"Unknown region {region_id}")
 
@@ -441,12 +535,14 @@ def run_coupling_analysis(region_id, variables, start, end):
         raise ValueError("Need at least two variables to diagnose coupling")
 
     grids = {}
+    source_errors={}
     for var in vars_:
+        jobs.check_cancelled()
         try:
-            grids[var["id"]] = power_client.fetch_grid(
-                var["id"], reg["bbox"], start, end, 5, 5)
-        except Exception:
+            grids[var["id"]] = fetch_region(var["id"], reg, start, end, 5, 5)
+        except Exception as e:
             grids[var["id"]] = None
+            source_errors[var['id']]=str(e)[:250]
 
     all_months = set()
     for g in grids.values():
@@ -455,18 +551,30 @@ def run_coupling_analysis(region_id, variables, start, end):
         for lo in g:
             for la in g[lo]:
                 all_months.update(g[lo][la].keys())
-    months = sorted(m for m in all_months
-                    if len(str(m)) == 6 and str(m)[4:] != "13")
+    months = calendar_months(start,end)
     month_labels = _month_labels(months)
 
     series_by_var = {}
     for var in vars_:
         g = grids.get(var["id"])
-        if not g:
+        if g is None:
             continue
-        series_by_var[var["id"]] = _region_series(g, months)
+        series_by_var[var["id"]] = covered_region_series(g, months)
 
     pairs = interconnect.analyze_local_couplings(reg, series_by_var, month_labels)
+    conditional = None
+    if target_variable in series_by_var:
+        candidates=[]
+        for p in pairs:
+            if p["response"]==target_variable and p["driver"] in series_by_var:
+                try:
+                    candidates.append({"id":p["driver"],"lag":max(1,abs(p["lag_months"])),
+                        "values":interconnect.decompose_monthly(series_by_var[p["driver"]])["values"]})
+                except ValueError:continue
+        try:
+            conditional=interconnect.conditional_driver_model(interconnect.decompose_monthly(series_by_var[target_variable])["values"],candidates)
+        except ValueError:
+            conditional={"ok":False,"reason":"Insufficient anomaly coverage"}
 
     var_meta = {v["id"]: v for v in vars_}
     out_pairs = []
@@ -482,10 +590,14 @@ def run_coupling_analysis(region_id, variables, start, end):
             mechanism = lexicon["divergent"]
         elif p["phase"] == "in_phase" and "in_phase" in lexicon:
             mechanism = lexicon["in_phase"]
+        has_mechanism=bool(mechanism)
         if not mechanism:
             mechanism = interconnect.describe_coupling(
                 var_meta.get(p["a"], {}), var_meta.get(p["b"], {}), p)
         out_pairs.append({
+            "source_a":getattr(grids.get(p['a']),'provenance',{}).get('source','Unknown source'),
+            "source_b":getattr(grids.get(p['b']),'provenance',{}).get('source','Unknown source'),
+            "overlapping_months":sum(a is not None and b is not None for a,b in zip(series_by_var[p['a']],series_by_var[p['b']])),
             "a": {"id": a["id"], "name": a["name"], "unit": a["unit"],
                   "color": a["color"], "sphere": a.get("sphere"),
                   "sphere_code": a.get("sphere_code")},
@@ -495,6 +607,7 @@ def run_coupling_analysis(region_id, variables, start, end):
             "r": p["r"],
             "r_lagged": p["r_lagged"],
             "p": p["p"],
+            "p_adjusted": p.get("p_adjusted"),
             "lag_months": p["lag_months"],
             "driver": p["driver"],
             "response": p["response"],
@@ -507,11 +620,20 @@ def run_coupling_analysis(region_id, variables, start, end):
             "strength": p["strength"],
             "confidence": p["confidence"],
             "title": title,
-            "mechanism": mechanism,
+            "mechanism": ("Possible mechanism: " if has_mechanism else "Computed relationship: ")+mechanism,
+            "mechanism_status": "hypothesis" if has_mechanism else "statistical_description",
         })
 
+    source_anomaly=None
+    if target_variable in series_by_var:
+        try:
+            residual=interconnect.decompose_monthly(series_by_var[target_variable])['values']
+            source_anomaly={'region':region_metadata(reg),'variable':var_meta[target_variable],
+                'anomaly_report':interconnect.anomaly_report(residual,month_labels),
+                'anomaly_yearly':_yearly_anomalies(residual,month_labels),'month_labels':month_labels}
+        except ValueError:pass
     return {
-        "region": reg,
+        "region": region_metadata(reg),
         "start": start,
         "end": end,
         "variables": [{
@@ -520,12 +642,17 @@ def run_coupling_analysis(region_id, variables, start, end):
             "sphere_code": v.get("sphere_code"),
         } for v in vars_],
         "pairs": out_pairs,
+        "source_errors":source_errors,
+        "analysable_variables":[vid for vid,values in series_by_var.items() if sum(v is not None for v in values)>=interconnect.MIN_MONTHS],
+        "source_anomaly":source_anomaly,
+        "conditional_drivers": conditional,
+        "provenance": {vid:getattr(g,"provenance",{}) for vid,g in grids.items() if g is not None},
         "method": (
             "Seasonal decomposition (monthly climatology + linear trend removed) · "
             "lagged cross-correlation (±6 mo) for direction · first-order partial "
             "correlation (T2M confounder) · two-way Granger F-test (3 lags) · α=0.05"
         ),
-        "sources": ["NASA POWER (MERRA-2 / GPCP / CERES)"],
+        "sources": list(dict.fromkeys(getattr(g,"provenance",{}).get("source","NASA POWER (legacy)") for g in grids.values() if g is not None)),
     }
 
 
@@ -541,7 +668,7 @@ def run_teleconnections(source_region, source_var, target_regions=None, target_v
     if end > MAX_YEAR:
         raise ValueError(f"Data available through {MAX_YEAR}")
 
-    reg_src = next((r for r in catalog.REGIONS if r["id"] == source_region), None)
+    reg_src = resolve_region(source_region)
     if not reg_src:
         raise KeyError(f"Unknown source region: {source_region}")
     var_src = next((v for v in catalog.CATALOG if v["id"] == source_var), None)
@@ -554,7 +681,7 @@ def run_teleconnections(source_region, source_var, target_regions=None, target_v
         "madagascar", "europe", "sahara"
     ]
     if target_regions:
-        candidate_regs = [r for r in catalog.REGIONS if r["id"] in target_regions and r["id"] != source_region]
+        candidate_regs = [r for r in (resolve_region(fid) for fid in target_regions) if r and r["id"] != source_region]
     else:
         # Default to planetary sentinel hubs spanning distinct climate zones
         candidate_regs = [r for r in catalog.REGIONS if r["id"] in DEFAULT_TELECON_HUBS and r["id"] != source_region]
@@ -570,15 +697,15 @@ def run_teleconnections(source_region, source_var, target_regions=None, target_v
         candidate_vars = [v for v in catalog.CATALOG if v["id"] in DEFAULT_TELECON_VARS]
 
     # Fetch and prepare source series
-    grid_src = power_client.fetch_grid(var_src["id"], reg_src["bbox"], start, end, 5, 5)
+    grid_src = fetch_region(var_src["id"], reg_src, start, end, 5, 5)
     all_months = set()
     for lo in grid_src:
         for la in grid_src[lo]:
             all_months.update(grid_src[lo][la].keys())
-    months = sorted(m for m in all_months if len(str(m)) == 6 and str(m)[4:] != "13")
+    months = calendar_months(start,end)
     month_labels = _month_labels(months)
 
-    src_region_ts = _region_series(grid_src, months)
+    src_region_ts = covered_region_series(grid_src, months)
     src_yearly = _annualize(month_labels, src_region_ts)
     ts_src = _complete_years(src_yearly)
 
@@ -598,15 +725,17 @@ def run_teleconnections(source_region, source_var, target_regions=None, target_v
 
     connections = []
     scanned_count = 0
+    tested_p = []
 
     for reg_tgt in candidate_regs:
         for var_tgt in candidate_vars:
+            jobs.progress(scanned_count,len(candidate_regs)*len(candidate_vars),"Screening "+reg_tgt["name"]+" / "+var_tgt["name"])
             scanned_count += 1
             try:
                 if src_anom is None:
                     continue
-                grid_tgt = power_client.fetch_grid(var_tgt["id"], reg_tgt["bbox"], start, end, 5, 5)
-                tgt_region_ts = _region_series(grid_tgt, months)
+                grid_tgt = fetch_region(var_tgt["id"], reg_tgt, start, end, 5, 5)
+                tgt_region_ts = covered_region_series(grid_tgt, months)
                 tgt_yearly = _annualize(month_labels, tgt_region_ts)
                 try:
                     tgt_decomp = interconnect.decompose_monthly(tgt_region_ts)
@@ -619,6 +748,7 @@ def run_teleconnections(source_region, source_var, target_regions=None, target_v
 
                 r = diag["r"]
                 p = diag["p"]
+                tested_p.append(p)
 
                 # Three gates, because with ~260 monthly samples a |r| of 0.2
                 # is already "significant" — significance alone would report
@@ -671,13 +801,17 @@ def run_teleconnections(source_region, source_var, target_regions=None, target_v
                         },
                         "r": round(r, 3),
                         "r_lagged": diag["r_lagged"],
-                        "p": round(p, 4),
+                        "p": p,
+                        "relationship": "response" if diag["lag_months"] > 0 else "driver" if diag["lag_months"] < 0 else "simultaneous",
+                        "evidence_label": "Lagged association; physical causation not established",
                         "lag_months": diag["lag_months"],
                         "lead_note": diag["lead_note"],
                         "composite": diag["composite"],
                         "direction": direction,
                         "strength": strength,
                         "mechanism": mechanism,
+                        "source_provenance": getattr(grid_src,"provenance",{}),
+                        "target_provenance": getattr(grid_tgt,"provenance",{}),
                         "source_yearly": src_yearly,
                         "target_yearly": tgt_yearly,
                         "target_anomaly_yearly": _yearly_anomalies(
@@ -690,10 +824,11 @@ def run_teleconnections(source_region, source_var, target_regions=None, target_v
     # region/variable pairs at alpha=0.05 guarantees a handful of coincidences;
     # only pairs that survive Benjamini-Hochberg across the whole scan are
     # reported, so a "discovery" is not just the luckiest test in the batch.
-    scanned_p = [c["p"] for c in connections]
-    n_survive = interconnect.benjamini_hochberg(scanned_p, q=0.10)
-    ranked = sorted(connections, key=lambda c: c["p"])
-    kept_ids = {id(c) for c in ranked[:n_survive]}
+    n_survive = interconnect.benjamini_hochberg(tested_p, q=0.10)
+    cutoff = sorted(tested_p)[n_survive-1] if n_survive else -1.0
+    kept_ids = {id(c) for c in connections if c["p"] <= cutoff}
+    for c in connections:
+        c["p_adjusted"] = interconnect.bh_adjusted_p(c["p"], tested_p)
     rejected = len(connections) - len(kept_ids)
     connections = [c for c in connections if id(c) in kept_ids]
 
@@ -704,7 +839,7 @@ def run_teleconnections(source_region, source_var, target_regions=None, target_v
 
     return {
         "source": {
-            "region": reg_src,
+            "region": region_metadata(reg_src),
             "variable": var_src,
             "start": start,
             "end": end,
@@ -715,6 +850,8 @@ def run_teleconnections(source_region, source_var, target_regions=None, target_v
         },
         "summary": {
             "total_scanned": scanned_count,
+            "valid_tests": len(tested_p),
+            "geographic_coverage": [r["name"] for r in candidate_regs],
             "significant_count": len(connections),
             "fdr_rejected": rejected,
             "fdr_q": 0.10,
@@ -736,12 +873,83 @@ def run_teleconnections(source_region, source_var, target_regions=None, target_v
             "cross-correlation of anomalies (±24 mo) · composite response of "
             "each target during driver +1σ months · α=0.05"
         ),
-        "sources": ["NASA POWER (MERRA-2 / GPCP / CERES)"],
+        "sources": list(dict.fromkeys([getattr(grid_src,"provenance",{}).get("source","NASA POWER (legacy)")]+[c.get("target_provenance",{}).get("source","NASA POWER (legacy)") for c in connections])),
     }
+
+
+def execute_job(spec):
+    if spec.get("provider")=="legacy-live":raise ValueError("Live legacy access is not enabled under the challenge resource policy")
+    token=data_sources.PROVIDER.set(spec.get("provider","project-cache"))
+    try:
+        operation=spec.get("operation","analyze")
+        variables=spec.get("variables",[])
+        start,end=int(spec.get("start",2005)),int(spec.get("end",MAX_YEAR))
+        if not isinstance(variables,list) or not variables or not all(isinstance(v,str) for v in variables):
+            raise ValueError("Select at least one variable")
+        known={v["id"] for v in catalog.CATALOG}
+        if any(v not in known for v in variables):raise ValueError("Unknown variable")
+        if data_sources.PROVIDER.get() in {"nasa-merra2","nasa-giovanni"} and not data_sources.nasa_data.token():
+            raise data_sources.nasa_data.EarthdataRequired("Connect Earthdata in Data & Methods once. NASA downloads require your account; TerraTrend fetches the observations automatically after connecting.")
+        available=data_sources.supported(data_sources.PROVIDER.get())
+        if data_sources.PROVIDER.get()=="nasa-giovanni":
+            if operation not in {"analyze","scan","overview","interconnections"}:raise ValueError('Unsupported Giovanni operation')
+            if operation=='interconnections' and spec.get('relationship_scope','local')!='local':raise ValueError('Giovanni relationship screening is local to the selected rectangle; remote country boundaries need native mode.')
+            available=list(data_sources.giovanni_data.FIELDS)
+            ids=spec.get('features',[]) if operation=='overview' else [spec.get('region'),spec.get('compare_region')]
+            if operation=='overview' and (not isinstance(ids,list) or not ids):raise ValueError('Choose rectangle preset areas for the Giovanni layer request')
+            for fid in ids:
+                if fid:data_sources.giovanni_data.rectangle(resolve_region(fid) or {})
+        if start<MIN_YEAR or end>MAX_YEAR or end-start<8:
+            raise ValueError(f"Choose at least nine years within {MIN_YEAR}–{MAX_YEAR}")
+        region=spec.get("region","")
+        if operation=="analyze":
+            return run_analysis(variables[:MAX_VARS],region,start,end,compare_region=spec.get("compare_region"))
+        if operation=="scan":
+            return run_scan(available,region,start,end)
+        if operation=="interconnections":
+            scope=spec.get('relationship_scope','local')
+            if scope not in {'local','remote'}:raise ValueError('Choose local or remote relationship screening')
+            fields=spec.get('relationship_variables') or available
+            if not isinstance(fields,list) or len(fields)<2 or len(fields)>20 or variables[0] not in fields or any(v not in available for v in fields):
+                raise ValueError('Choose at least two supported measurements for relationship screening')
+            if data_sources.PROVIDER.get()=='multi-source' and not spec.get('relationship_variables'):
+                raise ValueError('Select 2–3 measurements to link across sources; all sources are not downloaded automatically')
+            jobs.progress(0,2,"Testing local variable relationships")
+            local=run_coupling_analysis(region,fields,start,end,target_variable=variables[0])
+            global_links=None
+            if scope=='remote':
+                if not spec.get('target_regions'):raise ValueError('Choose explicit target areas for the remote search')
+                jobs.progress(1,2,"Screening remote relationships and lead direction")
+                global_links=run_teleconnections(region,variables[0],spec['target_regions'],target_vars=fields,start=start,end=end)
+            return {"local":local,"global":global_links,"scope":scope}
+        if operation=="overview":
+            if data_sources.PROVIDER.get()=='noaa-cdo' or (data_sources.PROVIDER.get()=='multi-source' and variables[0].startswith('STATION_')):
+                raise ValueError('Station summaries cannot color whole-country area trends. Use Analysis or Compare for the station evidence.')
+            ids=spec.get("features",[])
+            if not isinstance(ids,list) or len(ids)>260:raise ValueError("Too many geographic units")
+            rows=[]
+            for i,fid in enumerate(ids):
+                jobs.progress(i,len(ids),f"Analyzing area {i+1} of {len(ids)}")
+                try:
+                    result=run_analysis(variables[:1],fid,start,end)
+                    block=result["series"][0]
+                    rows.append({"id":fid,"overall":block["overall"],"summary":block["summary"],"provenance":block.get("provenance",{})})
+                except (ValueError,KeyError) as e:
+                    rows.append({"id":fid,"overall":{"ok":False,"reason":str(e)}})
+            return {"rows":rows,"variable":variables[0],"start":start,"end":end}
+        raise ValueError("Unknown analysis operation")
+    finally:
+        data_sources.PROVIDER.reset(token)
 
 
 class Handler(BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
+
+    def _same_origin(self):
+        origin=self.headers.get("Origin")
+        if not origin:return True
+        parsed=urlparse(origin)
+        return parsed.scheme in {"http","https"} and parsed.netloc==self.headers.get("Host")
 
     def log_message(self, fmt, *args):
         sys.stderr.write("%s - %s\n" % (self.address_string(), fmt % args))
@@ -752,7 +960,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(code)
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(body)))
-        self.send_header("Access-Control-Allow-Origin", "*")
+        if self.headers.get("Origin") and self._same_origin():self.send_header("Access-Control-Allow-Origin", self.headers.get("Origin"))
         self.send_header("Cache-Control", "no-store")
         self.end_headers()
         self.wfile.write(body)
@@ -761,35 +969,86 @@ class Handler(BaseHTTPRequestHandler):
         self._send(code, json.dumps(obj))
 
     def do_OPTIONS(self):
+        if not self._same_origin():return self._json(403,{"error":"Cross-origin access is not allowed"})
         self.send_response(204)
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
+        if self.headers.get("Origin"):self.send_header("Access-Control-Allow-Origin",self.headers.get("Origin"))
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "*")
         self.end_headers()
+
+    def do_POST(self):
+        try:
+            if not self._same_origin():return self._json(403,{"error":"Cross-origin writes are not allowed"})
+            length=int(self.headers.get("Content-Length",0))
+            if length<=0 or length>32_000_000:raise ValueError("Request body must be between 1 byte and 32 MB")
+            spec=json.loads(self.rfile.read(length))
+            if not isinstance(spec,dict):raise ValueError("Expected a JSON object")
+            path=urlparse(self.path).path
+            if path=="/api/geography/custom":
+                return self._json(201,geography.register_custom(spec))
+            if path=="/api/data-sources/import":
+                return self._json(201,data_sources.import_csv(spec))
+            if path=="/api/data-sources/earthdata":
+                if spec.get("disconnect"):return self._json(200,data_sources.nasa_data.disconnect())
+                return self._json(200,data_sources.nasa_data.connect(spec.get("token",""),remember=spec.get('remember',True) is True))
+            if path=='/api/data-sources/appeears':
+                if spec.get('disconnect'):return self._json(200,data_sources.appeears_data.disconnect())
+                return self._json(200,data_sources.appeears_data.connect(spec.get('username'),spec.get('password'),remember=spec.get('remember',True) is True))
+            if path=="/api/jobs":
+                custom=spec.get('custom_areas',[])
+                if not isinstance(custom,list) or len(custom)>2:raise ValueError('At most two custom selection boundaries are supported')
+                for area in custom:
+                    feature=geography.register_custom(area)
+                    if area.get('id') and area['id']!=feature['id']:raise ValueError('Custom selection identity does not match its geometry')
+                # The immutable request identity includes geometry and method versions.
+                spec["method_version"]="polygon-sen-calendar-fdr-v1"
+                ids=[spec.get("region"),spec.get("compare_region")]+spec.get("features",[])
+                spec["geometry_versions"]={fid:(resolve_region(fid) or {}).get("geometry_version","focus-v1") for fid in ids if fid}
+                return self._json(202,jobs.submit(spec,lambda:execute_job(spec)))
+            if path.startswith("/api/jobs/") and path.endswith("/cancel"):
+                return self._json(200,jobs.cancel(path.split("/")[3]))
+            return self._json(404,{"error":"Unknown operation"})
+        except (ValueError,TypeError,json.JSONDecodeError) as e:
+            return self._json(400,{"error":str(e)})
+        except KeyError as e:
+            return self._json(404,{"error":str(e)})
 
     def do_GET(self):
         parsed = urlparse(self.path)
         path = parsed.path
         q = parse_qs(parsed.query)
 
+        token=data_sources.PROVIDER.set(q.get("provider",["project-cache"])[0])
         try:
+            if data_sources.PROVIDER.get()=="legacy-live":
+                raise ValueError("Live legacy access is not enabled under the challenge resource policy")
+            if path=="/api/geography":
+                return self._json(200,geography.collection(q.get("level",["continent"])[0],q.get("parent",[None])[0]))
+            if path=="/api/data-sources":
+                return self._json(200,{"providers":data_sources.providers(),"resources":data_sources.ALLOWED,"earthdata":data_sources.nasa_data.status(),"appeears":data_sources.appeears_data.status()})
+            if path.startswith("/api/jobs/"):
+                return self._json(200,jobs.get(path.split("/")[3]))
             if path == "/api/health":
                 return self._json(200, {"ok": True,
                                         "uptime_s": round(time.time() - BOOT, 1)})
             if path == "/api/availability":
-                return self._json(200, power_client.probe_availability())
+                return self._json(200, {"ok":False,"mode":"Automatic NASA / project cache","message":"Published granules and actual observed dates are reported with each analysis"})
             if path == "/api/catalog":
                 return self._json(200, {
                     "variables": catalog.CATALOG,
                     "spheres": catalog.SPHERES,
-                    "regions": catalog.REGIONS,
-                    "years": {"min": 1985, "max": MAX_YEAR},
+                    "regions": catalog.REGIONS + geography.catalog(),
+                    "years": {"min": MIN_YEAR, "max": MAX_YEAR},
                     "max_variables": MAX_VARS,
-                    "availability": power_client.probe_availability(),
+                    "custom_selections": True,
+                    "automatic_data": True,
+                    "availability": {"ok":False,"mode":"Automatic NASA / project cache"},
                 })
             if path == "/api/satellite-imagery":
+                if data_sources.PROVIDER.get()!="legacy-live":
+                    return self._json(400,{"error":"This imagery route has not been enabled under the challenge resource policy. See Data & Methods."})
                 region_id = q.get("region", [""])[0]
-                reg = next((r for r in catalog.REGIONS if r["id"] == region_id), None)
+                reg = resolve_region(region_id)
                 custom_bbox = None
                 bbox_raw = q.get("bbox", [""])[0]
                 if bbox_raw:
@@ -870,12 +1129,34 @@ class Handler(BaseHTTPRequestHandler):
                     return self._json(
                         400, {"error": "variables and region required"})
                 variables = list(dict.fromkeys(variables))[:MAX_VARS]
+
+                # A globe click can supply a real bbox instead of a preset
+                # region id. Without this, "tap anywhere" silently snapped to
+                # the nearest of 23 boxes and analysed somewhere the user did
+                # not pick.
+                bbox = None
+                raw_bbox = q.get("bbox", [""])[0]
+                if raw_bbox:
+                    try:
+                        vals = [float(x) for x in raw_bbox.split(",")]
+                    except ValueError:
+                        return self._json(400, {"error": "bbox must be 4 numbers"})
+                    if len(vals) != 4:
+                        return self._json(400, {"error": "bbox must be lon0,lat0,lon1,lat1"})
+                    lon0, lat0, lon1, lat1 = vals
+                    if not (-180 <= lon0 < lon1 <= 180 and -90 <= lat0 < lat1 <= 90):
+                        return self._json(400, {"error": "bbox out of range or inverted"})
+                    if (lon1 - lon0) < 0.5 or (lat1 - lat0) < 0.5:
+                        return self._json(400, {"error": "bbox too small (min 0.5 deg)"})
+                    bbox = vals
+
                 result = run_analysis(
                     variables, region,
                     _int(q, "start", 2000), _int(q, "end", MAX_YEAR),
                     max(3, min(7, _int(q, "nx", 5))),
                     max(3, min(7, _int(q, "ny", 5))),
                     compare_region=compare_region,
+                    bbox=bbox,
                 )
                 return self._json(200, result)
             return self._static(path)
@@ -887,12 +1168,17 @@ class Handler(BaseHTTPRequestHandler):
             import traceback
             traceback.print_exc()
             return self._json(500, {"error": str(e)})
+        finally:
+            data_sources.PROVIDER.reset(token)
 
     def _static(self, path):
         if path in ("/", ""):
             path = "/index.html"
-        target = (FRONTEND_DIR / path.lstrip("/")).resolve()
-        if not str(target).startswith(str(FRONTEND_DIR.resolve())):
+        root = FRONTEND_DIR.resolve()
+        target = (root / path.lstrip("/")).resolve()
+        # `startswith(str(root))` also accepts sibling dirs such as
+        # `frontend-evil`, so compare resolved parents instead.
+        if target != root and root not in target.parents:
             return self._json(403, {"error": "forbidden"})
         if not target.is_file():
             return self._json(404, {"error": "not found"})
@@ -917,7 +1203,7 @@ def main():
             port = int(sys.argv[1])
         except ValueError:
             pass
-    server = ThreadingHTTPServer(("0.0.0.0", port), Handler)
+    server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
     print(f"TerraTrend running on http://127.0.0.1:{port}")
     try:
         server.serve_forever()

@@ -1,0 +1,28 @@
+{
+  "restarted_without_token_input": [
+    {
+      "port": 8518,
+      "pid": 1113618,
+      "automatic_restore": true,
+      "credential_storage": "desktop keyring",
+      "providers": [
+        "nasa-merra2",
+        "nasa-giovanni",
+        "project-cache"
+      ]
+    },
+    {
+      "port": 8517,
+      "pid": 1113711,
+      "automatic_restore": true,
+      "credential_storage": "desktop keyring",
+      "providers": [
+        "nasa-merra2",
+        "nasa-giovanni",
+        "project-cache"
+      ]
+    }
+  ],
+  "final_primary_url": "http://127.0.0.1:8517/",
+  "temporary_8518_stopped_after_verification": true
+}

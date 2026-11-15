@@ -1,0 +1,164 @@
+{
+  "id": "da3f38a09140ec3e7435",
+  "status": "complete",
+  "created": 1794709582.511725,
+  "updated": 1794709582.5221415,
+  "message": "Analysis complete",
+  "result": {
+    "region": {
+      "id": "custom:6027db8ecbaf85fbc908",
+      "name": "Coordinate bounds",
+      "level": "custom",
+      "parent": null,
+      "geometry_version": "1dc5aba6733f8455",
+      "bbox": [
+        -2.0,
+        6.0,
+        0.0,
+        8.0
+      ],
+      "surface": "mixed",
+      "desc": "Coordinate bounds \u00b7 49,086.2 km\u00b2 \u00b7 user-defined boundary",
+      "center": [
+        -1,
+        7
+      ],
+      "selection_kind": "bounds",
+      "area_km2": 49086.2435,
+      "boundary_source": "User-defined selection"
+    },
+    "start": 2016,
+    "end": 2024,
+    "grid": {
+      "nx": 5,
+      "ny": 5,
+      "bbox": [
+        -2.0,
+        6.0,
+        0.0,
+        8.0
+      ]
+    },
+    "window": {
+      "last_month": null,
+      "partial_years": []
+    },
+    "scanned": [
+      {
+        "id": "QV2M",
+        "name": "Specific Humidity",
+        "unit": "g/kg",
+        "color": "#7fd3a0",
+        "group": "water",
+        "sphere_code": "HYD",
+        "ok": true,
+        "slope_decade": 0.8204166666666644,
+        "p": 0.028567681801512812,
+        "z": 2.189401347599285,
+        "tau": 0.6111111111111112,
+        "significant": true,
+        "direction": "rising",
+        "n": 9,
+        "change_pct": 4.97657828011518,
+        "stars": "**",
+        "cells_sig": 0,
+        "cells_total": 0,
+        "provenance": {
+          "provider": "nasa-giovanni",
+          "source": "NASA Giovanni / MERRA-2",
+          "resource": "Giovanni",
+          "dataset": "M2IMNXASM",
+          "collection_version": "5.12.4",
+          "field": "QV2M",
+          "policy": "challenge_resource",
+          "citation": "https://disc.gsfc.nasa.gov/datasets/M2IMNXASM_5.12.4/summary",
+          "access": "Giovanni area averaging through NASA Harmony; regional CSV only",
+          "aggregation": "NASA server rectangle average; monthly spatial support is not supplied",
+          "quality": "Monthly mean instantaneous assimilation diagnostics; a different product from native mode. Cell weighting follows NASA's service.",
+          "geometry_version": "1dc5aba6733f8455",
+          "requested_bbox": [
+            -2.0,
+            6.0,
+            0.0,
+            8.0
+          ],
+          "spatial_detail_available": false,
+          "monthly_area_coverage_known": false,
+          "dlon": 0.625,
+          "dlat": 0.5,
+          "cache_hit": true,
+          "remote_job_id": "b8fe658c-24b8-4381-9d13-f42d3f305dc6",
+          "requested_months": 108,
+          "published_months": 108,
+          "first_observed_month": 201601,
+          "last_observed_month": 202412,
+          "retrieved_utc": "2026-11-15T02:12:13.500239+00:00"
+        }
+      },
+      {
+        "id": "T2M",
+        "name": "Air Temperature",
+        "unit": "\u00b0C",
+        "color": "#ff7a33",
+        "group": "temperature",
+        "sphere_code": "ATM",
+        "ok": true,
+        "slope_decade": -0.3109166666666585,
+        "p": 0.34808262363292397,
+        "z": -0.9383148632568366,
+        "tau": -0.2777777777777778,
+        "significant": false,
+        "direction": "flat",
+        "n": 9,
+        "change_pct": null,
+        "stars": "",
+        "cells_sig": 0,
+        "cells_total": 0,
+        "provenance": {
+          "provider": "nasa-giovanni",
+          "source": "NASA Giovanni / MERRA-2",
+          "resource": "Giovanni",
+          "dataset": "M2IMNXASM",
+          "collection_version": "5.12.4",
+          "field": "T2M",
+          "policy": "challenge_resource",
+          "citation": "https://disc.gsfc.nasa.gov/datasets/M2IMNXASM_5.12.4/summary",
+          "access": "Giovanni area averaging through NASA Harmony; regional CSV only",
+          "aggregation": "NASA server rectangle average; monthly spatial support is not supplied",
+          "quality": "Monthly mean instantaneous assimilation diagnostics; a different product from native mode. Cell weighting follows NASA's service.",
+          "geometry_version": "1dc5aba6733f8455",
+          "requested_bbox": [
+            -2.0,
+            6.0,
+            0.0,
+            8.0
+          ],
+          "spatial_detail_available": false,
+          "monthly_area_coverage_known": false,
+          "dlon": 0.625,
+          "dlat": 0.5,
+          "cache_hit": true,
+          "remote_job_id": "6217fbca-ebde-40ea-a5e9-bc42b294050c",
+          "requested_months": 108,
+          "published_months": 108,
+          "first_observed_month": 201601,
+          "last_observed_month": 202412,
+          "retrieved_utc": "2026-11-15T02:10:33.742663+00:00"
+        }
+      }
+    ],
+    "summary": {
+      "total": 2,
+      "analysable": 2,
+      "significant": 1,
+      "rising": 1,
+      "falling": 0,
+      "strongest": "Specific Humidity"
+    },
+    "sources": [
+      "NASA Giovanni / MERRA-2"
+    ]
+  },
+  "completed": 1,
+  "total": 2
+}

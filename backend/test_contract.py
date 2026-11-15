@@ -41,17 +41,9 @@ DOM_IGNORE = {
     "toFixed", "find", "some", "every", "sort", "includes", "then", "catch",
 }
 
-STUB_PAPERS = {
-    "ok": True,
-    "papers": [{
-        "title": "A study of trends", "year": 2020, "citations": 12,
-        "doi": "10.1000/xyz", "url": "https://doi.org/10.1000/xyz",
-        "venue": "Journal", "authors": ["A. Author"], "type": "article",
-    }],
-    "query": "test",
-    "source": "stub",
-    "degraded": False,
-}
+# The literature panel was removed: OpenAlex/Crossref are non-NASA sources and
+# the challenge rules restrict data to the NASA resources list.
+STUB_PAPERS = {"ok": False, "papers": [], "error": "removed"}
 
 
 def make_grid(param, bbox, start, end, nx=5, ny=5):
@@ -83,11 +75,9 @@ class _Stubs:
     def __enter__(self):
         self._saved = {
             "fetch_grid": server.power_client.fetch_grid,
-            "search_papers": server.literature.search_papers,
             "satellite": server.gibs.get_satellite_evidence,
         }
         server.power_client.fetch_grid = make_grid
-        server.literature.search_papers = lambda *a, **k: dict(STUB_PAPERS)
         server.gibs.get_satellite_evidence = lambda *a, **k: {
             "region_id": "stub", "layer": {"id": "x"}, "baseline": {},
             "recent": {}, "attribution": "stub",
@@ -96,7 +86,6 @@ class _Stubs:
 
     def __exit__(self, *exc):
         server.power_client.fetch_grid = self._saved["fetch_grid"]
-        server.literature.search_papers = self._saved["search_papers"]
         server.gibs.get_satellite_evidence = self._saved["satellite"]
         return False
 
@@ -136,7 +125,7 @@ class TestTopLevelContract(unittest.TestCase):
         for s in self.d["series"]:
             for key in ("variable", "overall", "cells", "summary",
                         "yearly_timeseries", "monthly_timeseries",
-                        "literature", "seasonal"):
+                        "seasonal"):
                 self.assertIn(key, s, f"series missing {key}")
             self.assertIn("id", s["variable"])
             self.assertIn("unit", s["variable"])
@@ -175,9 +164,6 @@ class TestFrontendAgainstServer(unittest.TestCase):
     def test_overall_fields(self):
         self._check("o", "overall", self.block["overall"])
 
-    def test_literature_fields(self):
-        self._check("lit", "literature", STUB_PAPERS)
-
     def test_data_object_fields(self):
         used = frontend_field_reads("d")
         # `d` is also a local variable name in a few helpers; only enforce the
@@ -197,7 +183,7 @@ class TestSeriesFieldReferences(unittest.TestCase):
 
     SERIES_FIELDS = [
         "variable", "overall", "cells", "summary", "yearly_timeseries",
-        "monthly_timeseries", "region_timeseries", "literature", "seasonal",
+        "monthly_timeseries", "region_timeseries", "seasonal",
     ]
 
     def test_referenced_series_fields_exist(self):

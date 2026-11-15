@@ -1,0 +1,345 @@
+{
+  "checks": [
+    {
+      "variable": "GWETROOT",
+      "dataset": "M2TMNXLND",
+      "version": "5.12.4",
+      "field": "GWETROOT",
+      "source_units": "1",
+      "output_units": "0\u20131",
+      "source_sample": 0.43020331859588623,
+      "converted_sample": 0.43020331859588623,
+      "native_shape": [
+        1,
+        13,
+        8
+      ],
+      "masked_cells_in_first_window": 2,
+      "region_id": "country:gha",
+      "native_cells": 85,
+      "expected_cells": 85,
+      "window": [
+        190,
+        202,
+        283,
+        290
+      ],
+      "observed_months": 240,
+      "complete_years": 20,
+      "first_observed_month": 200501,
+      "last_observed_month": 202412,
+      "first_granule": "G1278016337-GES_DISC",
+      "last_granule": "G3381657958-GES_DISC",
+      "area_fraction_with_any_data": 1.0,
+      "cached_subsets": 240,
+      "job_id": "c71377ab04f8f01e8b00",
+      "citation": "https://disc.gsfc.nasa.gov/datasets/M2TMNXLND_5.12.4/summary",
+      "verified": true
+    },
+    {
+      "variable": "T2M",
+      "dataset": "M2TMNXSLV",
+      "version": "5.12.4",
+      "field": "T2M",
+      "source_units": "K",
+      "output_units": "\u00b0C",
+      "source_sample": 300.07568359375,
+      "converted_sample": 26.925683593750023,
+      "native_shape": [
+        1,
+        13,
+        8
+      ],
+      "masked_cells_in_first_window": 0,
+      "region_id": "country:gha",
+      "native_cells": 85,
+      "expected_cells": 85,
+      "window": [
+        190,
+        202,
+        283,
+        290
+      ],
+      "observed_months": 240,
+      "complete_years": 20,
+      "first_observed_month": 200501,
+      "last_observed_month": 202412,
+      "first_granule": "G1278025954-GES_DISC",
+      "last_granule": "G3381658714-GES_DISC",
+      "area_fraction_with_any_data": 1.0,
+      "cached_subsets": 240,
+      "job_id": "c71377ab04f8f01e8b00",
+      "citation": "https://disc.gsfc.nasa.gov/datasets/M2TMNXSLV_5.12.4/summary",
+      "verified": true
+    },
+    {
+      "variable": "TS",
+      "dataset": "M2TMNXSLV",
+      "version": "5.12.4",
+      "field": "TS",
+      "source_units": "K",
+      "output_units": "\u00b0C",
+      "source_sample": 302.79388427734375,
+      "converted_sample": 29.643884277343773,
+      "native_shape": [
+        1,
+        1,
+        1
+      ],
+      "masked_cells_in_first_window": 0,
+      "region_id": "custom:26ad29a78b8764195393",
+      "native_cells": 1,
+      "expected_cells": 1,
+      "window": [
+        194,
+        194,
+        288,
+        288
+      ],
+      "observed_months": 108,
+      "complete_years": 9,
+      "first_observed_month": 201601,
+      "last_observed_month": 202412,
+      "first_granule": "G1278026185-GES_DISC",
+      "last_granule": "G3381658714-GES_DISC",
+      "area_fraction_with_any_data": 1.0,
+      "cached_subsets": 0,
+      "job_id": "d1ab0f533b2e59fc9eb8",
+      "citation": "https://disc.gsfc.nasa.gov/datasets/M2TMNXSLV_5.12.4/summary",
+      "verified": true
+    },
+    {
+      "variable": "QV2M",
+      "dataset": "M2TMNXSLV",
+      "version": "5.12.4",
+      "field": "QV2M",
+      "source_units": "kg kg-1",
+      "output_units": "g/kg",
+      "source_sample": 0.011568659916520119,
+      "converted_sample": 11.568659916520119,
+      "native_shape": [
+        1,
+        1,
+        1
+      ],
+      "masked_cells_in_first_window": 0,
+      "region_id": "custom:26ad29a78b8764195393",
+      "native_cells": 1,
+      "expected_cells": 1,
+      "window": [
+        194,
+        194,
+        288,
+        288
+      ],
+      "observed_months": 108,
+      "complete_years": 9,
+      "first_observed_month": 201601,
+      "last_observed_month": 202412,
+      "first_granule": "G1278026185-GES_DISC",
+      "last_granule": "G3381658714-GES_DISC",
+      "area_fraction_with_any_data": 1.0,
+      "cached_subsets": 0,
+      "job_id": "d1ab0f533b2e59fc9eb8",
+      "citation": "https://disc.gsfc.nasa.gov/datasets/M2TMNXSLV_5.12.4/summary",
+      "verified": true
+    },
+    {
+      "variable": "PS",
+      "dataset": "M2TMNXSLV",
+      "version": "5.12.4",
+      "field": "PS",
+      "source_units": "Pa",
+      "output_units": "kPa",
+      "source_sample": 99564.71875,
+      "converted_sample": 99.56471875,
+      "native_shape": [
+        1,
+        1,
+        1
+      ],
+      "masked_cells_in_first_window": 0,
+      "region_id": "custom:26ad29a78b8764195393",
+      "native_cells": 1,
+      "expected_cells": 1,
+      "window": [
+        194,
+        194,
+        288,
+        288
+      ],
+      "observed_months": 108,
+      "complete_years": 9,
+      "first_observed_month": 201601,
+      "last_observed_month": 202412,
+      "first_granule": "G1278026185-GES_DISC",
+      "last_granule": "G3381658714-GES_DISC",
+      "area_fraction_with_any_data": 1.0,
+      "cached_subsets": 0,
+      "job_id": "d1ab0f533b2e59fc9eb8",
+      "citation": "https://disc.gsfc.nasa.gov/datasets/M2TMNXSLV_5.12.4/summary",
+      "verified": true
+    },
+    {
+      "variable": "GWETTOP",
+      "dataset": "M2TMNXLND",
+      "version": "5.12.4",
+      "field": "GWETTOP",
+      "source_units": "1",
+      "output_units": "0\u20131",
+      "source_sample": 0.3252906799316406,
+      "converted_sample": 0.3252906799316406,
+      "native_shape": [
+        1,
+        1,
+        1
+      ],
+      "masked_cells_in_first_window": 0,
+      "region_id": "custom:26ad29a78b8764195393",
+      "native_cells": 1,
+      "expected_cells": 1,
+      "window": [
+        194,
+        194,
+        288,
+        288
+      ],
+      "observed_months": 108,
+      "complete_years": 9,
+      "first_observed_month": 201601,
+      "last_observed_month": 202412,
+      "first_granule": "G1278016522-GES_DISC",
+      "last_granule": "G3381657958-GES_DISC",
+      "area_fraction_with_any_data": 1.0,
+      "cached_subsets": 0,
+      "job_id": "abe1cd80ca8b344a31c3",
+      "citation": "https://disc.gsfc.nasa.gov/datasets/M2TMNXLND_5.12.4/summary",
+      "verified": true
+    },
+    {
+      "variable": "EVLAND",
+      "dataset": "M2TMNXLND",
+      "version": "5.12.4",
+      "field": "EVLAND",
+      "source_units": "kg m-2 s-1",
+      "output_units": "mm/day",
+      "source_sample": 8.96643177838996e-06,
+      "converted_sample": 0.7746997056528926,
+      "native_shape": [
+        1,
+        1,
+        1
+      ],
+      "masked_cells_in_first_window": 0,
+      "region_id": "custom:26ad29a78b8764195393",
+      "native_cells": 1,
+      "expected_cells": 1,
+      "window": [
+        194,
+        194,
+        288,
+        288
+      ],
+      "observed_months": 108,
+      "complete_years": 9,
+      "first_observed_month": 201601,
+      "last_observed_month": 202412,
+      "first_granule": "G1278016522-GES_DISC",
+      "last_granule": "G3381657958-GES_DISC",
+      "area_fraction_with_any_data": 1.0,
+      "cached_subsets": 0,
+      "job_id": "abe1cd80ca8b344a31c3",
+      "citation": "https://disc.gsfc.nasa.gov/datasets/M2TMNXLND_5.12.4/summary",
+      "verified": true
+    },
+    {
+      "variable": "PRECTOTCORR",
+      "dataset": "M2TMNXFLX",
+      "version": "5.12.4",
+      "field": "PRECTOTCORR",
+      "source_units": "kg m-2 s-1",
+      "output_units": "mm/day",
+      "source_sample": 4.321930759942916e-07,
+      "converted_sample": 0.03734148176590679,
+      "native_shape": [
+        1,
+        1,
+        1
+      ],
+      "masked_cells_in_first_window": 0,
+      "region_id": "custom:26ad29a78b8764195393",
+      "native_cells": 1,
+      "expected_cells": 1,
+      "window": [
+        194,
+        194,
+        288,
+        288
+      ],
+      "observed_months": 108,
+      "complete_years": 9,
+      "first_observed_month": 201601,
+      "last_observed_month": 202412,
+      "first_granule": "G1278003047-GES_DISC",
+      "last_granule": "G3381649069-GES_DISC",
+      "area_fraction_with_any_data": 1.0,
+      "cached_subsets": 0,
+      "job_id": "abe1cd80ca8b344a31c3",
+      "citation": "https://disc.gsfc.nasa.gov/datasets/M2TMNXFLX_5.12.4/summary",
+      "verified": true
+    }
+  ],
+  "bounded_probe_feature": {
+    "type": "Feature",
+    "id": "custom:26ad29a78b8764195393",
+    "geometry": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            -0.1,
+            6.9
+          ],
+          [
+            0.1,
+            6.9
+          ],
+          [
+            0.1,
+            7.1
+          ],
+          [
+            -0.1,
+            7.1
+          ],
+          [
+            -0.1,
+            6.9
+          ]
+        ]
+      ]
+    },
+    "properties": {
+      "id": "custom:26ad29a78b8764195393",
+      "name": "NASA source verification area",
+      "level": "custom",
+      "parent": null,
+      "geometry_version": "cfbed649e8a146cf",
+      "bbox": [
+        -0.1,
+        6.9,
+        0.1,
+        7.1
+      ],
+      "surface": "mixed",
+      "desc": "NASA source verification area \u00b7 490.9 km\u00b2 \u00b7 user-defined boundary",
+      "center": [
+        0,
+        7
+      ],
+      "selection_kind": "bounds",
+      "area_km2": 490.8871,
+      "boundary_source": "User-defined selection"
+    }
+  }
+}

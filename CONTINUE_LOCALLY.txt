@@ -1,0 +1,26 @@
+CURRENT UPDATE — sources and presets, 15 November 2026
+AppEEARS, NASA Hydrology Time Series and NOAA monthly stations are integrated and live-checked. Giovanni now supports four fields (temperature/humidity at 2 m and 10 m). Linked datasets exposes 20 unique measurement IDs; local relationships are the default, remote requests explicit. The existing globe has a 23-focus-box Presets toggle, preserving independent A/B areas.
+Read docs/SOURCES_AND_PRESETS.md and docs/local-handoff/sources-presets-2026-11-15/verification.json first. The usual app remains http://127.0.0.1:8517/. Both Earthdata and AppEEARS connections are remembered privately and were restored after actual restarts. Do not request, print or copy their values. AppEEARS saves its issued token only, never the password; NASA can expire the token.
+Ghana NDVI 2016–2024 has 108 real monthly values matching NASA's physical-unit summary exactly. Ghana root-moisture/NDVI found no surviving relationship. A Ghana Savannah GLDAS soil-temperature/Giovanni 10 m air-temperature pair has r≈0.65, 108 overlapping months, no resolved lead. These are exploratory associations, not causes or impact forecasts. AppEEARS returns summary CSVs only, has no additional pixel-QA filter/monthly area audit; NOAA station averages are not area averages. Full source bounds and cache limits are in the report. No presets were silently prefetched.
+Latest validation: 217 backend tests passed, one skipped, 43 passing subtests; 68 frontend tests passed. All original paths and the preexisting backend/literature.py deletion are retained. HEAD is unchanged; no commit, push, reset, clean or deployment was performed. Preserve the complete dirty tree. Earlier handoff sections below are historical where they conflict with this update.
+
+CURRENT UPDATE — 15 November 2026
+The optional NASA Giovanni rectangle mode and remembered Earthdata connections are now implemented and live-verified.
+Read docs/GIOVANNI_INTEGRATION.md, docs/CHALLENGE_RESOURCES.md and docs/local-handoff/giovanni-2026-11-15/verification.json first.
+The usual preview at http://127.0.0.1:8517 now runs the updated backend. Its Earthdata key is saved in the desktop credential store and restored after a real restart. Do not request or print it.
+Native mode retains eight fields and exact boundaries; optional Giovanni mode uses two M2IMNXASM monthly fields for rectangles and retains charts, discovery and two-rectangle comparisons. No automatic raw-grid fallback.
+All work remains uncommitted; preserve it. Session-only-token instructions below describe the earlier state.
+
+Continue the existing TerraTrend project locally. The previous conversation ran in ChatGPT cloud mode, but all implementation files are in this existing working tree:
+
+/home/templar/Documents/Projects/Nasa Space APP/Terratrend
+
+First read LOCAL_SESSION_HANDOFF.md and README.md in that folder, then inspect docs/local-handoff/manifest.json and git status. Do not reset, clean, reclone, or switch to a fresh worktree: substantial tracked edits and essential untracked files must be preserved. The recorded branch is dev, base HEAD 2fbda28faa2fb9467535d690669c610737457732. Keep any newer user edits.
+
+The Kaspersky-inspired globe UI, global boundary selection, independent A/B custom geometry, compact persistent selection rail, navigation, draggable/collapsible panels and statistical workflow are already implemented. The user likes the present design. The latest fix removes silent fallback to sparse POWER cache and clearly exposes NASA source readiness.
+
+Your first operational task is to identify and restart only the old TerraTrend backend currently serving 127.0.0.1:8517, using the normal local environment and ./start.sh 8517 from the existing project. Verify the real /api/catalog and /api/data-sources responses have automatic_data/custom_selections and the automatic NASA provider. Reload the browser. If Earthdata is already configured locally, use it without printing credentials; otherwise help the user complete the existing Data & Methods connection flow. Do not ask for tokens in chat or manual CSV uploads.
+
+Next verify a real, bounded Ghana 2005–2024 soil-moisture or temperature analysis, actual provenance/coverage, cache reuse, A/B comparison, custom polygons and cancellation. Eight automatic MERRA-2 measurements are coded and fixture-tested; protected observation downloads still await real account verification. Other original variables and satellite image sources need verified mappings. Never fabricate trends or equate missing data with no trend or correlation with physical causation.
+
+Fresh handover tests: 146 backend passed, 1 skipped, 5 passing subtests; 41 frontend passed. Do not commit, push or deploy unless separately requested. Continue the authorized work rather than stopping at a plan; ask the user only for a necessary account action or an actual local access barrier. If the local task opened in another output folder, use the existing project path above rather than creating a replacement app.

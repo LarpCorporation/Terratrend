@@ -1,0 +1,1056 @@
+[
+  {
+    "DATE": "2016-01",
+    "AWND": "3.1",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "1.4",
+    "PRCP": "112.1",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2016-02",
+    "AWND": "3.3",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "3.2",
+    "PRCP": "112.0",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2016-03",
+    "AWND": "3.0",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "9.4",
+    "PRCP": "29.8",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2016-04",
+    "AWND": "2.7",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "11.9",
+    "PRCP": "41.1",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2016-05",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "17.1",
+    "PRCP": "95.4"
+  },
+  {
+    "DATE": "2016-06",
+    "AWND": "1.9",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "22.4",
+    "PRCP": "66.0",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2016-07",
+    "AWND": "1.8",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "25.9",
+    "PRCP": "178.3",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2016-08",
+    "AWND": "1.7",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "26.2",
+    "PRCP": "50.2",
+    "AWND_ATTRIBUTES": "3,W"
+  },
+  {
+    "DATE": "2016-09",
+    "AWND": "2.2",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "22.1",
+    "PRCP": "71.0",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2016-10",
+    "AWND": "2.1",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "14.9",
+    "PRCP": "105.4",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2016-11",
+    "AWND": "2.3",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "9.9",
+    "PRCP": "137.5",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2016-12",
+    "AWND": "2.7",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "3.5",
+    "PRCP": "73.4",
+    "AWND_ATTRIBUTES": "2,W"
+  },
+  {
+    "DATE": "2017-01",
+    "AWND": "3.0",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "3.4",
+    "PRCP": "122.6",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2017-02",
+    "AWND": "3.0",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "5.4",
+    "PRCP": "63.1",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2017-03",
+    "AWND": "3.3",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "4.0",
+    "PRCP": "133.4",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2017-04",
+    "AWND": "2.6",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "14.0",
+    "PRCP": "97.5",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2017-05",
+    "AWND": "2.3",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "16.1",
+    "PRCP": "162.1",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2017-06",
+    "AWND": "1.9",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "22.2",
+    "PRCP": "121.1",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2017-07",
+    "AWND": "1.7",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "24.9",
+    "PRCP": "106.4",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2017-08",
+    "AWND": "1.5",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "23.4",
+    "PRCP": "84.9",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2017-09",
+    "AWND": "1.9",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "21.4",
+    "PRCP": "50.9",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2017-10",
+    "AWND": "2.0",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "17.9",
+    "PRCP": "106.3",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2017-11",
+    "AWND": "2.3",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "8.1",
+    "PRCP": "40.2",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2017-12",
+    "AWND": "2.7",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "1.7",
+    "PRCP": "56.2",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2018-01",
+    "AWND": "3.1",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "-0.1",
+    "PRCP": "55.4",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2018-02",
+    "AWND": "2.5",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "5.6",
+    "PRCP": "148.0",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2018-03",
+    "AWND": "3.3",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "4.5",
+    "PRCP": "131.4",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2018-04",
+    "AWND": "2.8",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "9.7",
+    "PRCP": "146.7",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2018-05",
+    "AWND": "1.4",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "19.4",
+    "PRCP": "89.7",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2018-06",
+    "AWND": "1.5",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "22.0",
+    "PRCP": "79.1",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2018-07",
+    "AWND": "1.3",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "25.4",
+    "PRCP": "189.2",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2018-08",
+    "AWND": "1.3",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "25.6",
+    "PRCP": "218.4",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2018-09",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "21.5",
+    "PRCP": "157.1"
+  },
+  {
+    "DATE": "2018-10",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "14.3",
+    "PRCP": "91.2"
+  },
+  {
+    "DATE": "2018-11",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "6.9",
+    "PRCP": "193.7"
+  },
+  {
+    "DATE": "2018-12",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "4.5",
+    "PRCP": "165.4"
+  },
+  {
+    "DATE": "2019-01",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "0.3",
+    "PRCP": "91.0"
+  },
+  {
+    "DATE": "2019-02",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "2.4",
+    "PRCP": "79.8"
+  },
+  {
+    "DATE": "2019-03",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "5.4",
+    "PRCP": "98.4"
+  },
+  {
+    "DATE": "2019-04",
+    "AWND": "2.0",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "13.0",
+    "PRCP": "115.9",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2019-05",
+    "AWND": "1.8",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "16.8",
+    "PRCP": "173.2",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2019-06",
+    "AWND": "1.9",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "22.0",
+    "PRCP": "138.5",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2019-07",
+    "AWND": "1.5",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "26.4",
+    "PRCP": "146.7",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2019-08",
+    "AWND": "1.7",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "24.2",
+    "PRCP": "94.0",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2019-09",
+    "AWND": "1.9",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "21.3",
+    "PRCP": "24.1",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2019-10",
+    "AWND": "2.4",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "15.5",
+    "PRCP": "156.4",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2019-11",
+    "AWND": "2.5",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "6.6",
+    "PRCP": "49.6",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2019-12",
+    "AWND": "2.9",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "3.5",
+    "PRCP": "180.2",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2020-01",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "4.0",
+    "PRCP": "49.1"
+  },
+  {
+    "DATE": "2020-02",
+    "AWND": "2.7",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "4.5",
+    "PRCP": "64.7",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2020-03",
+    "AWND": "3.1",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "8.9",
+    "PRCP": "96.1",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2020-04",
+    "AWND": "3.0",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "10.2",
+    "PRCP": "114.2",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2020-05",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "15.7",
+    "PRCP": "42.0"
+  },
+  {
+    "DATE": "2020-06",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "23.2",
+    "PRCP": "44.7"
+  },
+  {
+    "DATE": "2020-07",
+    "AWND": "1.6",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "26.7",
+    "PRCP": "167.1",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2020-08",
+    "AWND": "1.9",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "24.9",
+    "PRCP": "127.9",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2020-09",
+    "AWND": "1.7",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "20.4",
+    "PRCP": "100.1",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2020-10",
+    "AWND": "1.9",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "14.4",
+    "PRCP": "128.3",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2020-11",
+    "AWND": "2.4",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "11.6",
+    "PRCP": "101.4",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2020-12",
+    "AWND": "3.0",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "4.0",
+    "PRCP": "117.2",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2021-01",
+    "AWND": "3.0",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "1.6",
+    "PRCP": "58.6",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2021-02",
+    "AWND": "2.9",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "1.2",
+    "PRCP": "130.4",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2021-03",
+    "AWND": "3.0",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "7.7",
+    "PRCP": "86.7",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2021-04",
+    "AWND": "2.6",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "12.5",
+    "PRCP": "68.5",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2021-05",
+    "AWND": "2.3",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "17.1",
+    "PRCP": "110.8",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2021-06",
+    "AWND": "1.6",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "23.5",
+    "PRCP": "66.7",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2021-07",
+    "AWND": "1.6",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "24.5",
+    "PRCP": "281.9",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2021-08",
+    "AWND": "1.5",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "25.3",
+    "PRCP": "262.1",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2021-09",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "21.3",
+    "PRCP": "254.8"
+  },
+  {
+    "DATE": "2021-10",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "16.7",
+    "PRCP": "133.7"
+  },
+  {
+    "DATE": "2021-11",
+    "AWND": "2.1",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "7.9",
+    "PRCP": "28.6",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2021-12",
+    "AWND": "2.4",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "6.5",
+    "PRCP": "35.4",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2022-01",
+    "AWND": "3.0",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "-0.9",
+    "PRCP": "109.0",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2022-02",
+    "AWND": "2.9",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "3.0",
+    "PRCP": "82.1",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2022-03",
+    "AWND": "3.0",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "7.4",
+    "PRCP": "60.7",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2022-04",
+    "AWND": "2.9",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "11.5",
+    "PRCP": "115.0",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2022-05",
+    "AWND": "2.1",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "17.8",
+    "PRCP": "114.8",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2022-06",
+    "AWND": "1.8",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "21.9",
+    "PRCP": "74.1",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2022-07",
+    "AWND": "1.7",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "26.4",
+    "PRCP": "115.6",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2022-08",
+    "AWND": "1.6",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "26.3",
+    "PRCP": "43.4",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2022-09",
+    "AWND": "1.9",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "20.9",
+    "PRCP": "104.1",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2022-10",
+    "AWND": "2.2",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "13.8",
+    "PRCP": "129.0",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2022-11",
+    "AWND": "2.4",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "10.5",
+    "PRCP": "79.9",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2022-12",
+    "AWND": "2.8",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "3.6",
+    "PRCP": "148.1",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2023-01",
+    "AWND": "2.6",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "6.4",
+    "PRCP": "111.5",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2023-02",
+    "AWND": "2.6",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "5.1",
+    "PRCP": "32.6",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2023-03",
+    "AWND": "2.9",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "7.0",
+    "PRCP": "84.3",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2023-04",
+    "AWND": "2.3",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "14.2",
+    "PRCP": "195.7",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2023-05",
+    "AWND": "1.7",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "17.0",
+    "PRCP": "32.6",
+    "AWND_ATTRIBUTES": "1,W"
+  },
+  {
+    "DATE": "2023-06",
+    "AWND": "1.7",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "21.1",
+    "PRCP": "41.2",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2023-07",
+    "AWND": "1.2",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "26.1",
+    "PRCP": "135.5",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2023-08",
+    "AWND": "1.7",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "23.9",
+    "PRCP": "166.8",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2023-09",
+    "AWND": "2.1",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "20.8",
+    "PRCP": "362.0",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2023-10",
+    "AWND": "1.7",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "15.8",
+    "PRCP": "99.1",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2023-11",
+    "AWND": "2.2",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "8.2",
+    "PRCP": "74.9",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2023-12",
+    "AWND": "2.3",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "7.0",
+    "PRCP": "170.4",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2024-01",
+    "AWND": "3.0",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "2.8",
+    "PRCP": "134.1",
+    "AWND_ATTRIBUTES": "2,W"
+  },
+  {
+    "DATE": "2024-02",
+    "AWND": "2.6",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "4.5",
+    "PRCP": "52.1",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2024-03",
+    "AWND": "2.9",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "9.0",
+    "PRCP": "230.3",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2024-04",
+    "AWND": "2.6",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "13.1",
+    "PRCP": "88.3",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2024-05",
+    "AWND": "1.8",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "18.3",
+    "PRCP": "104.4",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2024-06",
+    "AWND": "1.6",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "23.9",
+    "PRCP": "43.4",
+    "AWND_ATTRIBUTES": "2,W"
+  },
+  {
+    "DATE": "2024-07",
+    "AWND": "1.4",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "26.5",
+    "PRCP": "106.7",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2024-08",
+    "AWND": "1.7",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "23.9",
+    "PRCP": "178.2",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2024-09",
+    "AWND": "2.0",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "20.4",
+    "PRCP": "40.1",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2024-10",
+    "AWND": "1.7",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "16.1",
+    "PRCP": "0.3",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2024-11",
+    "AWND": "2.4",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "10.8",
+    "PRCP": "85.0",
+    "AWND_ATTRIBUTES": ",W"
+  },
+  {
+    "DATE": "2024-12",
+    "AWND": "2.5",
+    "STATION": "USW00094728",
+    "TAVG_ATTRIBUTES": ",W",
+    "PRCP_ATTRIBUTES": ",,,W",
+    "TAVG": "3.5",
+    "PRCP": "115.1",
+    "AWND_ATTRIBUTES": ",W"
+  }
+]

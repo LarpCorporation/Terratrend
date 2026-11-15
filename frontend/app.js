@@ -6,15 +6,19 @@
 const $ = (id) => document.getElementById(id);
 
 const C = {
-  rise: "#ff7a33",
-  fall: "#4d7cf3",
-  flat: "#4a5057",
-  nodata: "#2b2f34",
-  cyan: "#e9ebed",
-  land: "#e6e9ec",
-  landDim: "#6f757a",
-  globeLine: "#2a2d31",
-  ring: "#f0f2f4",
+  /* Kaspersky-cybermap palette: data glows magenta / cyan on an olive world */
+  rise: "#ff786a",
+  fall: "#59cfda",
+  flat: "#4a5f54",
+  nodata: "#22302a",
+  cyan: "#cce8d9",
+  land: "#3f5f4d",
+  landDim: "#1d2c25",
+  globeLine: "#1b2a22",
+  ring: "#93e2bc",
+  arcHot: "#ff3ea5",
+  arcCool: "#38d9ff",
+  ocean: "#050b08",
 };
 
 const MAX_VARS = 3;
@@ -31,6 +35,7 @@ const state = {
   activeSphere: "all",
   compareMode: false,
   preferredVar: null,
+  pendingBbox: null,
   satellite: null,
   selectedCellBbox: null,
   activeSatBbox: null,
@@ -81,13 +86,14 @@ async function boot() {
   }
 
   const maxYear = state.catalog.years.max;
-  $("start").min = state.catalog.years.min + 8;
+  $("start").min = state.catalog.years.min;
   $("start").max = maxYear - 8;
   $("end").min = state.catalog.years.min + 8;
   $("end").max = maxYear;
   if (+$("end").value < maxYear) $("end").value = maxYear;
   if (+$("start").value > maxYear - 8) $("start").value = maxYear - 8;
 
+  wireStartModal();
   $("run").addEventListener("click", analyze);
   $("scan").addEventListener("click", scanAll);
   $("scan-close").addEventListener("click", closeScan);
@@ -178,16 +184,21 @@ function renderVarList() {
 
   const addItem = (v) => {
     const on = state.selected.includes(v.id);
+    const unavailable = typeof variableSourceAvailable === 'function' && !variableSourceAvailable(v.id);
     const el = document.createElement("div");
-    el.className = "var-item" + (on ? " on" : "");
+    el.className = "var-item" + (on ? " on" : "") + (unavailable ? " source-unavailable" : "");
+    el.dataset.variable = v.id;el.tabIndex=0;el.setAttribute('role','button');el.setAttribute('aria-pressed',String(on));el.setAttribute('aria-disabled',String(unavailable&&!on));
     el.style.setProperty("--vc", v.color);
-    el.title = v.desc || v.plain || "";
+    el.title = (v.desc || v.plain || "") + (unavailable ? ' · This measurement needs a source mapping for the selected data source.' : '');
     el.innerHTML = `
       <i class="var-dot"></i>
-      <span class="var-name">${esc(v.name)}</span>
-      <span class="var-sphere-badge">${esc(v.sphere_code || "ATM")}</span>
-      <span class="var-unit">${esc(v.unit)}</span>`;
+      <span class="var-text">
+        <span class="var-name">${esc(v.name)}</span>
+        <span class="var-meta">${esc(v.sphere_code || "ATM")} \u00b7 ${esc(v.unit)}</span>
+        ${unavailable ? '<span class="var-source-note">SOURCE MAPPING NEEDED</span>' : ''}
+      </span>`;
     el.addEventListener("click", () => toggleVar(v.id));
+    el.addEventListener('keydown', event => {if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleVar(v.id);}});
     box.appendChild(el);
   };
 
@@ -331,6 +342,8 @@ function renderRegionSelect() {
 }
 
 function onRegionChange() {
+  // choosing a preset from the dropdown overrides any area picked on the globe
+  state.pendingBbox = null;
   applyRegionSelection(currentRegion());
   if (state.result) analyze();
 }
@@ -343,6 +356,7 @@ function onCompareRegionChange() {
 }
 
 function currentRegion() {
+  if (!state.catalog || !state.catalog.regions) return null;
   const id = $("region") ? $("region").value : null;
   return state.catalog.regions.find((r) => r.id === id) || null;
 }
@@ -498,12 +512,12 @@ function renderScan(rows, total) {
         <span class="sr-slope">—</span>
         <span class="sr-p">—</span>
         <span class="sr-cells">—</span>
-        <span class="sr-dir nodata">NODATA</span>
+        <span class="sr-dir nodata" title="${esc(r.error || r.reason || 'Not enough supported observations for a trend test.')}">${r.error ? 'SOURCE ERROR' : 'INSUFFICIENT DATA'}</span>
       </div>`;
     }
     const dir = r.significant ? r.direction : "flat";
     const label = dir === "rising" ? "RISING"
-      : dir === "falling" ? "FALLING" : "STABLE";
+      : dir === "falling" ? "FALLING" : "NOT SIGNIFICANT";
     const sign = r.slope_decade > 0 ? "+" : "";
     return `<div class="scan-row" data-var="${esc(r.id)}">
       <span class="sr-rank">${rank}</span>
@@ -511,7 +525,7 @@ function renderScan(rows, total) {
       <span class="sr-name">${esc(r.name)}</span>
       <span class="sr-slope">${sign}${num(r.slope_decade, 3)} ${esc(r.unit)}/dec</span>
       <span class="sr-p">p=${r.p < 0.001 ? "<0.001" : num(r.p, 3)}</span>
-      <span class="sr-cells">${r.cells_sig}/${r.cells_total}</span>
+      <span class="sr-cells">${r.provenance?.spatial_detail_available===false?'REGIONAL':`${r.cells_sig}/${r.cells_total}`}</span>
       <span class="sr-dir ${dir}">${label}</span>
     </div>`;
   }).join("");
@@ -519,7 +533,11 @@ function renderScan(rows, total) {
   const box = $("scan-table");
   box.innerHTML = head + body;
   box.querySelectorAll(".scan-row[data-var]").forEach((el) => {
+    el.tabIndex = 0;
+    el.setAttribute('role', 'button');
+    el.setAttribute('aria-label', `Open analysis for ${rows.find(r => r.id === el.dataset.var)?.name || el.dataset.var}`);
     el.addEventListener("click", () => openFromScan(el.dataset.var));
+    el.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openFromScan(el.dataset.var); } });
   });
 }
 
@@ -771,6 +789,8 @@ function render3DTeleconArcs(d) {
   if (!teleconArcsGroup) return;
 
   // Clear existing arcs
+  arcPackets = [];
+  arcRings = [];
   while (teleconArcsGroup.children.length > 0) {
     const obj = teleconArcsGroup.children[0];
     teleconArcsGroup.remove(obj);
@@ -791,7 +811,8 @@ function render3DTeleconArcs(d) {
     const p2 = latLonToVec3(tgt.lat, tgt.lon, 1.0);
 
     const isDirect = c.direction === "direct";
-    const colorHex = isDirect ? 0xffaa40 : 0x00e5ff;
+    // Kaspersky reads a live attack stream as magenta; the reverse leg is cyan
+    const colorHex = isDirect ? 0xff3ea5 : 0x38d9ff;
 
     // Elevation height scales with angular distance across globe
     const angle = p1.angleTo(p2);
@@ -799,28 +820,64 @@ function render3DTeleconArcs(d) {
 
     const mid = p1.clone().add(p2).multiplyScalar(0.5).normalize().multiplyScalar(altitude);
     const curve = new THREE.QuadraticBezierCurve3(p1, mid, p2);
-    const points = curve.getPoints(45);
+    const points = curve.getPoints(48);
+
+    // wide, faint halo under a bright core — cheap bloom without a post pass
+    const haloGeom = new THREE.BufferGeometry().setFromPoints(points);
+    const haloMat = new THREE.LineBasicMaterial({
+      color: colorHex,
+      transparent: true,
+      opacity: Math.min(0.30, Math.abs(c.r) * 0.30),
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const halo = new THREE.Line(haloGeom, haloMat);
+    halo.renderOrder = 4;
+    halo.scale.setScalar(1.0);
+    teleconArcsGroup.add(halo);
 
     const geom = new THREE.BufferGeometry().setFromPoints(points);
     const mat = new THREE.LineBasicMaterial({
       color: colorHex,
       transparent: true,
-      opacity: Math.min(0.9, Math.abs(c.r) * 1.1),
+      opacity: Math.min(0.95, 0.45 + Math.abs(c.r) * 0.6),
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
     });
     const line = new THREE.Line(geom, mat);
+    line.renderOrder = 5;
     teleconArcsGroup.add(line);
 
+    // a packet that crawls along the arc, so the link reads as live traffic
+    const packetGeom = new THREE.SphereGeometry(0.010, 8, 8);
+    const packetMat = new THREE.MeshBasicMaterial({
+      color: colorHex,
+      transparent: true,
+      opacity: 0.95,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const packet = new THREE.Mesh(packetGeom, packetMat);
+    packet.renderOrder = 6;
+    packet.userData = { curve, t: Math.random(), speed: 0.0038 + Math.random() * 0.0032 };
+    arcPackets.push(packet);
+    teleconArcsGroup.add(packet);
+
     // Glowing target ring on destination
-    const ringGeom = new THREE.RingGeometry(0.018, 0.030, 24);
+    const ringGeom = new THREE.RingGeometry(0.016, 0.030, 28);
     const ringMat = new THREE.MeshBasicMaterial({
       color: colorHex,
       side: THREE.DoubleSide,
       transparent: true,
-      opacity: 0.85,
+      opacity: 0.9,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
     });
     const ring = new THREE.Mesh(ringGeom, ringMat);
     ring.position.copy(p2.clone().multiplyScalar(1.002));
     ring.lookAt(p2.clone().multiplyScalar(2.0));
+    ring.userData.pulse = Math.random() * Math.PI * 2;
+    arcRings.push(ring);
     teleconArcsGroup.add(ring);
   });
 }
@@ -877,6 +934,11 @@ async function analyze() {
     end: $("end").value,
   });
 
+  // A globe click outside the preset boxes carries its own area.
+  if (state.pendingBbox) {
+    params.set("bbox", state.pendingBbox.join(","));
+  }
+
   if (state.compareMode && $("compare-region")) {
     const compVal = $("compare-region").value;
     if (compVal && compVal !== $("region").value) {
@@ -903,6 +965,7 @@ async function analyze() {
     state.activeVarIdx = prefIdx >= 0 ? prefIdx
       : (firstSig >= 0 ? firstSig : 0);
     render();
+    announceVerdict(data);
     setStatus("ok", "");
   } catch (e) {
     if (seq === state.analyzeSeq) {
@@ -918,6 +981,7 @@ async function analyze() {
    ============================================================ */
 function render() {
   const d = state.result;
+  renderRegionCard(d);
   renderHeader(d);
   renderSignals(d);
   renderCouplings(d);
@@ -925,10 +989,88 @@ function render() {
   renderCells(d);
   renderLegend(d);
   renderSatellite(d);
-  renderLiterature(d);
+  renderLiterature();
   drawChart();
   renderGlobeRegions(d);
   updateGlobeOverlay();
+}
+
+
+/* The "country panel" from the reference map, but for a region: name, one
+   headline number, and a short bar per selected variable. It reads from the
+   same analysis the rest of the HUD uses — nothing new is computed here. */
+function renderRegionCard(d) {
+  const nameEl = $("krc-name");
+  if (!nameEl) return;
+
+  const reg = currentRegion();
+  nameEl.textContent = reg ? reg.name : "No region";
+  const foot = $("k-foot-region");
+  if (foot) foot.textContent = reg ? reg.name.toUpperCase() : "NO REGION SELECTED";
+
+  const surfEl = $("krc-surface");
+  if (surfEl) surfEl.textContent = reg && reg.surface ? reg.surface : "—";
+
+  const valEl = $("krc-value");
+  const unitEl = $("krc-unit");
+  const perEl = $("krc-period");
+  const verEl = $("krc-verdict");
+  const barsEl = $("krc-bars");
+  if (barsEl) barsEl.innerHTML = "";
+
+  if (!d || !d.series || !d.series.length) {
+    if (valEl) valEl.textContent = "—";
+    if (unitEl) unitEl.textContent = "run an analysis";
+    if (perEl) perEl.textContent = "—";
+    if (verEl) verEl.textContent = "—";
+    return;
+  }
+
+  const series = d.series;
+  const sig = series.filter((x) => x.overall && x.overall.ok && x.overall.significant);
+  if (valEl) valEl.textContent = `${sig.length}/${series.length}`;
+  if (unitEl) unitEl.textContent = "significant";
+
+  if (perEl) {
+    perEl.textContent = d.start && d.end ? `${d.start}–${d.end}` : "—";
+  }
+  if (verEl) {
+    const active = series[state.activeVarIdx] || series[0];
+    const o = active && active.overall;
+    let label = "NO TREND";
+    if (o && o.ok) {
+      if (!o.significant) label = "NOT SIGNIFICANT";
+      else label = o.direction === "falling" ? "FALLING" : "RISING";
+    }
+    verEl.textContent = label;
+    verEl.style.color = o && o.ok && o.significant
+      ? (o.direction === "falling" ? C.fall : C.rise)
+      : "var(--muted-2)";
+  }
+
+  if (!barsEl) return;
+  // one thin bar per variable, width proportional to |slope| across the set
+  const rows = series
+    .map((x) => ({ x, o: x.overall, mag: x.overall && x.overall.ok ? Math.abs(x.overall.slope || 0) : 0 }))
+    .filter((r) => r.o && r.o.ok);
+  if (!rows.length) return;
+  const max = Math.max(...rows.map((r) => r.mag), 1e-9);
+
+  for (const r of rows) {
+    const pct = Math.max(2, Math.round((r.mag / max) * 100));
+    const col = !r.o.significant ? C.flat
+      : (r.o.direction === "falling" ? C.fall : C.rise);
+    const row = document.createElement("div");
+    row.className = "krc-bar";
+    row.innerHTML =
+      `<span>${esc(r.x.variable.name)}</span>` +
+      `<span class="krc-bar-val" style="color:${col}">` +
+        `${r.o.slope > 0 ? "+" : ""}${num(r.o.slope * 10, 2)}</span>` +
+      `<span class="krc-bar-track">` +
+        `<span class="krc-bar-fill" style="width:${pct}%;background:${col};box-shadow:0 0 8px ${col}"></span>` +
+      `</span>`;
+    barsEl.appendChild(row);
+  }
 }
 
 function renderCouplings(d) {
@@ -1013,52 +1155,29 @@ function renderRegionalContrast(d) {
   }).join("");
 }
 
-function renderLiterature(d) {
+function renderLiterature() {
+  // Replaced: the previous OpenAlex/Crossref lookup was a non-NASA data
+  // source, which the challenge rules disallow. This panel now points only at
+  // NASA/partner resources from the challenge Resources tab.
   const box = $("lit-list");
-  const active = Math.min(state.activeVarIdx, d.series.length - 1);
-
-  // OpenAlex occasionally returns 429/503 for one variable. Rather than showing
-  // OFFLINE while another variable has results, fall back to a series that has
-  // papers and say which one it is.
-  const hasPapers = (s) => s && s.literature && s.literature.ok
-    && (s.literature.papers || []).length;
-  let s = d.series[active];
-  let fallback = false;
-  if (!hasPapers(s)) {
-    const alt = d.series.find((x, i) => i !== active && hasPapers(x));
-    if (alt) { s = alt; fallback = true; }
-  }
-
-  const lit = (s && s.literature) || { ok: false, papers: [] };
-  if (!lit.ok) {
-    $("lit-tag").textContent = "OFFLINE";
-    box.innerHTML =
-      `<div class="lit-empty">Literature lookup unavailable — analysis unaffected.</div>`;
-    return;
-  }
-  const papers = lit.papers || [];
-  if (!papers.length) {
-    $("lit-tag").textContent = "NONE";
-    box.innerHTML = `<div class="lit-empty">No close matches for this variable + region.</div>`;
-    return;
-  }
-  const srcTag = lit.degraded ? " · CROSSREF" : "";
-  $("lit-tag").textContent =
-    `${papers.length} · ${s.variable.name.split(" ")[0].toUpperCase()}${srcTag}` +
-    (fallback ? " (ALT)" : "");
-  box.innerHTML = papers.slice(0, 2).map((p) => {
-    const href = p.doi
-      ? `https://doi.org/${encodeURIComponent(p.doi)}` : "#";
-    return `<a class="lit-item" href="${esc(href)}" target="_blank"
-      rel="noopener noreferrer">
-      <div class="lt">${esc(p.title)}</div>
-      <div class="lm">
-        ${p.year ? `<span class="yr">${p.year}</span>` : ""}
-        ${p.citations ? `<span class="cit">${p.citations} cites</span>` : ""}
-        ${p.venue ? `<span>${esc(String(p.venue).slice(0, 26))}</span>` : ""}
-      </div>
-    </a>`;
-  }).join("");
+  if (!box) return;
+  const tag = $("lit-tag");
+  if (tag) tag.textContent = "NASA";
+  const links = [
+    ["Giovanni", "https://giovanni.gsfc.nasa.gov/",
+     "Multi-variable time series and downloads"],
+    ["AppEEARS", "https://appeears.earthdatacloud.nasa.gov/",
+     "Subset MODIS/VIIRS/ASTER, build time series"],
+    ["Hydrology Time Series", "https://disc.gsfc.nasa.gov/information/tools?title=Hydrology%20Time%20Series",
+     "Hydrological series, incl. streamflow"],
+    ["KNMI Climate Explorer", "https://climexp.knmi.nl/",
+     "Cross-check a trend in an independent tool"],
+  ];
+  box.innerHTML = links.map(([name, href, note]) => `
+    <a class="lit-item" href="${href}" target="_blank" rel="noopener noreferrer">
+      <div class="lt">${name}</div>
+      <div class="lm"><span>${note}</span></div>
+    </a>`).join("");
 }
 
 function renderLegend(d) {
@@ -1078,7 +1197,7 @@ function renderLegend(d) {
       renderSignals(d);
       renderLegend(d);
       renderCells(d);
-      renderLiterature(d);
+      renderLiterature();
       drawChart();
       renderGlobeRegions(d);
     });
@@ -1093,6 +1212,30 @@ function renderLegend(d) {
       <span class="legend-chip active">CONTRAST</span>`;
     box.appendChild(liComp);
   }
+}
+
+/* Speak the headline result for screen-reader users. The visual verdict is a
+   colour-coded dial, which conveys nothing without sight. */
+function announceVerdict(d) {
+  const el = $("sr-live");
+  if (!el || !d || !d.series || !d.series.length) return;
+  const idx = Math.min(state.activeVarIdx, d.series.length - 1);
+  const s = d.series[idx];
+  const o = s.overall || {};
+  const reg = d.region ? d.region.name : "the selected region";
+  const name = s.variable ? s.variable.name : "the variable";
+  if (!o.ok) {
+    el.textContent = `${name} over ${reg}: not enough data to test a trend.`;
+    return;
+  }
+  const dir = o.direction === "rising" ? "rising"
+    : o.direction === "falling" ? "falling" : "showing no significant trend";
+  const sig = o.significant ? "This is statistically significant"
+    : "This is not statistically significant";
+  const slope = (o.per_decade > 0 ? "+" : "") + (Math.round(o.per_decade * 100) / 100);
+  el.textContent = `${name} over ${reg} is ${dir}, ${slope} `
+    + `${s.variable ? s.variable.unit : ""} per decade, p equal to `
+    + `${Math.round((o.p || 0) * 1000) / 1000}. ${sig}.`;
 }
 
 function renderHeader(d) {
@@ -1144,9 +1287,10 @@ function renderSignals(d) {
     const o = s.overall;
     const dir = o.ok ? o.direction : "nodata";
     const dirTxt =
+      !o.ok ? "INSUFFICIENT DATA" : !o.significant ? "NOT SIGNIFICANT" :
       dir === "rising" ? "RISING" :
       dir === "falling" ? "FALLING" :
-      dir === "flat" ? "STABLE" : "NODATA";
+      "NOT SIGNIFICANT";
     const el = document.createElement("div");
     el.className = "signal";
     el.style.setProperty("--vc", v.color);
@@ -1168,7 +1312,7 @@ function renderSignals(d) {
       renderSignals(d);
       renderLegend(d);
       renderCells(d);
-      renderLiterature(d);
+      renderLiterature();
       drawChart();
       renderGlobeRegions(d);
     });
@@ -1181,6 +1325,7 @@ function renderCells(d) {
   box.innerHTML = "";
   const s = d.series[state.activeVarIdx] || d.series[0];
   const sm = s.summary;
+  if(sm.spatial_detail_available===false){$('cell-tag').textContent='REGIONAL SUMMARY';const note=document.createElement('p');note.className='micro';note.textContent='This source supplied a regional or station-summary series. Native-cell trends, spatial consensus and monthly area coverage are not supplied. See the source and aggregation details for its meaning.';box.appendChild(note);return;}
   $("cell-tag").textContent =
     `${sm.significant_cells}/${sm.total_cells} SIG · ${s.variable.name.split(" ")[0]}`;
 
@@ -1883,7 +2028,9 @@ function renderDataModal() {
 
     $("mc-change").textContent = `${o.change_total > 0 ? "+" : ""}${num(o.change_total, 2)} ${v.unit}`;
     $("mc-change").style.color = o.direction === "falling" ? C.fall : (o.direction === "rising" ? C.rise : C.flat);
-    $("mc-change-sub").textContent = `Cumulative shift: ${o.change_pct > 0 ? "+" : ""}${num(o.change_pct, 1)}%`;
+    $("mc-change-sub").textContent = o.change_pct == null
+      ? "Cumulative shift (percent not meaningful for this scale)"
+      : `Cumulative shift: ${o.change_pct > 0 ? "+" : ""}${num(o.change_pct, 1)}%`;
 
     $("mc-mk").textContent = `p = ${num(o.p, 3)} · Z = ${o.z > 0 ? "+" : ""}${num(o.z, 2)}`;
     $("mc-mk").style.color = o.significant ? (o.direction === "falling" ? C.fall : C.rise) : C.flat;
@@ -1927,7 +2074,7 @@ function renderDataModal() {
     geoSortedCells.forEach((c) => {
       const chip = document.createElement("div");
       chip.className = "eg-cell-chip";
-      const cColor = c.significant
+      const cColor = c.direction === "nodata" ? C.nodata : c.significant
         ? (c.direction === "falling" ? C.fall : C.rise)
         : C.flat;
       const slopeStr = c.slope !== null && c.slope !== undefined
@@ -1946,7 +2093,7 @@ function renderDataModal() {
           <strong>Cell [${c.lat.toFixed(2)}°, ${c.lon.toFixed(2)}°]:</strong>
           Slope: <span style="color:${cColor}">${slopeStr} ${v.unit}/decade</span> ·
           Mann-Kendall p-value: <strong>${c.p !== undefined ? num(c.p, 3) : "—"}</strong> ·
-          Status: <strong>${c.significant ? (c.direction === "falling" ? "SIGNIFICANT FALL" : "SIGNIFICANT RISE") : "STABLE / NO TREND"}</strong>
+          Status: <strong>${c.direction === "nodata" ? "INSUFFICIENT DATA" : c.significant ? (c.direction === "falling" ? "SIGNIFICANT FALL" : "SIGNIFICANT RISE") : "NO SIGNIFICANT TREND"}</strong>
         `;
       });
 
@@ -2118,13 +2265,10 @@ function drawExpandedChart() {
   }
 
   const validPts = chartPoints.filter((p) => p.y !== null && Number.isFinite(p.y));
-  if (validPts.length > 2) {
+  if (validPts.length > 2 && o.ok) {
     let lineFn;
     if (o.ok) {
-      const slopePerStep = o.slope * (isYear ? 1 : 1 / 12);
-      const midY = validPts.reduce((a, p) => a + p.y, 0) / validPts.length;
-      const midX = (minX + maxX) / 2;
-      lineFn = (x) => midY + slopePerStep * (x - midX);
+      lineFn = (x) => o.intercept + o.slope * (isYear ? x : d.start + x/12);
     } else {
       const ptPairs = validPts.map((p) => [p.x, p.y]);
       lineFn = fitLine(ptPairs);
@@ -2175,10 +2319,7 @@ function drawExpandedChart() {
       const oB = sB.overall || {};
       let lineFnB;
       if (oB.ok) {
-        const slopePerStepB = oB.slope * (isYear ? 1 : 1 / 12);
-        const midYB = validPtsB.reduce((a, p) => a + p.y, 0) / validPtsB.length;
-        const midXB = (minX + maxX) / 2;
-        lineFnB = (x) => midYB + slopePerStepB * (x - midXB);
+        lineFnB = (x) => oB.intercept + oB.slope * (isYear ? x : d.start + x / 12);
       } else {
         const ptPairsB = validPtsB.map((p) => [p.x, p.y]);
         lineFnB = fitLine(ptPairsB);
@@ -2327,8 +2468,9 @@ function drawExpandedChart() {
         `<div class="tn-row"><span class="tn-key">THEIL–SEN</span><span class="tn-val">` +
         `<b style="color:${dirColor}">${o.slope > 0 ? "+" : ""}${num(slopePerDec, 3)} ${esc(s.variable.unit)}/decade</b> ` +
         `(${dirLabel}) · CUMULATIVE SHIFT ` +
-        `<b>${o.change_total > 0 ? "+" : ""}${num(o.change_total, 2)} ${esc(s.variable.unit)} ` +
-        `(${o.change_pct > 0 ? "+" : ""}${num(o.change_pct, 1)}%)</b></span></div>`
+        `<b>${o.change_total > 0 ? "+" : ""}${num(o.change_total, 2)} ${esc(s.variable.unit)}` +
+        (o.change_pct == null ? "" : ` (${o.change_pct > 0 ? "+" : ""}${num(o.change_pct, 1)}%)`) +
+        `</b></span></div>`
       );
 
       rows.push(
@@ -2382,30 +2524,58 @@ function drawExpandedChart() {
   }
 }
 
+function buildAnalysisCSV(d, variableIndex, isYear) {
+  const selected = d.series[variableIndex] || d.series[0];
+  const areas = [{ slot: "A", region: d.region, block: selected }];
+  const comparison = d.compare?.series.find(s => s.variable.id === selected.variable.id);
+  if (comparison) areas.push({ slot: "B", region: d.compare.region, block: comparison });
+  const periods = isYear
+    ? Array.from({ length: d.end - d.start + 1 }, (_, i) => Number(d.start) + i)
+    : (d.months?.length ? d.months : [...new Set(areas.flatMap(a => (a.block.monthly_timeseries || []).map(p => p.month)))].sort());
+  const rows = [[isYear ? "Year" : "Month_YYYY_MM",
+    `${isYear ? "Annual" : "Regional"}_Mean_${selected.variable.id}_${selected.variable.unit}`,
+    "Area_Slot", "Area_ID", "Area_Name", "Valid_Months_In_Year", "Complete_Year", "Value_Status",
+    "Period_Area_Fraction_With_Any_Data", "Period_Native_Cells_With_Any_Data", "Expected_Native_Cells",
+    "Provider", "Source", "Dataset", "Collection_Version", "Source_Field", "Source_Policy",
+    "First_Observed_Month", "Last_Observed_Month", "Requested_Start_Year", "Requested_End_Year",
+    "Longitude_Spacing_Deg", "Latitude_Spacing_Deg", "Geometry_Revision", "Retrieved_UTC", "Citation", "Quality_Notes"]];
+  const observedMonth = value => value ? `${String(value).slice(0, 4)}-${String(value).slice(4, 6)}` : "";
+  for (const { slot, region, block } of areas) {
+    const p = block.provenance || {};
+    const yearly = new Map((block.yearly_timeseries || []).map(point => [point.year, point]));
+    const points = new Map((isYear ? block.yearly_timeseries : block.monthly_timeseries || []).map(point => [isYear ? point.year : point.month, point]));
+    for (const period of periods) {
+      const point = points.get(period), annual = yearly.get(isYear ? period : Number(period.slice(0, 4)));
+      const valid = typeof point?.value === "number" && Number.isFinite(point.value);
+      rows.push([period, valid ? point.value : "", slot, region.id, region.name,
+        annual?.months ?? 0, !!annual?.complete, !valid ? "unavailable" : isYear && !annual?.complete ? "partial_year" : "valid",
+        // This provenance is availability in any month of the requested period,
+        // not a claim of identical spatial support in every exported month.
+        p.available_area_fraction, p.available_cells, p.expected_cells, p.provider, p.source,
+        p.dataset, p.collection_version, p.field, p.policy, observedMonth(p.first_observed_month), observedMonth(p.last_observed_month),
+        d.start, d.end, p.dlon, p.dlat, p.geometry_version || region.geometry_version, p.retrieved_utc, p.citation, p.quality]);
+    }
+  }
+  const cell = value => {
+    if (value === undefined || value === null) return "";
+    let text = String(value);
+    if (typeof value === "string" && /^[\s\uFEFF]*[=+\-@]/.test(text)) text = "'" + text;
+    return /[",\r\n]/.test(text) ? '"' + text.replace(/"/g, '""') + '"' : text;
+  };
+  return rows.map(row => row.map(cell).join(",")).join("\r\n") + "\r\n";
+}
+
 function exportDataCSV() {
   const d = state.result;
   if (!d) return;
   const s = d.series[state.expandedVarIdx] || d.series[0];
-  const isYear = state.expandedMode === "yearly";
-
-  let csvContent = "";
-  if (isYear) {
-    csvContent = `Year,Annual_Mean_${s.variable.id}_${s.variable.unit}\n`;
-    s.yearly_timeseries.forEach((p) => {
-      csvContent += `${p.year},${p.value}\n`;
-    });
-  } else {
-    csvContent = `Month_YYYY_MM,Regional_Mean_${s.variable.id}_${s.variable.unit}\n`;
-    (s.monthly_timeseries || []).forEach((p) => {
-      csvContent += `${p.month},${p.value}\n`;
-    });
-  }
+  const csvContent = buildAnalysisCSV(d, state.expandedVarIdx, state.expandedMode === "yearly");
 
   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `terratrend_${d.region.id}_${s.variable.id}_${d.start}_${d.end}.csv`;
+  a.download = `terratrend_${d.region.id}_${s.variable.id}_${d.start}_${d.end}${d.compare ? "_comparison" : ""}.csv`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -2615,6 +2785,8 @@ function esc(s) {
 const R = 1;
 let renderer, scene, camera, globeGroup;
 let teleconArcsGroup;
+let arcPackets = [];   // travelling packets along teleconnection arcs
+let arcRings = [];     // pulsing destination rings
 let landPoints, gridLines, regionMesh, haloMesh, atmosphere, pickSphere;
 // ring drawn for a region click that has not finished analysing yet
 let previewRing = null;
@@ -2651,9 +2823,11 @@ async function initGlobe() {
   camera.position.set(0, 0, 3.35);
 
   renderer = new THREE.WebGLRenderer({
-    antialias: true, alpha: true, powerPreference: "high-performance",
+    // no MSAA: a full-bleed globe at DPR 2 with multisampling stalls
+    // integrated / software GL, and the soft shader edges do not need it
+    antialias: false, alpha: true, powerPreference: "high-performance",
   });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   renderer.setSize(w, h);
   host.appendChild(renderer.domElement);
 
@@ -2673,6 +2847,7 @@ async function initGlobe() {
 
   buildLandDots();
   buildGridLines();
+  buildGlobeLabels();
   buildAtmosphere();
   buildRegionMesh();
   buildEarthSurface();
@@ -2710,6 +2885,77 @@ async function initGlobe() {
   ro.observe(host);
 
   updateGlobeOverlay();
+}
+
+/* ---------- country-style labels hovering on the globe ----------
+   The cybermap names the places it is watching. We do the same with the
+   23 focus regions: each label is a DOM node projected from the sphere
+   every frame, so it stays put while the planet turns underneath it. */
+let labelEls = [];       // { el, lat, lon, name }
+
+function buildGlobeLabels() {
+  const layer = $("globe-labels");
+  if (!layer) return;
+  layer.innerHTML = "";
+  labelEls = [];
+
+  const regions = (state.catalog && state.catalog.regions) || [];
+  if (!regions.length) return;
+
+  const frag = document.createDocumentFragment();
+  for (const r of regions) {
+    const lat = (r.bbox[1] + r.bbox[3]) / 2;
+    const lon = (r.bbox[0] + r.bbox[2]) / 2;
+    const el = document.createElement("span");
+    el.className = "globe-label";
+    el.dataset.region = r.id;
+    el.textContent = r.name.toUpperCase();
+    frag.appendChild(el);
+    labelEls.push({ el, lat, lon, id: r.id });
+  }
+  layer.appendChild(frag);
+}
+
+function updateGlobeLabels() {
+  if (!labelEls.length || !camera || !globeGroup) return;
+  const host = $("globe");
+  if (!host) return;
+  const w = host.clientWidth, h = host.clientHeight;
+  if (!w || !h) return;
+
+  const camDir = camera.position.clone().normalize();
+  const tmp = new THREE.Vector3();
+
+  // which region is the user currently looking at?
+  const regSel = $("region");
+  const activeId = regSel ? regSel.value : null;
+
+  for (const L of labelEls) {
+    const on = L.id === activeId;
+    if (L.el.classList.contains("is-active") !== on) {
+      L.el.classList.toggle("is-active", on);
+    }
+    tmp.copy(latLonToVec3(L.lat, L.lon, 1.0)).applyMatrix4(globeGroup.matrixWorld);
+    const facing = tmp.clone().normalize().dot(camDir);
+
+    tmp.project(camera);
+    const x = (tmp.x * 0.5 + 0.5) * w;
+    const y = (-tmp.y * 0.5 + 0.5) * h;
+
+    // fade out across the limb so labels never smear on the horizon
+    const k = Math.max(0, Math.min(1, (facing - 0.06) / (0.34 - 0.06)));
+    let a = k * k * (3 - 2 * k);
+    if (Math.abs(tmp.x) > 1.4 || Math.abs(tmp.y) > 1.4) a = 0;
+
+    const st = L.el.style;
+    if (a <= 0.01) {
+      if (st.display !== "none") st.display = "none";
+      continue;
+    }
+    if (st.display === "none") st.display = "block";
+    st.transform = `translate(-50%,-50%) translate(${x.toFixed(1)}px,${y.toFixed(1)}px)`;
+    st.opacity = a.toFixed(2);
+  }
 }
 
 function buildLandDots() {
@@ -2784,7 +3030,7 @@ function buildGridLines() {
    reference dashboard does it: ice-blue land that brightens with elevation,
    deep blue sea. Lit gently for roundness - no day/night terminator. */
 const EARTH_TEXTURES = {
-  topo: "https://unpkg.com/three-globe/example/img/earth-topology.png",
+  topo: "vendor/earth-topology.png",
 };
 let earthMesh = null;
 let cloudMesh = null;
@@ -2821,7 +3067,7 @@ function buildEarthSurface() {
   topo.anisotropy = 4;
 
   earthMesh = new THREE.Mesh(
-    new THREE.SphereGeometry(0.999, 96, 96),
+    new THREE.SphereGeometry(0.999, 72, 48),
     new THREE.ShaderMaterial({
       uniforms: {
         uTopo: { value: topo },
@@ -2845,12 +3091,14 @@ function buildEarthSurface() {
         varying vec3 vNormalW;
         varying vec3 vViewDirW;
 
-        // strict cool slate palette (sRGB values from the design spec)
-        const vec3 cShadow = vec3(0.078, 0.098, 0.122);  // #14191F
-        const vec3 cOcean  = vec3(0.149, 0.196, 0.243);  // #26323E
-        const vec3 cLand   = vec3(0.294, 0.369, 0.443);  // #4B5E71
-        const vec3 cLit    = vec3(0.471, 0.557, 0.624);  // #788E9F
-        const vec3 cRim    = vec3(0.659, 0.753, 0.816);  // #A8C0D0
+        // Terrain tones measured off the cybermap feed: a lifted grey-olive
+        // world rather than a black one. Lands sit near #4a544d, seas near
+        // #1b2620, and the lit limb picks up mint.
+        const vec3 cShadow = vec3(0.110, 0.157, 0.129);  // #1c2821
+        const vec3 cOcean  = vec3(0.169, 0.235, 0.200);  // #2b3c33
+        const vec3 cLand   = vec3(0.365, 0.459, 0.384);  // #5d7562
+        const vec3 cLit    = vec3(0.643, 0.780, 0.675);  // #a4c7ac
+        const vec3 cRim    = vec3(0.800, 0.914, 0.839);  // #cce9d6
 
         void main() {
           // topology: 0 = ocean, higher = land elevation (0..~0.55 typical)
@@ -2877,13 +3125,13 @@ function buildEarthSurface() {
           float lam = dot(n, L);
 
           // matte directional falloff: the far limb sinks into deep space
-          col = mix(cShadow, col, smoothstep(0.02, 0.50, lam));
+          col = mix(cShadow, col, smoothstep(-0.12, 0.42, lam));
 
           // high-contrast fresnel rim on the sunlit edge
           float ndv = max(dot(n, normalize(vViewDirW)), 0.0);
           float fres = pow(1.0 - ndv, 2.4);
           float litMask = smoothstep(0.05, 0.55, lam);
-          col = mix(col, cRim, fres * litMask * 0.9);
+          col = mix(col, cRim, fres * litMask * 0.45);
 
           gl_FragColor = vec4(col, 1.0);
         }`,
@@ -2896,7 +3144,7 @@ function buildEarthSurface() {
 /* drifting procedural cloud layer (fbm noise - no texture asset) */
 function buildClouds() {
   cloudMesh = new THREE.Mesh(
-    new THREE.SphereGeometry(1.012, 96, 96),
+    new THREE.SphereGeometry(1.012, 48, 32),
     new THREE.ShaderMaterial({
       transparent: true,
       depthWrite: false,
@@ -2939,7 +3187,7 @@ function buildClouds() {
           float latBand = smoothstep(0.02, 0.16, abs(vUv.y - 0.5))
                         * (1.0 - smoothstep(0.38, 0.5, abs(vUv.y - 0.5)));
           float a = shape * latBand * 0.62;
-          vec3 col = vec3(0.863, 0.910, 0.941);  // #DCE8F0 cloud highlights
+          vec3 col = vec3(0.576, 0.792, 0.678);  // #93CAB0 mint haze
           gl_FragColor = vec4(col, a);
         }`,
     }),
@@ -2962,8 +3210,8 @@ function buildStarfield() {
   const geo = new THREE.BufferGeometry();
   geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
   starField = new THREE.Points(geo, new THREE.PointsMaterial({
-    color: 0x788e9f, size: 0.075, sizeAttenuation: true,
-    transparent: true, opacity: 0.55, depthWrite: false,
+    color: 0x628b74, size: 0.055, sizeAttenuation: true,
+    transparent: true, opacity: 0.30, depthWrite: false,
   }));
   starField.visible = false;
   scene.add(starField);
@@ -2985,10 +3233,14 @@ function applyGlobeStyle(style) {
     gridLines.forEach((line) => { line.visible = !wantRelief; });
   }
 
+  // keep the map rail button in step with the active render mode
+  const mcStyle = $("mc-style");
+  if (mcStyle) mcStyle.classList.toggle("on", appliedStyle === "relief");
+
   // sync the dropdown
   const value = $("globe-style-value");
   if (value) {
-    value.textContent = appliedStyle === "relief" ? "BLUE RELIEF" : "DOT MATRIX";
+    value.textContent = appliedStyle === "relief" ? "EARTH RELIEF" : "DOT MATRIX";
   }
   document.querySelectorAll(".gm-option").forEach((opt) => {
     const on = opt.dataset.style === appliedStyle;
@@ -3000,7 +3252,7 @@ function applyGlobeStyle(style) {
       const desc = opt.querySelector(".gm-desc");
       if (desc) {
         desc.textContent = textureState === "ready"
-          ? "textured sphere · blue palette"
+          ? "lit sphere · olive terrain"
           : "needs the CDN textures — unavailable offline";
       }
     }
@@ -3049,7 +3301,7 @@ function buildAtmosphere() {
     transparent: true,
     side: THREE.BackSide,
     depthWrite: false,
-    uniforms: { uColor: { value: new THREE.Color("#A8C0D0") } },
+    uniforms: { uColor: { value: new THREE.Color("#629c7f") } },
     vertexShader: `
       varying vec3 vNormal;
       varying vec3 vPos;
@@ -3064,7 +3316,7 @@ function buildAtmosphere() {
       varying vec3 vPos;
       void main() {
         float rim = 1.0 - abs(dot(vNormal, normalize(-vPos)));
-        float a = pow(rim, 3.4) * 0.34;
+        float a = pow(rim, 3.0) * 0.30;
         gl_FragColor = vec4(uColor, a);
       }`,
   });
@@ -3073,7 +3325,7 @@ function buildAtmosphere() {
 
   haloMesh = new THREE.Mesh(
     new THREE.SphereGeometry(0.985, 48, 48),
-    new THREE.MeshBasicMaterial({ color: 0x101214 })
+    new THREE.MeshBasicMaterial({ color: 0x050907 })
   );
   haloMesh.renderOrder = -2;
   globeGroup.add(haloMesh);
@@ -3125,7 +3377,7 @@ function makeSphericalRing(center, angRad, thickness, radius, segments = 96) {
   return g;
 }
 
-const REGION_MAG = 2.8; // visually amplify the small region so cells are readable
+const REGION_MAG = 1.0; // visually amplify the small region so cells are readable
 
 /* The selection ring around a lat/lon bbox. The analysed result and the
    optimistic preview both draw through here, so the ring does not jump when
@@ -3453,38 +3705,51 @@ function applyRegionSelection(region) {
   previewRegionSelection(region);
 }
 
-/* Tap the globe -> select the nearest preset region at once, then analyze. */
+/* Tap the globe -> analyse the area actually clicked.
+   If the click lands inside a preset focus region, use that preset (it has a
+   curated description). Otherwise build a real 4-degree box around the click
+   and send it as a bbox, so the answer is about the place the user pointed at
+   rather than the nearest of 23 unrelated boxes. */
 function selectNearestRegion(lat, lon) {
-  let best = null;
-  let bestD = Infinity;
+  let inside = null;
   state.catalog.regions.forEach((r) => {
     const b = r.bbox;
-    const cLat = (b[1] + b[3]) / 2;
-    const cLon = (b[0] + b[2]) / 2;
-    let dLon = Math.abs(lon - cLon);
-    if (dLon > 180) dLon = 360 - dLon;
-    const d = Math.hypot(lat - cLat, dLon);
-    if (d < bestD) { bestD = d; best = r; }
+    if (lon >= b[0] && lon <= b[2] && lat >= b[1] && lat <= b[3]) inside = r;
   });
-  if (!best) return;
+
+  const HALF = 2.0;  // 4 x 4 degree box around the click
+  const lon0 = Math.max(-180, lon - HALF);
+  const lon1 = Math.min(180, lon + HALF);
+  const lat0 = Math.max(-89, lat - HALF);
+  const lat1 = Math.min(89, lat + HALF);
+
+  const target = inside || {
+    id: "custom",
+    name: "Selected Area",
+    desc: `${lat.toFixed(1)}\u00b0, ${lon.toFixed(1)}\u00b0 \u00b7 ${(lon1 - lon0).toFixed(1)}\u00d7${(lat1 - lat0).toFixed(1)}\u00b0 box`,
+    bbox: [lon0, lat0, lon1, lat1],
+    custom: true,
+  };
 
   const sel = $("region");
-  const changed = !sel || sel.value !== best.id;
-  if (sel) sel.value = best.id;
+  const changed = !sel || sel.value !== target.id;
+  if (sel && !target.custom) sel.value = target.id;
+
+  state.pendingBbox = target.custom ? target.bbox : null;
 
   // optimistic: the globe answers the click before the network does
-  applyRegionSelection(best);
+  applyRegionSelection(target);
 
   if (!state.selected.length) {
-    flashHint(`${best.name.toUpperCase()} SELECTED — PICK A VARIABLE`);
+    flashHint(`${target.name.toUpperCase()} SELECTED — PICK A VARIABLE`);
     return;
   }
-  if (changed || !state.result) {
-    flashHint(`${best.name.toUpperCase()} SELECTED — ANALYZING`);
+  if (changed || !state.result || target.custom) {
+    flashHint(`${target.name.toUpperCase()} SELECTED — ANALYZING`);
     analyze();
   } else {
     // clicking inside the region already on screen must still acknowledge
-    flashHint(`${best.name.toUpperCase()} SELECTED`);
+    flashHint(`${target.name.toUpperCase()} SELECTED`);
   }
 }
 
@@ -3575,10 +3840,201 @@ function animateGlobe() {
     }
   }
 
+  // live traffic along the teleconnection arcs: a bright packet crawls the
+  // curve and the destination ring breathes, the way the cybermap's attack
+  // links behave
+  if (arcPackets.length) {
+    for (const pkt of arcPackets) {
+      pkt.userData.t = (pkt.userData.t + pkt.userData.speed) % 1;
+      const pos = pkt.userData.curve.getPoint(pkt.userData.t);
+      pkt.position.copy(pos);
+      // fade in at the origin, out at the target
+      const t = pkt.userData.t;
+      pkt.material.opacity = 0.95 * Math.sin(Math.PI * t);
+      const sc = 0.7 + 0.5 * Math.sin(t * Math.PI);
+      pkt.scale.setScalar(sc);
+    }
+  }
+  if (arcRings.length) {
+    const now = performance.now() * 0.0018;
+    for (const ring of arcRings) {
+      const k = 1 + 0.30 * Math.sin(now + ring.userData.pulse);
+      ring.scale.setScalar(k);
+      ring.material.opacity = 0.55 + 0.35 * Math.sin(now + ring.userData.pulse);
+    }
+  }
+
+  updateGlobeLabels();
   renderer.render(scene, camera);
 }
 
-boot();
+/* ============================================================
+   GUIDED START — the "data detective" front door
+   The challenge brief asks for a short question flow and a couple
+   of demonstration examples. These four stories are pre-verified
+   against the live API, so a first-time user sees a real answer
+   within seconds instead of facing 16 variables x 23 regions.
+   ============================================================ */
+const DEMOS = {
+  warming: {
+    vars: ["T2M"], region: "europe", start: 2005, end: 2024,
+    hint: "Central Europe \u00b7 Air Temperature",
+  },
+  rain: {
+    vars: ["PRECTOTCORR"], region: "sahel", start: 2005, end: 2024,
+    hint: "Sahel Central \u00b7 Precipitation",
+  },
+  contrast: {
+    vars: ["PRECTOTCORR"], region: "sahel", start: 2005, end: 2024,
+    compare: "amazon", hint: "Precipitation \u00b7 Sahel vs Amazon",
+  },
+  negative: {
+    vars: ["T2M"], region: "arctic", start: 2005, end: 2024,
+    hint: "Arctic Siberia \u00b7 Air Temperature",
+  },
+};
+
+function wireStartModal() {
+  const modal = $("start-modal");
+  if (!modal) return;
+  const close = $("start-close");
+  if (close) close.addEventListener("click", () => hideModal(modal));
+  modal.addEventListener("click", (e) => { if (e.target === modal) hideModal(modal); });
+
+  modal.querySelectorAll(".start-card").forEach((card) => {
+    card.addEventListener("click", () => runDemo(card.dataset.demo));
+  });
+
+  // Only show on a genuinely fresh visit, and never block a returning user.
+  let seen = null;
+  try { seen = window.localStorage.getItem("tt-seen-start"); } catch (_) {}
+  if (!seen) {
+    showModal(modal);
+    if (close) close.focus();
+  }
+}
+
+function runDemo(key) {
+  const demo = DEMOS[key];
+  if (!demo) return;
+  hideModal($("start-modal"));
+  try { window.localStorage.setItem("tt-seen-start", "1"); } catch (_) {}
+
+  state.selected = demo.vars.slice();
+  state.pendingBbox = null;
+  state.preferredVar = demo.vars[0];
+
+  if ($("region")) $("region").value = demo.region;
+  if ($("start")) $("start").value = demo.start;
+  if ($("end")) $("end").value = demo.end;
+
+  // contrast demo turns compare mode on and picks the second region
+  if (demo.compare) {
+    state.compareMode = true;
+    const pill = $("toggle-compare-mode");
+    if (pill) pill.textContent = "MODE: CONTRAST";
+    const grp = $("compare-region-group");
+    if (grp) grp.style.display = "";
+    if ($("compare-region")) $("compare-region").value = demo.compare;
+  }
+
+  renderVarList();
+  applyRegionSelection(currentRegion());
+  flashHint(demo.hint.toUpperCase());
+  analyze();
+}
+
+/* ============================================================
+   KASPERSKY-STYLE SHELL
+   The chrome is a cybermap: a 60px header with the primary nav, a
+   40px tool strip, a full-bleed globe and a 51px legend footer.
+   Everything here is presentation — no analysis logic lives in it.
+   ============================================================ */
+function initCyberShell() {
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+  const zoomBy = (factor) => {
+    if (!camera) return;
+    camera.position.z = clamp(camera.position.z * factor, 2.1, 5.4);
+  };
+  const mczi = $("mc-zoom-in");
+  const mczo = $("mc-zoom-out");
+  if (mczi) mczi.addEventListener("click", () => zoomBy(0.86));
+  if (mczo) mczo.addEventListener("click", () => zoomBy(1.16));
+
+  // render-mode toggle on the map rail mirrors the header dropdown
+  const mcStyle = $("mc-style");
+  if (mcStyle) {
+    mcStyle.addEventListener("click", () => {
+      const next = appliedStyle === "relief" ? "dots" : "relief";
+      if (next === "relief" && textureState !== "ready") return;
+      applyGlobeStyle(next);
+      try { window.localStorage.setItem("tt-globe-style", next); } catch (e) { /* ignore */ }
+    });
+  }
+
+  const mcRotate = $("mc-rotate");
+  if (mcRotate) {
+    mcRotate.classList.toggle("on", autoRotate);
+    mcRotate.addEventListener("click", () => {
+      autoRotate = !autoRotate;
+      mcRotate.classList.toggle("on", autoRotate);
+    });
+  }
+
+  const mcReset = $("mc-reset");
+  if (mcReset) {
+    mcReset.addEventListener("click", () => {
+      if (camera) camera.position.z = 3.35;
+      autoRotate = true;
+      if (mcRotate) mcRotate.classList.add("on");
+      if (globeGroup) globeGroup.rotation.x = 0.18;
+      if (globeGroup) globeGroup.rotation.y = -0.6;
+      updateGlobeOverlay();
+    });
+  }
+
+  // primary nav — each entry reveals the surface that already exists
+  document.querySelectorAll("[data-kview]").forEach((link) => {
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      document.querySelectorAll("[data-kview]").forEach((l) => l.classList.remove("active"));
+      link.classList.add("active");
+      const view = link.dataset.kview;
+      if (view === "observatory") openDataModal();
+      else if (view === "statistics") {
+        // the all-variable ranking table is the statistics surface
+        if (state.selected.length) $("scan").click();
+        else flashHint("SELECT A VARIABLE FIRST");
+      } else if (view === "interconnect") openInterconnectScreen({ force: true });
+      else if (view === "sources") openDefs();
+      else flashHint("GLOBAL CHANGE MAP");
+    });
+  });
+
+  // header CTA = the scan action, kept in one place
+  const cta = $("k-scan-cta");
+  if (cta) {
+    cta.addEventListener("click", () => {
+      if (state.selected.length === 0) {
+        // the scan needs at least one variable in the current engine
+        flashHint("SELECT A VARIABLE FIRST");
+        return;
+      }
+      const scanBtn = $("scan");
+      if (scanBtn) scanBtn.click();
+    });
+  }
+
+  // footer mirrors the selected region so the strip always reads true
+  const footRegion = $("k-foot-region");
+  if (footRegion) {
+    const reg = currentRegion();
+    if (reg) footRegion.textContent = reg.name.toUpperCase();
+  }
+}
+
+window.addEventListener("DOMContentLoaded", () => boot());
 
 /* ============================================================
    EARTH SYSTEM INTERCONNECTIONS SCREEN
@@ -3677,7 +4133,7 @@ async function openInterconnectScreen(opts = {}) {
   ixState.varUnit = vMeta ? vMeta.unit : "";
 
   $("ix-sub").textContent =
-    "How " + ixState.varName + " over " + reg.name + " is wired into the Earth system - computed from NASA POWER data, not from a list of expected relationships.";
+    "Candidate relationships for " + ixState.varName + " over " + reg.name + ", computed from the selected datasets. Statistical links do not establish a physical cause.";
   $("ix-period").textContent = $("start").value + "-" + $("end").value;
   $("ix-hero").innerHTML = ixHeroHTML(reg, vMeta || { name: vId }, null, null);
   showIxPanels(true);
@@ -3743,7 +4199,7 @@ async function loadInterconnectData(reg, vId) {
     const cm = local && local.method ? local.method : "";
     const tm = global && global.method ? global.method : "";
     methodEl.textContent = [cm, tm].filter(Boolean).join("  ·  ") ||
-      "Computed from NASA POWER monthly grids.";
+      "Computed from the selected dataset’s monthly grid cells.";
   }
 
   renderIxHero(local, global);
@@ -3756,12 +4212,12 @@ function ixHeroHTML(reg, varMeta, local, global) {
   const pairs = local && local.pairs ? local.pairs : [];
   const strong = pairs.filter((p) => p.confidence === "HIGH").length;
   const conns = global && global.teleconnections ? global.teleconnections : [];
-  const rep = global && global.source ? global.source.anomaly_report : null;
+  const rep = global && global.source ? global.source.anomaly_report : local?.source_anomaly?.anomaly_report;
   const peak = rep ? (rep.peak_sigma > 0 ? "+" : "") + rep.peak_sigma + "σ" : "...";
 
   return '' +
     '<div class="ix-hero-cell lead">' +
-      '<span class="ixh-lbl">DRIVER VARIABLE</span>' +
+      '<span class="ixh-lbl">SELECTED MEASUREMENT</span>' +
       '<span class="ixh-val">' + esc(varMeta.name || "—") + '</span>' +
       '<span class="ixh-sub">' + esc(reg.name) + ' · ' + esc(varMeta.unit || "") + '</span>' +
     '</div>' +
@@ -3771,8 +4227,8 @@ function ixHeroHTML(reg, varMeta, local, global) {
       '<span class="ixh-sub">' + strong + ' high-confidence</span>' +
     '</div>' +
     '<div class="ix-hero-cell">' +
-      '<span class="ixh-lbl">GLOBAL RIPPLES</span>' +
-      '<span class="ixh-val">' + (ixState.loading && !global ? "..." : conns.length) + '</span>' +
+      '<span class="ixh-lbl">REMOTE RELATIONSHIPS</span>' +
+      '<span class="ixh-val">' + (global?conns.length:local?'NOT REQUESTED':"...") + '</span>' +
       '<span class="ixh-sub">after effect + FDR gates</span>' +
     '</div>' +
     '<div class="ix-hero-cell">' +
@@ -3813,7 +4269,7 @@ function renderIxLocal(local, driverId) {
   if (sub && local) {
     sub.textContent =
       "Every pair of variables measured in " + local.region.name +
-      " is tested. " + mine.length + " involve the selected driver " + driverVar.name +
+      " is tested. " + mine.length + " involve the selected measurement " + driverVar.name +
       "; " + others.length + " are couplings between the other variables.";
   }
 
@@ -3821,17 +4277,20 @@ function renderIxLocal(local, driverId) {
     list.innerHTML =
       '<div class="ix-empty on"><h4>NO LOCAL COUPLING SURVIVED THE TESTS</h4>' +
       '<p>Within ' + esc(local && local.region ? local.region.name : "this region") +
-      ', no pair of variables stayed correlated above the effect-size gate after the seasonal cycle, the shared trend and the temperature confounder were removed. Its variables are behaving independently.</p></div>';
+      ', no relationship passed the checks for the available overlapping observations. Missing coverage or an unavailable source can prevent testing. This does not establish that the variables are independent.</p></div>';
     return;
   }
 
-  let html = '<div class="ix-group"><h4 class="ix-group-title">DRIVER COUPLINGS · ' +
+  let html = '<div class="ix-group"><h4 class="ix-group-title">RELATIONSHIPS · ' +
     esc(driverVar.name.toUpperCase()) + '</h4>';
   if (!mine.length) {
-    html += '<p class="ix-group-empty">The driver does not couple significantly to any other variable measured here. That is itself a finding: ' +
-      esc(driverVar.name) + ' varies independently within this region.</p>';
+    html += '<p class="ix-group-empty">No tested relationship involving ' + esc(driverVar.name) + ' passed the evidence checks for this area and period.</p>';
   } else {
-    html += mine.map((p) => ixPairHTML(p, pairs, driverId)).join("");
+    for(const [label,selected] of [
+      ['CANDIDATE INCOMING DRIVERS',mine.filter(p=>p.response===driverId)],
+      ['ASSOCIATED DOWNSTREAM RESPONSES',mine.filter(p=>p.driver===driverId)],
+      ['NO CLEAR TEMPORAL LEAD',mine.filter(p=>!p.driver||!p.response)]
+    ])if(selected.length)html+='<h4 class="ix-group-title">'+label+'</h4>'+selected.map(p=>ixPairHTML(p,pairs,driverId)).join('');
   }
   html += '</div>';
 
@@ -3865,7 +4324,7 @@ function ixPairHTML(p, allPairs, driverId) {
     '<div class="ix-pair ' + p.phase + '">' +
       '<div class="ix-pair-top">' +
         drv +
-        (isDriver ? '<span class="ix-conf HIGH">INVOLVES DRIVER</span>' : "") +
+        (isDriver ? '<span class="ix-conf HIGH">SELECTED MEASUREMENT</span>' : "") +
         '<span class="ix-pair-r" style="color:' + color + '">' + sign + p.r.toFixed(2) + '</span>' +
       '</div>' +
       '<div class="ix-pair-meta">' +
@@ -3875,6 +4334,7 @@ function ixPairHTML(p, allPairs, driverId) {
         '<span class="ix-conf ' + p.confidence + '">' + p.confidence + ' CONFIDENCE</span>' +
       '</div>' +
       '<div class="ix-pair-note">' + esc(p.lag_note) + '. ' + esc(p.mechanism) + '</div>' +
+      '<div class="ix-pair-note">'+esc([p.source_a,p.source_b].filter(Boolean).join(' ↔ '))+(p.overlapping_months?' · '+p.overlapping_months+' overlapping months':'')+'</div>'+
     '</div>';
 }
 
@@ -4108,3 +4568,136 @@ function renderIxAnomaly(global) {
 }
 
 initInterconnectScreen();
+
+/* ============================================================
+   EXPLAIN-YOURSELF LAYER
+   The statistics on this screen are the point, but a reader should
+   not need a stats course to see what they mean. Every technical
+   term carries a plain-English definition in a tooltip, and the
+   screen opens with a short guide to reading it.
+   ============================================================ */
+const IX_TIPS = {
+  driver:
+    "The variable you selected. Everything on this screen is measured against this one.",
+  localCouplings:
+    "How many pairs of variables in this region still move together after the seasons, the long-term trend and air temperature are factored out.",
+  globalRipples:
+    "Places far from this region whose variables shifted measurably when this one ran hotter or colder than its own normal.",
+  peakAnomaly:
+    "The single month this variable strayed furthest from where its own history says it should have been, in standard deviations (\u03c3).",
+  pairsTested:
+    "How many remote region-and-variable combinations the scan checked before deciding which ones count.",
+
+  r:
+    "Correlation, from -1 to +1. Positive means both rise and fall together; negative means one rises as the other falls. Near 0 means no relationship.",
+  p:
+    "The chance of seeing a link this strong purely by luck. 0.05 means 1 in 20; lower is more trustworthy.",
+  lag:
+    "How many months one variable leads the other. 0 months means they change in the same month. A positive number means the driver moves first.",
+  partialR:
+    "The correlation left over after air temperature is held constant. If this drops near zero, the link was really just a shared response to temperature.",
+  confidence:
+    "Three separate tests must agree: the correlation itself, surviving the temperature control, and one actually helping predict the other. HIGH means all three passed.",
+  sigma:
+    "Standard deviations from normal. +1\u03c3 means higher than about 84% of months on record; +2\u03c3 is rarer still.",
+  effectSize:
+    "How far the remote variable sat from its own normal during this driver's surges, in \u03c3. Bigger means a stronger real-world response.",
+  fdr:
+    "When you test dozens of pairs, some will look linked by pure chance. False-discovery control throws those lucky results out before anything is reported.",
+
+  aboveTrend:
+    "Months this variable ran higher than its own seasonal cycle and long-term trend predict.",
+  belowTrend:
+    "Months it ran lower than its own trend predicts.",
+  episodes:
+    "Separate stretches of time it stayed more than one standard deviation from its trend.",
+  decomposition:
+    "Each month is compared with what that same calendar month normally looks like in this region, and with the region's long-term drift, so the leftover is genuine departure rather than season or slow warming.",
+  network:
+    "Each dot is a variable measured here. A line means the two move together. Arrowheads point at the one that reacts, so the drawing shows the computed direction of influence.",
+};
+
+function initIxTooltips() {
+  const tip = document.createElement("div");
+  tip.className = "ix-tooltip";
+  tip.setAttribute("role", "tooltip");
+  tip.hidden = true;
+  document.body.appendChild(tip);
+
+  const show = (el) => {
+    const text = el.getAttribute("data-tip");
+    if (!text) return;
+    tip.textContent = text;
+    tip.hidden = false;
+    const box = el.getBoundingClientRect();
+    const tw = tip.offsetWidth, th = tip.offsetHeight;
+    let left = box.left + box.width / 2 - tw / 2;
+    left = Math.max(10, Math.min(window.innerWidth - tw - 10, left));
+    let top = box.top - th - 10;
+    if (top < 10) top = box.bottom + 10;
+    tip.style.left = left + "px";
+    tip.style.top = top + "px";
+  };
+  const hide = () => { tip.hidden = true; };
+
+  document.addEventListener("mouseover", (e) => {
+    const el = e.target.closest && e.target.closest("[data-tip]");
+    if (el) show(el);
+  });
+  document.addEventListener("mouseout", (e) => {
+    const el = e.target.closest && e.target.closest("[data-tip]");
+    if (el) hide();
+  });
+  document.addEventListener("focusin", (e) => {
+    const el = e.target.closest && e.target.closest("[data-tip]");
+    if (el) show(el);
+  });
+  document.addEventListener("focusout", hide);
+  window.addEventListener("scroll", hide, true);
+}
+
+/* A term with a dotted underline and a tooltip. Keyboard focusable so the
+   definitions are reachable without a mouse. */
+function tipTerm(label, tipKey, extraClass) {
+  const text = IX_TIPS[tipKey] || "";
+  return '<span class="ix-term ' + (extraClass || "") + '" tabindex="0" data-tip="' +
+    esc(text) + '">' + label + '<i class="ix-q" aria-hidden="true">?</i></span>';
+}
+
+/* The guide that explains the three views before any numbers appear. */
+function ixGuideHTML() {
+  return '<details class="ix-guide">' +
+    '<summary><span class="ixg-title">HOW TO READ THIS SCREEN</span>' +
+    '<span class="ixg-sub">Three views of the same question, in plain English</span>' +
+    '<span class="ix-chev">\u25b8</span></summary>' +
+    '<div class="ix-guide-body">' +
+      '<div class="ixg-col">' +
+        '<h5>01 \u00b7 LOCAL COUPLING</h5>' +
+        '<p><b>Which variables here move together, and which one moves first.</b> ' +
+        'The engine tests the available pairs using your selected period of monthly data. ' +
+        'It removes the seasonal cycle, the long-term trend and the effect of air temperature, ' +
+        'then asks whether what is left still lines up. Supported lead relationships identify candidates: when one consistently ' +
+        'changes before the other, the display reports the measured lag. This does not establish a physical cause.</p>' +
+      '</div>' +
+      '<div class="ixg-col">' +
+        '<h5>02 \u00b7 GLOBAL IMPACTS</h5>' +
+        '<p><b>Where this variable shows up far away.</b> ' +
+        'We find the months when the driver ran unusually high, then look at what other ' +
+        'variables were doing elsewhere at the same time or up to two years later. ' +
+        'A row is reported only if the remote variable really shifted \u2014 and after we throw out ' +
+        'results that are merely the luckiest of dozens of tests.</p>' +
+      '</div>' +
+      '<div class="ixg-col">' +
+        '<h5>03 \u00b7 DRIVER ANOMALY</h5>' +
+        '<p><b>When this variable departed from its own normal.</b> ' +
+        'Every month is compared with what that same calendar month usually looks like, ' +
+        'and with the region\u2019s slow long-term drift. What remains is the genuine surprise: ' +
+        'the months it ran hotter, drier, or windier than its own history predicts.</p>' +
+      '</div>' +
+      '<p class="ixg-foot">Every number on this screen is computed from the selected dataset’s monthly grid cells. ' +
+      'Nothing is looked up from a list of expected relationships. ' +
+      'Hover any underlined term for a definition.</p>' +
+    '</div></details>';
+}
+
+window.TerraLegacy = { render, clearResults, renderSatellite, renderDataModal };

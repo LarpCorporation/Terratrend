@@ -1,0 +1,60 @@
+{
+  "base_head_unchanged": "2fbda28faa2fb9467535d690669c610737457732",
+  "original_snapshot_files_preserved": 6783,
+  "intentionally_updated_snapshot_files": [
+    "README.md",
+    "docs/UI_OVERHAUL_IMPLEMENTATION.md",
+    "frontend/app.js"
+  ],
+  "missing_original_files": [],
+  "existing_deletion_preserved": "backend/literature.py",
+  "git_status": "## dev...origin/dev [ahead 27]\n M .gitignore\n M README.md\n M backend/analysis.py\n M backend/catalog.py\n M backend/interconnect.py\n D backend/literature.py\n M backend/power_client.py\n M backend/server.py\n M backend/test_analysis.py\n M backend/test_contract.py\n M frontend/app.js\n M frontend/index.html\n M frontend/styles.css\n?? CONTINUE_LOCALLY.txt\n?? LOCAL_SESSION_HANDOFF.md\n?? TerraTrend_Algorithms_and_Data_Architecture.pdf\n?? backend/data_sources.py\n?? backend/geography.py\n?? backend/jobs.py\n?? backend/nasa_data.py\n?? backend/spatial.py\n?? backend/test_geographic_workflow.py\n?? backend/test_nasa_data.py\n?? backend/test_statistics.py\n?? backend/test_window.py\n?? docs/LEGACY_README.md\n?? docs/LOCAL_VERIFICATION.md\n?? docs/TerraTrend_Algorithms_and_Data_Architecture.pdf\n?? docs/UI_OVERHAUL_IMPLEMENTATION.md\n?? docs/UI_OVERHAUL_REVIEW.md\n?? docs/local-handoff/\n?? docs/screenshot-cybermap.png\n?? frontend/data/\n?? frontend/earth-renderer.js\n?? frontend/map-panels.js\n?? frontend/overhaul.css\n?? frontend/selection-geometry.js\n?? frontend/selection-tools.js\n?? frontend/textures/\n?? frontend/theme.css\n?? frontend/vendor/\n?? frontend/workflow.js\n?? requirements.txt\n?? start.sh\n?? tests/\n",
+  "running_api": {
+    "/api/health": {
+      "ok": true,
+      "uptime_s": 3220.2
+    },
+    "/api/catalog": {
+      "automatic_data": true,
+      "custom_selections": true,
+      "years": {
+        "min": 1981,
+        "max": 2026
+      }
+    },
+    "/api/data-sources": {
+      "providers": [
+        "nasa-merra2",
+        "project-cache"
+      ],
+      "earthdata": {
+        "configured": true,
+        "reader_installed": true,
+        "variables": [
+          "T2M",
+          "TS",
+          "QV2M",
+          "PS",
+          "GWETROOT",
+          "GWETTOP",
+          "EVLAND",
+          "PRECTOTCORR"
+        ],
+        "resource": "Giovanni",
+        "source": "NASA GES DISC / MERRA-2",
+        "login_url": "https://urs.earthdata.nasa.gov/",
+        "storage": "Server memory for this session; or EARTHDATA_TOKEN environment variable"
+      }
+    }
+  },
+  "verified_automatic_fields": [
+    "GWETROOT",
+    "T2M",
+    "TS",
+    "QV2M",
+    "PS",
+    "GWETTOP",
+    "EVLAND",
+    "PRECTOTCORR"
+  ]
+}

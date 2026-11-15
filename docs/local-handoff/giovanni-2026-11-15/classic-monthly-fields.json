@@ -1,0 +1,53 @@
+{
+  "url": "https://giovanni.gsfc.nasa.gov/giovanni/daac-bin/catalogServices.pl?q=%28dataFieldId%3A%22M2TMNXSLV_5_12_4_T2M%22+OR+dataFieldId%3A%22M2TMNXSLV_5_12_4_TS%22+OR+dataFieldId%3A%22M2TMNXSLV_5_12_4_QV2M%22+OR+dataFieldId%3A%22M2TMNXSLV_5_12_4_PS%22+OR+dataFieldId%3A%22M2TMNXLND_5_12_4_GWETROOT%22+OR+dataFieldId%3A%22M2TMNXLND_5_12_4_GWETTOP%22+OR+dataFieldId%3A%22M2TMNXLND_5_12_4_EVLAND%22+OR+dataFieldId%3A%22M2TMNXFLX_5_12_4_PRECTOTCORR%22%29+AND+dataFieldActive%3Atrue&wt=json&rows=20",
+  "fields": [
+    {
+      "dataFieldLongName": "Bias corrected total surface precipitation",
+      "dataFieldId": "M2TMNXFLX_5_12_4_PRECTOTCORR",
+      "dataFieldUnits": "kg m-2 s-1",
+      "dataProductTimeInterval": "monthly"
+    },
+    {
+      "dataFieldId": "M2TMNXLND_5_12_4_GWETTOP",
+      "dataProductTimeInterval": "monthly",
+      "dataFieldUnits": "1",
+      "dataFieldLongName": "Surface soil wetness"
+    },
+    {
+      "dataProductTimeInterval": "monthly",
+      "dataFieldUnits": "hPa",
+      "dataFieldId": "M2TMNXSLV_5_12_4_PS",
+      "dataFieldLongName": "Surface pressure"
+    },
+    {
+      "dataFieldUnits": "kg kg-1",
+      "dataProductTimeInterval": "monthly",
+      "dataFieldId": "M2TMNXSLV_5_12_4_QV2M",
+      "dataFieldLongName": "2-meter specific humidity"
+    },
+    {
+      "dataFieldUnits": "K",
+      "dataProductTimeInterval": "monthly",
+      "dataFieldId": "M2TMNXSLV_5_12_4_T2M",
+      "dataFieldLongName": "2-meter air temperature"
+    },
+    {
+      "dataFieldLongName": "Surface skin temperature",
+      "dataFieldUnits": "K",
+      "dataProductTimeInterval": "monthly",
+      "dataFieldId": "M2TMNXSLV_5_12_4_TS"
+    },
+    {
+      "dataFieldLongName": "Evaporation land",
+      "dataFieldUnits": "kg m-2 s-1",
+      "dataProductTimeInterval": "monthly",
+      "dataFieldId": "M2TMNXLND_5_12_4_EVLAND"
+    },
+    {
+      "dataFieldLongName": "Root zone soil wetness",
+      "dataFieldId": "M2TMNXLND_5_12_4_GWETROOT",
+      "dataFieldUnits": "1",
+      "dataProductTimeInterval": "monthly"
+    }
+  ]
+}

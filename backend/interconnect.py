@@ -172,12 +172,22 @@ def decompose_monthly(values):
 # --------------------------------------------------------------------------
 # correlation toolkit
 # --------------------------------------------------------------------------
+def effective_sample_size(xs,ys):
+    _,ax,ay=_mask_pairs(xs,ys)
+    n=len(ax)
+    if n<8:return float(n)
+    rx=calculate_pearson(xs[:-1],xs[1:])
+    ry=calculate_pearson(ys[:-1],ys[1:])
+    product=max(0.,min(.99,rx*ry))
+    return max(4.,min(float(n),n*(1-product)/(1+product)))
+
+
 def cross_corr_best(xs, ys, max_lag=DEFAULT_MAX_LAG):
     _, ax, ay = _mask_pairs(xs, ys)
     if len(ax) < 8:
         return {"r": 0.0, "p": 1.0, "lag": 0, "r0": 0.0, "n": len(ax)}
     r0 = calculate_pearson(ax, ay)
-    best = {"r": abs(r0), "p": pearson_significance(r0, len(ax)),
+    best = {"r": abs(r0), "p": pearson_significance(r0, effective_sample_size(xs,ys)),
             "lag": 0, "r0": r0, "n": len(ax)}
     for tau in range(-max_lag, max_lag + 1):
         if tau == 0:
@@ -192,11 +202,14 @@ def cross_corr_best(xs, ys, max_lag=DEFAULT_MAX_LAG):
         if len(bx) < 8:
             continue
         r = calculate_pearson(bx, by)
-        p = pearson_significance(r, len(bx))
+        p = pearson_significance(r, effective_sample_size(xw,yw))
         if abs(r) > best["r"]:
             best = {"r": abs(r), "p": p, "lag": tau, "r0": r, "n": len(bx)}
     best["r"] = round(best["r"], 4)
-    best["p"] = round(best["p"], 5)
+    # The maximum was selected from a family of lag tests. Bonferroni is
+    # conservative but avoids treating the winning lag as prespecified.
+    best["p_raw"] = best["p"]
+    best["p"] = min(1.0, best["p"] * (2*max_lag+1))
     best["r0"] = round(best["r0"], 4)
     return best
 
@@ -221,7 +234,16 @@ def partial_corr(xs, ys, zs):
 
 
 def granger_f_test(xs, ys, lag=3):
-    _, ax, ay = _mask_pairs(xs, ys)
+    # Keep calendar lags intact: use the longest complete contiguous block.
+    blocks, block = [], []
+    for x,y in zip(xs,ys):
+        if x is None or y is None:
+            if block:blocks.append(block)
+            block=[]
+        else:block.append((x,y))
+    if block:blocks.append(block)
+    longest=max(blocks,key=len,default=[])
+    ax=[p[0] for p in longest];ay=[p[1] for p in longest]
     n = len(ax)
     if n < lag * 3 + 4:
         return None, None
@@ -273,6 +295,7 @@ def analyze_local_couplings(region, series_by_var, months, confounder="T2M"):
 
     var_ids = list(decomps.keys())
     pairs = []
+    family=[]
     for i in range(len(var_ids)):
         for j in range(i + 1, len(var_ids)):
             a, b = var_ids[i], var_ids[j]
@@ -282,9 +305,11 @@ def analyze_local_couplings(region, series_by_var, months, confounder="T2M"):
             ccf = cross_corr_best(ax, by)
             if ccf["n"] < 8:
                 continue
-            part = partial_corr(ax, by, confound) if confound is not None \
+            part = partial_corr(ax, by, confound) if confound is not None and confounder not in {a,b} \
                 else {"r": None, "p": None, "n": ccf["n"]}
             g_ab, g_ba = granger_f_test(ax, by)
+            discovery_p=min(1.,2*min(ccf["p"],part["p"] if part["p"] is not None else 1.))
+            family.append(discovery_p)
 
             lag = ccf["lag"]
             if lag > 1:
@@ -312,6 +337,8 @@ def analyze_local_couplings(region, series_by_var, months, confounder="T2M"):
             # must also explain a meaningful share of variance.
             if abs(ccf["r"]) < MIN_LOCAL_R:
                 continue
+            if ccf["p"]>=ALPHA:
+                driver,response,lag_note=None,None,"Association without a supported temporal lead"
             if ccf["p"] >= ALPHA and (part["p"] is None or part["p"] >= ALPHA):
                 continue
 
@@ -334,6 +361,7 @@ def analyze_local_couplings(region, series_by_var, months, confounder="T2M"):
                 "r": round(ccf["r0"], 3),
                 "r_lagged": round(ccf["r"], 3),
                 "p": round(ccf["p"], 5),
+                "p_discovery": discovery_p,
                 "lag_months": lag,
                 "driver": driver,
                 "response": response,
@@ -347,6 +375,9 @@ def analyze_local_couplings(region, series_by_var, months, confounder="T2M"):
                 "confidence": confidence,
             })
 
+    for pair in pairs:
+        pair["p_adjusted"]=bh_adjusted_p(pair["p_discovery"],family)
+    pairs=[p for p in pairs if p["p_adjusted"]<=.10]
     pairs.sort(key=lambda p: (
         0 if p["p"] < ALPHA else 1,
         -(abs(p["r_lagged"]) if p["p"] < ALPHA else abs(p["r_partial"] or 0)),
@@ -442,10 +473,12 @@ def impact_pair(src_anom, tgt_anom, months, max_lag=GLOBAL_MAX_LAG):
     tgt_sigma = _std(tgt_anom) or 1.0
 
     during, outside = [], []
-    for i in range(min(len(src_anom), len(tgt_anom))):
-        if src_anom[i] is None or tgt_anom[i] is None:
+    lag = ccf["lag"]
+    for i in range(len(src_anom)):
+        j=i+lag
+        if j<0 or j>=len(tgt_anom) or src_anom[i] is None or tgt_anom[j] is None:
             continue
-        (during if src_anom[i] > src_sigma else outside).append(tgt_anom[i])
+        (during if src_anom[i] > src_sigma else outside).append(tgt_anom[j])
     if not during or not outside:
         return None
 
@@ -500,6 +533,59 @@ def mechanism_sentence(src_reg, src_var, tgt_reg, tgt_var, diag):
     return " ".join(pieces)
 
 
+def bh_adjusted_p(p, family):
+    ordered=sorted(family)
+    if not ordered:return 1.0
+    return min(1.0,min(value*len(ordered)/(i+1) for i,value in enumerate(ordered) if value>=p))
+
+
+def conditional_driver_model(target, candidates, max_drivers=4):
+    """Exploratory joint lagged model; conditional prediction, not attribution.
+
+    Includes three target-history terms. Complete regression rows retain their
+    original monthly coordinates. Each candidate is tested by removing its
+    term from the joint model, with BH correction across retained candidates.
+    No independent validation is claimed for this in-sample diagnostic.
+    """
+    unique=[]
+    for c in candidates:
+        if c["id"] not in [p["id"] for p in unique]:unique.append(c)
+    chosen=unique[:max_drivers]
+    if not chosen:return {"ok":False,"reason":"No directional candidates with joint coverage"}
+    lags=[max(1,min(24,int(c["lag"]))) for c in chosen]
+    Y,X=[],[]
+    for t in range(max(3,max(lags)),len(target)):
+        if target[t] is None:continue
+        row=[target[t-i] for i in (1,2,3)]
+        row += [c["values"][t-lag] if t-lag<len(c["values"]) else None for c,lag in zip(chosen,lags)]
+        if any(v is None for v in row):continue
+        Y.append(target[t]);X.append(row)
+    if len(Y)<max(36,8*(len(chosen)+4)):
+        return {"ok":False,"reason":"Not enough overlapping months for a joint model"}
+    beta,rss=_ols(Y,X)
+    if beta is None or rss is None or rss<=1e-12:
+        return {"ok":False,"reason":"Predictors are collinear or the fit is degenerate"}
+    df=len(Y)-len(X[0])-1
+    rows=[]
+    target_sd=_std(Y) or 1.
+    for i,c in enumerate(chosen):
+        col=3+i
+        _,reduced=_ols(Y,[r[:col]+r[col+1:] for r in X])
+        if reduced is None:continue
+        f=max(0.,(reduced-rss)/(rss/df))
+        p=max(0.,min(1.,1-_f_cdf(f,1,df)))
+        rows.append({"id":c["id"],"lag_months":lags[i],"p":p,
+            "standardized_coefficient":beta[col+1]*(_std([r[col] for r in X]) or 1.)/target_sd})
+    family=[r["p"] for r in rows]
+    for row in rows:
+        row["p_adjusted"]=bh_adjusted_p(row["p"],family)
+        row["significant"]=row["p_adjusted"]<.05
+    total=sum((y-_mean(Y))**2 for y in Y)
+    return {"ok":True,"n":len(Y),"drivers":rows,"r_squared":max(0.,1-rss/total) if total else 0.,
+        "evidence":"Exploratory conditional prediction; in-sample, candidate-selected, physical causation not established",
+        "method":"Joint lagged regression with 3 target-history terms; conditional F tests; BH across candidates"}
+
+
 def benjamini_hochberg(pvals, q=0.10):
     """Benjamini-Hochberg FDR control.
 
@@ -551,20 +637,21 @@ def describe_coupling(a, b, pair):
     parts.append(lead.capitalize() + ".")
 
     phase = ("in the same direction" if r > 0 else "in opposite directions")
+    p_text="p<0.001" if p<.001 else f"p={p:.3f}"
     parts.append(f"After the seasonal cycle and shared trend are removed they stay correlated "
-                 f"{phase} at r={r:+.2f} (p={p:.3f}), so about {abs(r) * 100:.0f}% of the "
-                 f"month-to-month variation is shared.")
+                 f"{phase} at r={r:+.2f} ({p_text}). The squared correlation corresponds to "
+                 f"about {r*r*100:.0f}% shared month-to-month variation in this linear comparison.")
 
     if partial is not None:
         if abs(partial) < 0.15:
-            parts.append("The link disappears once air temperature is controlled, so this is "
-                         "largely a shared thermal response rather than a direct coupling.")
+            parts.append("The association weakens substantially when air temperature is controlled, "
+                         "consistent with a shared thermal response.")
         elif abs(partial) < abs(r) * 0.7:
             parts.append(f"Controlling for air temperature weakens it to r={partial:+.2f}, so "
-                         f"temperature explains part of the relationship.")
+                         f"the association depends partly on the temperature control.")
         else:
-            parts.append(f"It survives the temperature control at r={partial:+.2f}, which is "
-                         f"evidence of a direct {sphere_a}–{sphere_b} link.")
+            parts.append(f"It remains at r={partial:+.2f} after the temperature control; "
+                         "other shared influences may still be present.")
 
     if ga is not None and gb is not None:
         if ga < 0.05 and (gb is None or ga < gb):
@@ -574,8 +661,10 @@ def describe_coupling(a, b, pair):
             parts.append(f"{name_b}'s own past improves the prediction of {name_a} "
                          f"(Granger p={gb:.3f}).")
         else:
-            parts.append("Neither history predicts the other beyond their shared variance, "
+            parts.append("Neither predictive-direction test passes its threshold, "
                          "so the ordering between them is unresolved.")
+
+    parts.append("This exploratory association does not establish physical causation or attribute the long-term trend.")
 
     return " ".join(parts)
 

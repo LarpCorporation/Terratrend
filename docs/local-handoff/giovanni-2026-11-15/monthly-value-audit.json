@@ -1,0 +1,42 @@
+{
+  "series": [
+    {
+      "area": "A",
+      "variable": "T2M",
+      "csv_bytes": 3386,
+      "valid_months": 108,
+      "complete_years": 9,
+      "max_value_error": 0.0,
+      "job_id": "6217fbca-ebde-40ea-a5e9-bc42b294050c"
+    },
+    {
+      "area": "A",
+      "variable": "QV2M",
+      "csv_bytes": 3622,
+      "valid_months": 108,
+      "complete_years": 9,
+      "max_value_error": 0.0,
+      "job_id": "b8fe658c-24b8-4381-9d13-f42d3f305dc6"
+    },
+    {
+      "area": "B",
+      "variable": "T2M",
+      "csv_bytes": 3382,
+      "valid_months": 108,
+      "complete_years": 9,
+      "max_value_error": 0.0,
+      "job_id": "6639a616-658d-4b1c-bc67-13b498feb411"
+    },
+    {
+      "area": "B",
+      "variable": "QV2M",
+      "csv_bytes": 3624,
+      "valid_months": 108,
+      "complete_years": 9,
+      "max_value_error": 0.0,
+      "job_id": "752362a5-859c-4b52-a133-da45f5fd8e55"
+    }
+  ],
+  "total_regional_csv_bytes": 14014,
+  "scope": "Only returned CSV bytes; API status, metadata and transport overhead are additional."
+}

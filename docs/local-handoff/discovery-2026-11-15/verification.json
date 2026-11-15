@@ -1,0 +1,62 @@
+{
+  "date": "2026-11-15",
+  "request_review_only": true,
+  "matching_discovery_job_id": "679c7470f861e923722f",
+  "matching_job_exists": false,
+  "observation_cache_files": 1167,
+  "observation_cache_bytes": 35428316,
+  "baseline_cache_files": 1167,
+  "baseline_cache_bytes": 35428316,
+  "earthdata_connection_retained": true,
+  "automatic_measurements": [
+    "T2M",
+    "TS",
+    "PRECTOTCORR",
+    "QV2M",
+    "EVLAND",
+    "GWETROOT",
+    "GWETTOP",
+    "PS"
+  ],
+  "offline_geometry_plan": {
+    "area": "Africa",
+    "bbox": [
+      -25.341553,
+      -53.18457,
+      73.837793,
+      37.340381
+    ],
+    "native_cells": 8594,
+    "native_windows": [
+      [
+        74,
+        255,
+        247,
+        406
+      ]
+    ],
+    "window_cells": 29120,
+    "planning_seconds": 0.65,
+    "monthly_files_per_variable": 240,
+    "float32_value_MB_per_variable": 27.9552,
+    "float64_value_MB_per_variable": 55.9104,
+    "eight_variables_value_MB_range": [
+      223.6416,
+      447.2832
+    ]
+  },
+  "cold_cache_plan_MB": {
+    "single_measurement": 68.56704,
+    "eight_measurements": 548.53632
+  },
+  "frontend_tests_passed": 60,
+  "backend_tests_passed": 146,
+  "backend_skipped": 1,
+  "backend_passing_subtests": 5,
+  "review_module_coverage": {
+    "lines_percent": 100,
+    "branches_percent": 82.35,
+    "functions_percent": 90,
+    "command": "node --experimental-test-coverage --test tests/data-review.test.cjs"
+  }
+}

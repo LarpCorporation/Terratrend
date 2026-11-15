@@ -49,13 +49,63 @@ def _z_from_s(s, var):
     return 0.0
 
 
-def mk_test(ys):
-    """Mann-Kendall trend test. Returns (z, p, tau, h)."""
+def _lag1_autocorr(ys):
+    """Lag-1 autocorrelation of a series, clamped to a stable range.
+
+    Estimated on detrended residuals. If it were estimated on the raw series,
+    any strong monotonic trend would itself look like autocorrelation
+    (r1 -> 1) and the variance correction would erase a real trend.
+    """
+    n = len(ys)
+    if n < 4:
+        return 0.0
+    xs = list(range(n))
+    slope, intercept = theil_sen(ys, xs)
+    resid = [y - (intercept + slope * x) for x, y in zip(xs, ys)]
+    m = sum(resid) / n
+    num = sum((resid[i] - m) * (resid[i + 1] - m) for i in range(n - 1))
+    den = sum((v - m) ** 2 for v in resid)
+    if den <= 1e-12:
+        return 0.0
+    r1 = num / den
+    # Clamp so the variance inflation factor stays finite and positive.
+    return max(-0.99, min(0.99, r1))
+
+
+def _ar1_variance_factor(ys):
+    """Variance inflation for MK under AR(1) serial correlation.
+
+    Mann-Kendall assumes independent samples. Annual climate series are
+    autocorrelated (one warm year tends to follow another), which makes the
+    variance of S too small and the p-value too optimistic. This factor
+    rescales Var(S) by (1+r1)/(1-r1) -- the standard first-order correction.
+
+    The factor is floored at 1.0 on purpose. When the residuals happen to look
+    negatively autocorrelated the formula would *shrink* the variance and buy
+    extra confidence from what is usually small-sample noise (with n=20 the
+    standard error of r1 is ~0.22). A trend test should never be made more
+    certain by a correction it did not need, so the correction can only widen
+    the interval, never narrow it.
+    """
+    r1 = _lag1_autocorr(ys)
+    return max(1.0, (1.0 + r1) / (1.0 - r1)), r1
+
+
+def mk_test(ys, autocorr=False):
+    """Mann-Kendall trend test. Returns (z, p, tau, h).
+
+    autocorr=True applies the AR(1) variance correction, which is the honest
+    choice for annual means. The uncorrected test is kept as the default so
+    existing callers and tests keep their meaning.
+    """
     n = len(ys)
     if n < 8:
         return 0.0, 1.0, 0.0, False
     s = _s_stat(ys)
     var = _var_s(ys)
+    if autocorr:
+        factor, _r1 = _ar1_variance_factor(ys)
+        var *= factor
     z = _z_from_s(s, var)
     p = 2.0 * (1.0 - _norm_cdf(abs(z)))
     tau = s / (0.5 * n * (n - 1))
@@ -299,25 +349,35 @@ def t_test_trend(ys, xs=None):
     }
 
 
-def analyze_series(values, dt_per_step=1.0, dt_label="year"):
+def analyze_series(values, dt_per_step=1.0, dt_label="year", percent_ok=True, xs=None):
     """Full trend analysis of one ordered series.
 
     dt_per_step: time between samples in years (1.0 for annual, 1/12 for monthly).
+    percent_ok: whether percent change is meaningful for this variable's scale.
     """
-    pts = [(i, v) for i, v in enumerate(values) if v is not None]
+    if xs is not None and len(xs) != len(values):
+        raise ValueError("Time coordinates must match the values")
+    pts = [(xs[i] if xs is not None else i, v) for i, v in enumerate(values) if v is not None]
     if len(pts) < 8:
         return {"ok": False, "reason": "insufficient data (<8 points)"}
     xs = [p[0] for p in pts]
     ys = [p[1] for p in pts]
 
-    z, p, tau, h = mk_test(ys)
+    # Mann-Kendall with the AR(1) correction: annual means are serially
+    # correlated, and the uncorrected test overstates significance.
+    z, p, tau, h = mk_test(ys, autocorr=True)
+    z_raw, p_raw, _tau_raw, _h_raw = mk_test(ys, autocorr=False)
+    ac_factor, ac_r1 = _ar1_variance_factor(ys)
     slope, intercept = theil_sen(ys, xs)
     ci_lo, ci_hi = theil_sen_ci(ys, xs)
     tt = t_test_trend(ys, xs)
 
     first, last = ys[0], ys[-1]
     total = last - first
-    pct = (total / abs(first) * 100.0) if first != 0 else None
+    # Percent change is only meaningful for ratio-scale variables. For Celsius
+    # or kPa it is an artefact of an arbitrary zero point, so callers decide by
+    # passing percent_ok; the default stays permissive for backwards compat.
+    pct = (total / abs(first) * 100.0) if (first != 0 and percent_ok) else None
     stars = stars_for(p)
 
     direction = "flat"
@@ -341,9 +401,16 @@ def analyze_series(values, dt_per_step=1.0, dt_label="year"):
         "direction": direction,
         "change_total": total,
         "change_pct": pct,
+        # serial-correlation diagnostics: what the correction did, so a reader
+        # can see whether the p-value was materially adjusted
+        "autocorr_r1": ac_r1,
+        "autocorr_factor": ac_factor,
+        "p_uncorrected": p_raw,
+        "z_uncorrected": z_raw,
         "per_decade": slope * 10.0 / dt_per_step,
         # classic OLS + t-test, reported alongside Mann-Kendall
         "t_slope": tt["slope"] if tt else None,
+        "t_se": tt["se"] if tt else None,
         "t_per_decade": (tt["slope"] * 10.0 / dt_per_step) if tt else None,
         "t_p": tt["p"] if tt else None,
         "t_df": tt["df"] if tt else None,
@@ -492,27 +559,100 @@ def analyze_cross_coupling(var_a, var_b, series_a, series_b, stats_a=None, stats
 
 
 def analyze_regional_contrast(var, reg_a, reg_b, series_a, series_b, stats_a, stats_b):
-    """Compare how the same variable trends between two distinct geographical regions."""
-    ts_a = [p["value"] for p in series_a if p.get("value") is not None]
-    ts_b = [p["value"] for p in series_b if p.get("value") is not None]
+    """Compare rates and test the calendar-aligned A-minus-B time series.
+
+    The paired test retains covariance between regions. Individual Sen rates
+    and their arithmetic difference remain separate from the Sen trend of the
+    paired difference. The OLS fallback supports older summary-only callers.
+    """
+    a_years = {p["year"]:p["value"] for p in series_a if p.get("value") is not None and p.get("complete",True)}
+    b_years = {p["year"]:p["value"] for p in series_b if p.get("value") is not None and p.get("complete",True)}
+    common = sorted(a_years.keys() & b_years.keys())
+    ts_a = [a_years[y] for y in common]
+    ts_b = [b_years[y] for y in common]
     r = calculate_pearson(ts_a, ts_b)
 
     slope_a = (stats_a.get("slope") or 0.0) * 10.0
     slope_b = (stats_b.get("slope") or 0.0) * 10.0
     diff = slope_a - slope_b
 
+    # Standard error of the difference between two independent OLS slopes.
+    se_a = (stats_a.get("t_se") or 0.0) * 10.0
+    se_b = (stats_b.get("t_se") or 0.0) * 10.0
+    se_diff = math.sqrt(se_a ** 2 + se_b ** 2) if (se_a or se_b) else None
+
+    p_diff = None
+    diff_z = None
+    paired = None
+    if se_diff and se_diff > 0:
+        diff_z = diff / se_diff
+        p_diff = max(0.0, min(1.0, 2.0 * (1.0 - _norm_cdf(abs(diff_z)))))
+    # Paired difference series keeps calendar alignment and the covariance
+    # between regions, and uses the same Sen/MK machinery as each headline.
+    if len(common) >= 8:
+        paired = analyze_series([a_years[y]-b_years[y] for y in common], xs=common, percent_ok=False)
+        p_diff = paired.get("p")
+        diff_z = None
+    diff_significant = bool(p_diff is not None and p_diff < ALPHA)
+
     dir_a = stats_a.get("direction", "flat")
     dir_b = stats_b.get("direction", "flat")
+    sig_a = bool(stats_a.get("significant"))
+    sig_b = bool(stats_b.get("significant"))
 
-    if dir_a == dir_b and dir_a != "flat":
-        verdict = f"PARALLEL TREND ({dir_a.upper()})"
-        explanation = f"Both {reg_a.get('name')} and {reg_b.get('name')} exhibit {dir_a} {var.get('name')}. Regional co-trend r = {r:.2f}."
-    elif (dir_a == "rising" and dir_b == "falling") or (dir_a == "falling" and dir_b == "rising"):
-        verdict = "DIVERGENT / OPPOSING"
-        explanation = f"Contrasting Earth system response: {reg_a.get('name')} trends {dir_a} ({slope_a:+.2f} {var.get('unit')}/dec) while {reg_b.get('name')} trends {dir_b} ({slope_b:+.2f} {var.get('unit')}/dec)."
-    else:
+    if diff_significant:
+        if sig_a != sig_b:
+            verdict = "LOCALIZED SIGNAL"
+            explanation = (
+                f"The trend is significant in {reg_a.get('name') if sig_a else reg_b.get('name')} "
+                f"and not significant in {reg_b.get('name') if sig_a else reg_a.get('name')}. "
+                f"The paired difference also changes over time (p = {p_diff:.3f})."
+            )
+        elif (dir_a == "rising" and dir_b == "falling") or \
+           (dir_a == "falling" and dir_b == "rising"):
+            verdict = "DIVERGENT / OPPOSING"
+            explanation = (
+                f"Statistically divergent: {reg_a.get('name')} trends {dir_a} "
+                f"({slope_a:+.2f} {var.get('unit')}/dec) while "
+                f"{reg_b.get('name')} trends {dir_b} "
+                f"({slope_b:+.2f} {var.get('unit')}/dec); the difference is "
+                f"significant (p = {p_diff:.3f})."
+            )
+        else:
+            verdict = "SIGNIFICANTLY DIFFERENT RATES"
+            explanation = (
+                f"Both regions trend the same way, but at different rates: "
+                f"{reg_a.get('name')} {slope_a:+.2f} vs {reg_b.get('name')} "
+                f"{slope_b:+.2f} {var.get('unit')}/dec (difference p = "
+                f"{p_diff:.3f})."
+            )
+    elif sig_a and not sig_b:
         verdict = "LOCALIZED SIGNAL"
-        explanation = f"Localized change: one region exhibits significant trend while the other remains climatologically stable."
+        explanation = (
+            f"{reg_a.get('name')} shows a significant {dir_a} trend "
+            f"({slope_a:+.2f} {var.get('unit')}/dec); {reg_b.get('name')} does "
+            f"not. The difference between them is not itself significant "
+            f"(p = {p_diff:.3f})." if p_diff is not None else
+            f"{reg_a.get('name')} shows a significant {dir_a} trend; "
+            f"{reg_b.get('name')} does not."
+        )
+    elif sig_b and not sig_a:
+        verdict = "LOCALIZED SIGNAL"
+        explanation = (
+            f"{reg_b.get('name')} shows a significant {dir_b} trend "
+            f"({slope_b:+.2f} {var.get('unit')}/dec); {reg_a.get('name')} does "
+            f"not. The difference between them is not itself significant "
+            f"(p = {p_diff:.3f})." if p_diff is not None else
+            f"{reg_b.get('name')} shows a significant {dir_b} trend; "
+            f"{reg_a.get('name')} does not."
+        )
+    else:
+        verdict = "NO SIGNIFICANT DIFFERENCE"
+        explanation = (
+            f"The paired contrast does not show a statistically significant "
+            f"change over time"
+            + (f" (p = {p_diff:.3f})." if p_diff is not None else ".")
+        )
 
     return {
         "var_id": var.get("id"),
@@ -528,6 +668,13 @@ def analyze_regional_contrast(var, reg_a, reg_b, series_a, series_b, stats_a, st
         "p_b": round(stats_b.get("p", 1.0), 3),
         "sig_a": stats_a.get("significant", False),
         "sig_b": stats_b.get("significant", False),
+        # the actual test the verdict is based on
+        "p_diff": round(p_diff, 4) if p_diff is not None else None,
+        "diff_z": round(diff_z, 3) if diff_z is not None else None,
+        "diff_significant": diff_significant,
+        "paired_difference_per_decade": paired.get("per_decade") if paired else None,
+        "difference_method": "Calendar-aligned paired Sen/Mann-Kendall" if paired else "Independent OLS standard-error approximation",
+        "common_years": common,
         "verdict": verdict,
         "explanation": explanation,
     }
@@ -545,44 +692,24 @@ def pearson_significance(r, n):
 
 
 def explain_teleconnection(src_reg, src_var, dst_reg, dst_var, r, p):
-    """Generate a scientific plain-English mechanism explanation for a discovered teleconnection."""
-    src_rid = src_reg.get("id", "")
-    src_vid = src_var.get("id", "")
-    dst_rid = dst_reg.get("id", "")
-    dst_vid = dst_var.get("id", "")
+    """Plain-English description of a discovered teleconnection.
 
-    # ENSO / Pacific Trade Wind teleconnections
-    if src_rid == "tropical_pacific" and src_vid in ("WS2M", "TS"):
-        if "ghana" in dst_rid and dst_vid in ("T2M", "TS"):
-            if r > 0:
-                return "Walker circulation displacement: equatorial Pacific sea warming drives concurrent thermal anomalies across the Gulf of Guinea and West Africa."
-            return "Trade wind breakdown teleconnection: Pacific wind relaxation correlates with West African heatwave amplification."
-        if dst_rid == "amazon" and dst_vid == "PRECTOTCORR":
-            return "Pacific-Atlantic Walker cell seesaw: eastward shift of deep convection during El Nino suppresses convective precipitation over the Amazon basin."
-        if dst_rid == "california" and dst_vid == "PRECTOTCORR":
-            return "Subtropical jet stream steering: warm ENSO conditions displace the Pacific storm track southward, driving atmospheric river precipitation into California."
-        if "sahel" in dst_rid and dst_vid in ("GWETROOT", "PRECTOTCORR"):
-            return "Monsoon modulation: equatorial Pacific sea surface thermal forcing alters Hadley circulation, impacting sub-Saharan convective moisture transport."
-
-    # Sahara desert thermal forcing
-    if src_rid == "sahara" and src_vid in ("T2M", "TS"):
-        if "sahel" in dst_rid and dst_vid in ("GWETROOT", "GWETTOP", "PRECTOTCORR"):
-            return "Sahara thermal low intensification: hyper-arid desert heating enhances boundary-layer moisture deficits, depleting root-zone soil wetness in the Sahel."
-        if dst_rid == "lake_volta" and dst_vid in ("EVPTRNS", "EVLAND"):
-            return "Advective evaporative demand: warm, dry Saharan air masses accelerate open-water evaporation over West African hydrological reservoirs."
-        if dst_rid == "mediterranean":
-            return "Subtropical ridge extension: Saharan thermal ridges extend northward, driving marine heatwaves and high pressure over the Mediterranean basin."
-
-    # Polar / Arctic amplification
-    if "greenland" in src_rid or "siberia" in src_rid:
-        if dst_rid == "europe" and dst_vid in ("T2M", "TS"):
-            return "Reduced pole-to-equator thermal gradient: Arctic warming weakens and destabilizes the polar jet stream, creating persistent blocking weather patterns over Europe."
-
-    # General planetary dipole or co-variation
+    This is a *presentation* helper only: the relationship itself was found by
+    the statistical pipeline in interconnect.py (lagged cross-correlation,
+    partial correlation, Granger F-tests, FDR control). The wording here is
+    derived purely from the computed sign and strength, so it can never assert
+    a mechanism the data did not support.
+    """
+    src = f"{src_var.get('name', 'the driver')} over {src_reg.get('name', 'the source region')}"
+    dst = f"{dst_var.get('name', 'the response')} over {dst_reg.get('name', 'the target region')}"
     if r >= 0.65:
-        return f"Planetary co-variation: strong positive teleconnection (r = {r:+.2f}, p = {p:.3f}) indicating synchronized global-scale climate variability."
+        return (f"Strong in-phase link (r = {r:+.2f}, p = {p:.3f}): {src} and "
+                f"{dst} move together.")
     if r <= -0.65:
-        return f"Global dipole seesaw: strong inverse teleconnection (r = {r:+.2f}, p = {p:.3f}) indicating mass or moisture displacement between regions."
+        return (f"Strong inverse link (r = {r:+.2f}, p = {p:.3f}): {src} rises "
+                f"while {dst} falls.")
     if r > 0:
-        return f"Direct teleconnection: positive co-trend (r = {r:+.2f}) linking {src_reg.get('name')} {src_var.get('name')} with {dst_reg.get('name')} {dst_var.get('name')}."
-    return f"Inverse teleconnection: opposing phase response (r = {r:+.2f}) linking {src_reg.get('name')} {src_var.get('name')} with {dst_reg.get('name')} {dst_var.get('name')}."
+        return (f"Positive link (r = {r:+.2f}, p = {p:.3f}): {src} tends to move "
+                f"with {dst}.")
+    return (f"Inverse link (r = {r:+.2f}, p = {p:.3f}): {src} tends to move "
+            f"opposite to {dst}.")

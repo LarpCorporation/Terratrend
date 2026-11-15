@@ -1,0 +1,92 @@
+{
+  "source_samples": [
+    {
+      "variable": "GWETROOT",
+      "granule": "G1278016337-GES_DISC",
+      "month": 200501,
+      "source_units": "1",
+      "shape": [
+        1,
+        13,
+        8
+      ],
+      "masked_cells_in_window": 2,
+      "units_after_conversion": "0\u20131",
+      "lat_range": [
+        5.0,
+        11.0
+      ],
+      "lon_range": [
+        -3.125,
+        1.25
+      ]
+    },
+    {
+      "variable": "T2M",
+      "granule": "G1278025954-GES_DISC",
+      "month": 200501,
+      "source_units": "K",
+      "shape": [
+        1,
+        13,
+        8
+      ],
+      "masked_cells_in_window": 0,
+      "units_after_conversion": "\u00b0C",
+      "lat_range": [
+        5.0,
+        11.0
+      ],
+      "lon_range": [
+        -3.125,
+        1.25
+      ]
+    }
+  ],
+  "monthly_coverage_checks": [
+    {
+      "area_slot": "A",
+      "area_id": "country:gha",
+      "variable": "GWETROOT",
+      "observed_months": 240,
+      "minimum_monthly_area_coverage": 1.0000000000000004,
+      "maximum_monthly_area_coverage": 1.0000000000000004,
+      "minimum_valid_native_cells": 85,
+      "maximum_valid_native_cells": 85,
+      "all_regional_values_match_cached_native_cells": true
+    },
+    {
+      "area_slot": "B",
+      "area_id": "custom:6886c3df83c68350e63f",
+      "variable": "GWETROOT",
+      "observed_months": 240,
+      "minimum_monthly_area_coverage": 1.0000000000000002,
+      "maximum_monthly_area_coverage": 1.0000000000000002,
+      "minimum_valid_native_cells": 55,
+      "maximum_valid_native_cells": 55,
+      "all_regional_values_match_cached_native_cells": true
+    },
+    {
+      "area_slot": "A",
+      "area_id": "country:gha",
+      "variable": "T2M",
+      "observed_months": 240,
+      "minimum_monthly_area_coverage": 1.0000000000000004,
+      "maximum_monthly_area_coverage": 1.0000000000000004,
+      "minimum_valid_native_cells": 85,
+      "maximum_valid_native_cells": 85,
+      "all_regional_values_match_cached_native_cells": true
+    },
+    {
+      "area_slot": "B",
+      "area_id": "custom:6886c3df83c68350e63f",
+      "variable": "T2M",
+      "observed_months": 240,
+      "minimum_monthly_area_coverage": 1.0000000000000002,
+      "maximum_monthly_area_coverage": 1.0000000000000002,
+      "minimum_valid_native_cells": 55,
+      "maximum_valid_native_cells": 55,
+      "all_regional_values_match_cached_native_cells": true
+    }
+  ]
+}

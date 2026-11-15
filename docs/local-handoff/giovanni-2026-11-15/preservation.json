@@ -1,0 +1,21 @@
+{
+  "head": "2fbda28faa2fb9467535d690669c610737457732",
+  "original_paths_checked": 99,
+  "changed_original_paths": [
+    "CONTINUE_LOCALLY.txt",
+    "LOCAL_SESSION_HANDOFF.md",
+    "backend/data_sources.py",
+    "backend/nasa_data.py",
+    "frontend/data-review.js",
+    "frontend/overhaul.css",
+    "frontend/workflow.js",
+    "tests/data-review.test.cjs",
+    "tests/workflow.test.cjs",
+    "README.md",
+    "backend/server.py",
+    "frontend/app.js",
+    "frontend/index.html"
+  ],
+  "newly_missing_original_paths": [],
+  "preexisting_literature_deletion_retained": true
+}

@@ -1,256 +1,95 @@
 # TerraTrend — Earth Change Observatory
 
-**NASA Space Apps Challenge** · *Change is always occurring in Earth's interconnected environmental system*
+TerraTrend is a NASA Space Apps project for investigating environmental change across whole geographic areas. The original analysis engine and chart tools now sit behind a map-first interface inspired by Kaspersky Cybermap, using the globe geometry from the sibling TerraTrend 2 project.
 
-Select one to three Earth science variables, tap anywhere on a 3D globe, and
-TerraTrend tells you **what is changing, where, by how much, and whether it is
-statistically significant** — using NASA's own open data.
+## Run
 
-![TerraTrend](docs/screenshot-europe.png)
-
-*Monochrome mission-control HUD. White dot-matrix Earth on black; colour appears
-only where it means something — orange cells are significantly rising trends.*
-
----
-
-## The problem this solves
-
-A measured Earth science variable can trend one way in one region and the
-opposite way in another, even when the same process drives both. With thousands
-of available variables, scientists and the public struggle to:
-
-1. **select** variables that could indicate change,
-2. **visualize** how they change over time,
-3. **quantify** the change ("how much"),
-4. and decide whether it is **statistically significant**.
-
-TerraTrend does all four in one interactive observatory.
-
----
-
-## The experience
-
-| Interaction | What happens |
-|---|---|
-| **Tap anywhere on the 3D globe** | The nearest focus region is selected and analyzed automatically |
-| **Drag / scroll** | Rotate and zoom the dot-matrix Earth |
-| **Filter by Earth Sphere** | Toggle between ALL, ATM (Atmosphere), HYD (Hydrosphere), and ENG (Energy) |
-| **Select up to 3 variables** | Signals stack in the right rail, each with its own color |
-| **Earth System Coupling** | When 2+ variables are selected, automatically diagnoses cross-sphere physical interactions (VPD expansion, greenhouse radiative trapping, hydrological sensitivity) |
-| **Regional Contrast Mode** | Compare two distinct geographic regions (Region A vs Region B) simultaneously on the 3D globe and trend observatory |
-| **Earth System Interconnections** | Click `INTERCONNECTIONS` to open a dedicated analysis screen with three focused views: **Local Coupling** (which variables drive which, inside the selected region), **Global Impacts** (where that driver's anomalies ripple to across the planet, with lag and effect size), and **Driver Anomaly** (when the driver ran above or below its own trend). Every link is computed — see below |
-| **Quick Globe Trace** | Click `QUICK GLOBE TRACE` for the fast 3D view: remote ripple effects across global climate zones drawn as Great-Circle glowing arcs |
-| **Earth System Impact Ledger** | Comprehensive modal ranking remote teleconnections with Pearson r, Student's t p-values, physical mechanisms, and 1-click `INVESTIGATE` contrast triggers |
-| **Click a signal or color key** | The globe swaps to that variable's grid analysis |
-| **Hover a grid cell** | Tooltip with lat/lon, slope/decade, p-value, trend verdict |
-| **Click a grid cell** | Cell detail readout in the coordinate bar + orbital zoom action |
-| **Click mini-chart or expand icon** | Opens high-resolution time series observatory modal with interactive 2-finger scroll/pinch zoom, trackpad swipe panning, horizontal/vertical axis toggles, 4-card statistics, 5x5 spatial consensus matrix, and CSV export |
-| **Click "Compare Orbital Pass"** | Opens NASA GIBS satellite evidence with interactive split-slider and multi-year comparisons |
-
----
-
-## What the challenge asks → what TerraTrend delivers
-
-| Requirement | Implementation |
-|---|---|
-| Select variables from Earth science missions/models | 16 curated NASA POWER variables (MERRA-2, GPCP, CERES) across 4 Earth System Spheres (Atmosphere, Hydrosphere, Land, Energy) |
-| Multi-Sphere System Framework | Filter variables by Atmosphere (ATM), Hydrosphere (HYD), Land (LND), and Energy (ENG) across 3 functional groups |
-| Automated Trend Discovery Mode | One-click `SCAN ALL VARIABLES` systematically queries and ranks all 16 variables by trend slope and grid consensus |
-| Cross-Variable Physical Coupling | Automated thermodynamic coupling detection (VPD expansion, greenhouse radiative trapping, hydrological sensitivity, moisture convergence) with Pearson r |
-| Earth System Interconnectivity | Dedicated `INTERCONNECTIONS` screen computing how variables drive each other, locally and globally. **Nothing is hard-coded**: seasonal + trend decomposition isolates anomalies, lagged cross-correlation (±6 mo local, ±24 mo global) establishes direction, first-order partial correlation removes the T2M confounder, two-way Granger F-tests rank who leads, event compositing measures the remote effect size in σ, and Benjamini–Hochberg FDR controls false discoveries at q=0.10 across each scan. Implementation: `backend/interconnect.py` |
-| Planetary Teleconnection Detective | Dynamic `QUICK GLOBE TRACE` engine scanning multi-sphere driver variables across 7 global climate zones, quantifying remote ripple effects on anomaly series (r, lag, effect size, p < 0.05), rendering 3D Great-Circle connection arcs, and providing physical mechanism explanations |
-| Regional Contrast (A vs B) | Simultaneous dual-region comparison on the 3D globe and trend observatory with differential slope, co-trend correlation, and divergence verdicts |
-| Visualize change over time | Interactive yearly/monthly series with Theil-Sen trend lines, partial-year guards through 2026, and multi-region comparisons |
-| What is changing | Plain-language verdict per variable (rising / falling / stable) + in-app scientific glossary |
-| Where it is changing | 5x5 gridded trend analysis rendered as North-aligned colored cells on the globe and consensus matrix |
-| How much it is changing | Theil-Sen slope/decade, 95% confidence intervals, total change, percent change — per region and per cell |
-| Is it significant | **Mann-Kendall** (p < 0.05), **Theil-Sen 95% CI**, **OLS t-test** cross-check with Student's t CDF, **Hirsch-Slack seasonal MK**, significance stars |
-| Visual ground truth | **NASA GIBS & Worldview** orbital imagery comparison (MODIS / VIIRS) via side-by-side & interactive split-slider |
-| Does the science agree? | Live **OpenAlex** literature lookup, relevance-ranked per variable + region |
-
----
-
-## Quick start
+From this repository’s root:
 
 ```bash
-cd terratrend/backend
-python server.py 8517
+./start.sh 8517
 ```
 
-Open <http://127.0.0.1:8517>.
+Open <http://127.0.0.1:8517>. Stop any older TerraTrend server on that port first, then start this version and reload the browser. The new frontend needs the new backend routes; refreshing an already-running Python process does not reload its code.
 
-Then, before judging, warm the cache so every demo click is instant:
+The startup script uses a project virtual environment and installs missing Python dependencies from `requirements.txt` (NumPy, SciPy, Requests and NetCDF4). JavaScript libraries are bundled locally. `pytest` is needed for the Python test command below.
+
+## Investigation workflow
+
+1. Choose **Continent**, **Subcontinent**, **Country**, or **Region**. The scope selector limits the displayed units. Ghana’s 16 administrative regions are bundled; other countries request ADM1 boundaries on demand when online access is available. **◇ Presets** switches the same globe to 23 original focus boxes, including Savannah, Congo Basin and Sahel; these are curated boxes, not official ecosystem boundaries.
+2. Click the blue **A / Primary area** card or amber **B / Comparison area** card to choose the target. Pick a whole boundary, draw a freehand/clicked **Lasso**, enter **Lat / Lon** bounds, or place a **Circle**/**Square** centre and adjust its size in kilometres. Custom shapes show approximate area; choose **Use for area A/B** to commit. A and B keep independent methods and stay selected when the displayed geographic level changes.
+3. Use the persistent **selection icon at the bottom right** to open the compact icon rail. Hover/focus a tool for its label. The settings card opens only when a method needs controls; closing it leaves the rail accessible. Clear A/B with its × button, or click an already selected boundary again.
+4. Choose a data source and a period of at least nine years. Variables are optional: leave them empty to discover what is changing, or select up to three for detailed analysis.
+5. Choose **Analyze** explicitly. With no variables selected, it prepares a discovery scan of the source's supported measurements for primary area A. A data-use review shows the area, period, measurements and estimated uncached download size. Choose **Start this request** to submit it, or **Go back** to change the scope. Selecting an area alone does not start a scientific request.
+6. Use **Analyze Layer** to calculate a separate trend for every area currently displayed. Results are calculated independently at each level. Missing data have their own status.
+7. Discovery shows a ranked table of significant increases, significant decreases, nonsignificant results, insufficient observations and source errors. Choose a measurement to open **Analysis** for its graph, statistics, native-cell summaries and CSV export. Open **Compare** and choose two different units for an A/B analysis using the same variables and dates.
+8. Open **Interconnections** to screen local candidate leads and simultaneous associations. In **Linked datasets**, select two or three measurements across sources. Remote screening is off by default and requires the explicit **Include remote areas** option and review. Each result retains its source and quality limits. **Globe / plane** switches the projection while retaining geographic identities.
+
+## Scientific data
+
+The default source is **NASA MERRA-2 · exact boundaries**, using GES DISC datasets available through the challenge’s **Giovanni** resource. Open **Data & Methods**, generate a user token in your [NASA Earthdata profile](https://urs.earthdata.nasa.gov/profile), and connect it there. The app verifies authorization by reading one real temperature cell. Enable **Remember this connection on this computer** to restore the connection after server restarts. The key uses the desktop credential store when available, or an owner-only local configuration file outside the project; it is not saved to browser storage or the repository. **Forget this connection** removes it. NASA can still expire or revoke the token. A server operator can instead provide `EARTHDATA_TOKEN` in the process environment.
+
+If the running server is older than these files, the UI shows **RESTART SERVER** and opens setup. It does not silently change to cache-only data. Stop that Python process with Ctrl+C, run `./start.sh 8517` from this folder and reload. Measurements without an automatic source mapping are marked in the variable controls; cached data remain available only when explicitly selected.
+
+**Additional sources:** **Data & Methods → Data source and processing** and the variable drawer now offer AppEEARS monthly NDVI/EVI, Hydrology GLDAS soil water/soil temperature/near-surface wind, and NOAA station temperature/rainfall/wind. **Linked datasets · NASA + NOAA** connects explicitly selected measurements across sources while preserving each product's identity. There are 20 distinct live measurement IDs. AppEEARS has a separate NASA sign-in form; **Remember** stores only the issued token, not the password. Both remembered NASA connections were verified after actual restarts. NOAA's public NCEI route needs no separate API key.
+
+**Optional low-transfer mode:** Choose **NASA Giovanni · rectangle summaries (preview)** for bounds, an axis-aligned rectangular lasso or a preset box. NASA returns monthly air-temperature and specific-humidity averages at **2 m and 10 m**. This mode uses M2IMNXASM, a different MERRA-2 product; it retains charts, discovery, two-rectangle comparisons, local relationships, preset-box layers and export. It supplies neither native-cell maps nor a monthly valid-area audit. No automatic raw-download fallback is used. AppEEARS likewise processes the actual polygon on NASA servers and returns only statistics CSVs, though its first remote extraction can take minutes. See [sources, presets, caching and live checks](docs/SOURCES_AND_PRESETS.md), [the Giovanni integration report](docs/GIOVANNI_INTEGRATION.md) and [all 13 challenge resource links](docs/CHALLENGE_RESOURCES.md).
+
+After connecting and reviewing data use, **Start this request** discovers published monthly granules in NASA CMR, downloads only the requested native grid windows through OPeNDAP, applies provider masks and verified unit conversions, clips cells to the exact selected polygon, and caches validated subsets. NASA supplies the scientific subsets; this computer downloads, stores and analyzes them. Progress and cancellation cover downloading as well as calculations. No manual data uploads are required. Large first-time requests can take minutes; subsequent analyses reuse cached data.
+
+For Africa in 2005–2024, the current conservative planning estimate is **68.6 MB for one measurement** or **548.5 MB for all eight**, assuming an empty matching cache. These estimates are not measured transfers or a hard data cap. They allow for native values, coordinates and file metadata; compression, cache reuse and service responses can change actual data use. Each native download window can include cells outside the selected polygon. See [area-only discovery and data use](docs/AREA_DISCOVERY_AND_DATA_USE.md) for the implementation, verification and suggested small examples. Relationship searches and layer analyses also show the review before a scientific job is submitted.
+
+| Automatic measurement | NASA collection / field | Conversion |
+| --- | --- | --- |
+| Air temperature | M2TMNXSLV / T2M | K → °C |
+| Surface temperature | M2TMNXSLV / TS | K → °C |
+| Specific humidity | M2TMNXSLV / QV2M | kg/kg → g/kg |
+| Surface pressure | M2TMNXSLV / PS | Pa → kPa |
+| Root-zone / surface soil moisture | M2TMNXLND / GWETROOT, GWETTOP | Saturation fraction retained |
+| Land evaporation | M2TMNXLND / EVLAND | kg m⁻² s⁻¹ → mm/day |
+| Precipitation | M2TMNXFLX / PRECTOTCORR | kg m⁻² s⁻¹ → mm/day |
+
+All three native collections use version **5.12.4**, with a grid of **0.625° longitude × 0.5° latitude**. Each source enables only its verified mappings; unsupported fields are rejected explicitly. New GLDAS and station wind IDs remain separate from the unmapped 2 m wind ID. Monthly wind-component means are not substituted for mean wind speed, monthly maxima are not daily-maximum averages, and absorbed radiation is not substituted for direct normal irradiance.
+
+All eight implemented measurements have now passed real authenticated download checks. Besides the country-scale examples below, the other six each returned 108 valid months and nine complete years for a single native cell in 2016–2024, with source units and conversions checked against the downloaded NetCDF files. These bounded checks do not establish coverage for every geographic selection.
+
+On 14 November 2026, an Earthdata-connected local run verified real **Ghana 2005–2024 root-zone soil-moisture and air-temperature downloads**: 240 valid months and 20 complete years for each variable, with 85 intersecting native cells. A separately drawn 55-cell lasso was analyzed independently; repeat A/B calculations reused 960 cached subsets across the four series. Native-file checks reproduced all 960 regional monthly values and confirmed full monthly area support for these particular selections. Both Ghana trends and both paired contrasts were statistically nonsignificant. See [local verification and evidence](docs/LOCAL_VERIFICATION.md) for exact results, source granules, masks, units, exports and remaining work. That verification used session-only credentials. Remembered desktop connections are now implemented for automatic reconnection after restart.
+
+Earlier unauthenticated requests reached the Earthdata login gate; this was not evidence of missing observations. The old Hydrology Data Rods URL redirects to a retirement notice. The new Hydrology connector uses NASA's current monthly time-series service, separately from the native MERRA-2 OPeNDAP adapter.
+
+The sparse **Existing project cache** remains available and is labeled as a legacy POWER access route not verified against the challenge resource list. Overlapping cached observations are retained while missing months remain missing. Advanced normalized CSV import remains available under a collapsed section in Data & Methods for existing datasets; it is optional.
+
+**Analysis → Satellite imagery** retains the earlier satellite panel. Imagery access remains source-policy gated; the new MERRA-2 trend adapter does not enable satellite image products.
+
+## Map navigation and panels
+
+Vertical scrolling zooms; horizontal trackpad scrolling rotates the globe or pans the plane. Wheel units are normalized and each event is limited; close-up zoom and drag scale with camera altitude. Double-click the globe to start spinning; drag or use the rotation button to pause it. Drawing tools retain their own click/drag behavior.
+
+Drag either floating panel by its heading/grip, or use arrow keys on the grip (Shift for larger steps). The −/+ button collapses or expands the panel. Positions are kept inside the map on resize, and position/collapse preferences are saved locally. Boundary downloads are cached per country; recently viewed administrative meshes are reused. Progressive mesh construction and cancellation keep the map responsive while switching countries.
+
+## Methods and limits
+
+Whole Polygon/MultiPolygon selections, including disconnected pieces present in the boundary dataset, are shared between the renderer and backend. Native MERRA-2 and GLDAS cells use polygon overlap and `cos(latitude)`, a small-cell approximation. Those months need at least 80% selected-area support; incomplete years are excluded from annual trend testing. Giovanni and AppEEARS summaries do not provide that independently audited monthly support, and AppEEARS has no additional per-pixel VI quality filter. NOAA uses a fixed station cohort, not an area average or whole-country layer. Coarse data cannot resolve fine administrative differences simply because the map has sharper boundaries. Full limits and live outcomes are in [the source report](docs/SOURCES_AND_PRESETS.md).
+
+Theil–Sen and Mann–Kendall summarize annual trends, with confidence intervals, seasonal checks and OLS diagnostics. Actual calendar years preserve gaps in slope calculations. A/B inference uses common complete years and the paired difference series.
+
+CSV export retains the date/value columns and adds A/B area identities, source and boundary provenance, complete-year flags and explicit missing-value states. A comparison exports both areas for the selected variable. Missing values are empty cells; wholly missing requested years remain in annual exports. Coverage columns describe availability in **any month of the requested period**, not a per-month coverage fraction. The separate monthly coverage audit in the local verification evidence records measured support for the verified Ghana/lasso example.
+
+Interconnection screens use anomaly series, lag-search correction, full-family false discovery control and conditional diagnostics where sufficient data exist. They identify exploratory associations and possible lead relationships. They do not establish physical causation, explain a long-term trend by themselves, or measure atmospheric transport. Moving packets illustrate computed lead direction.
+
+Continents and subcontinents use Natural Earth’s regional country membership. Transcontinental countries remain whole under that scheme. Administrative boundaries can be dated or unavailable, and small islands may be absent at the bundled 1:50m resolution.
+
+## Validation
 
 ```bash
-python warm_cache.py
+.venv/bin/python -m pytest backend -q -p no:cacheprovider
+node --test tests/*.test.cjs
+node --check frontend/app.js
+node --check frontend/workflow.js
+node --check frontend/earth-renderer.js
+node --check frontend/selection-tools.js
+node --check frontend/selection-geometry.js
+node --check frontend/map-panels.js
 ```
 
-**Presenting this?** Read [`docs/GUIDE.md`](docs/GUIDE.md) — a plain-English
-explainer of every statistic (p-values, Mann–Kendall, Theil–Sen, significance,
-multiple comparisons), a number cheat-sheet, a 3-minute demo script, and a bank
-of judge Q&A.
-
-**No Python dependencies.** The server uses only the standard library, and the
-frontend loads three.js and Chart.js from CDN. The globe geometry
-(`land_dots.json`, 6,550 real land points derived from Natural Earth) ships
-with the repo — no runtime geodata dependency.
-
----
-
-## Demo stories (pre-warmed)
-
-### 1. Europe is warming — every cell
-- **Variables:** Air Temperature (+ Precipitation for contrast)
-- **Region:** Central Europe · 2005–2024
-- **Result:** `+0.99 °C/decade`, **p = 0.003**, **25/25 cells** rising significantly
-- Precipitation over the same window: **no significant trend** (p = 0.673)
-- **Why it matters:** the clearest regional warming signal, with a built-in
-  "same place, different variable, different answer" contrast.
-
-### 2. Sahel precipitation is recovering — a famous greening signal
-- **Variable:** Precipitation
-- **Region:** Sahel Central
-- **Result:** `+0.21 mm/day per decade`, **p = 0.009**, 13/25 cells rising
-- **Why it matters:** after the catastrophic 1970s–80s droughts, Sahel rainfall
-  has partially recovered — one of the clearest regional signals on Earth.
-
-### 3. Southern Madagascar, Arabia, China, Brazil
-All show significant warming (p ≤ 0.025) — tap them on the globe in seconds.
-
-### 4. The honest negative control
-Arctic Siberia (this 6°×4° box) returns **no significant trend** (p = 0.163).
-This is a feature, not a bug: Mann–Kendall refuses to call a trend when
-interannual variability is too large for the record length. Judges love a tool
-that says "not significant" when it means it.
-
----
-
-## Methodology (what makes this defensible)
-
-### Trend magnitude — Theil–Sen estimator
-The median of all pairwise slopes. Robust to outliers and non-normal data,
-unlike ordinary least squares. The standard companion to Mann–Kendall in
-climate science.
-
-### Significance — Mann–Kendall test
-Non-parametric, rank-based test of monotonic trend. No normality assumption,
-resistant to outliers. Significance at **α = 0.05** (`**`), with `*` for p < 0.1
-and `***` for p < 0.01.
-
-### Annual aggregation (the critical detail)
-Raw monthly series are dominated by the seasonal cycle, which inflates the
-Mann–Kendall statistic and produces false "significant trends." TerraTrend
-therefore computes **annual means** for trend testing, and additionally reports
-a **Hirsch–Slack seasonal Mann–Kendall** test on the monthly series as an
-independent cross-check. This bug was caught during development: before the fix,
-Arctic warming returned p = 0.52.
-
-### Gridded analysis — "where"
-The region is sampled on a 5×5 grid of NASA POWER points. Each cell gets its own
-Mann–Kendall + Theil–Sen analysis. Cells are color-coded by direction and
-significance, and sized by slope magnitude.
-
----
-
-## Data sources
-
-**NASA POWER** (Prediction Of Worldwide Energy Resources)
-<https://power.larc.nasa.gov/>
-
-- Monthly point API: `https://power.larc.nasa.gov/api/temporal/monthly/point`
-- Variables derive from **MERRA-2** reanalysis, **GPCP** precipitation, and
-  **CERES** radiative fluxes.
-- No API key required.
-
-> POWER's `/regional` endpoint returned empty payloads during development, so
-> TerraTrend samples a grid of `/point` calls in parallel (cached, with jitter
-> and retry to stay inside POWER's rate limits). Swappable for Harmony /
-> GES DISC netCDF later.
-
-**OpenAlex** <https://openalex.org/> — free, no API key, ~250M scholarly works.
-Papers are re-ranked locally by regional relevance (region name in title is the
-strongest signal) then citation impact. Semantic Scholar was evaluated first but
-rate-limits unauthenticated requests (HTTP 429); Crossref works but lacks
-citation counts.
-
-**Natural Earth** <https://www.naturalearthdata.com/> — public-domain land
-polygons used to generate the globe's dot matrix (1:110m, 6,550 points at 1.4°
-sampling).
-
----
-
-## Architecture
-
-```
-terratrend/
-├── backend/
-│   ├── server.py        # zero-dependency HTTP server + API + teleconnections engine
-│   ├── analysis.py      # Mann-Kendall, Theil-Sen CI, Hirsch-Slack seasonal MK, OLS t-test, Pearson coupling, teleconnection mechanisms
-│   ├── gibs.py          # NASA GIBS WMS & Worldview orbital comparison engine
-│   ├── power_client.py  # NASA POWER fetcher: parallel grid + disk cache + availability probe
-│   ├── literature.py    # OpenAlex lookup with relevance re-ranking
-│   ├── catalog.py       # 16 variables · 23 regions (land & ocean) · glossary
-│   ├── warm_cache.py    # pre-fetch demo regions before judging
-│   ├── warm_scan.py     # pre-warm full 16-variable scans for demo regions
-│   ├── test_analysis.py # 25 unit tests for statistical & teleconnection engine
-│   ├── test_catalog.py  # 11 unit tests for catalog integrity
-│   ├── test_currency.py # 8 unit tests for data currency & partial-year guards
-│   ├── test_gibs.py     # 4 unit tests for GIBS & Worldview integration
-│   └── cache/           # auto-created; 30-day TTL
-└── frontend/
-    ├── index.html       # HUD shell + scan modal + defs modal + data observatory + orbital modal + impact ledger modal
-    ├── styles.css       # monochrome observatory theme + WCAG AA contrast styling
-    ├── app.js           # three.js globe (with 3D teleconnection arcs) + chart + scan + glossary + GIBS orbital comparator + teleconnection ledger
-    └── land_dots.json   # 6,550 Natural Earth land points
-```
-
-**Design language:** the chrome is strictly monochrome — near-black ground, white
-dot-matrix Earth, 1px grey rules, uppercase monospace readouts, inverted white
-action button. Saturated colour is reserved **only for data** (orange = rising,
-blue = falling), exactly like a mission-control display where hue carries meaning.
-
-**API**
-
-- `GET /api/health` → `{ok, uptime_s}`
-- `GET /api/availability` → live NASA POWER probe `{ok, max_year, latest_month, latest_day}`
-- `GET /api/catalog` → 16 variables, spheres, 23 regions, year bounds, availability
-- `GET /api/scan?region=sahel&start=2005&end=2026` → ranks all 16 variables by trend slope and grid consensus
-- `GET /api/teleconnections?region=tropical_pacific&variable=WS2M&start=2005&end=2024&min_r=0.38`
-  → discovers and quantifies remote cascading ripple effects across planetary sentinel hubs with Pearson r, Student's t significance (p < 0.05), and physical mechanism explanations
-- `GET /api/analyze?variables=T2M,PRECTOTCORR&region=europe&start=2005&end=2024`
-  → for each variable: monthly + yearly series (with partial-year guards), per-cell trends, regional
-  summary, 95% CI, OLS t-test, seasonal MK, cross-sphere couplings, literature, and NASA GIBS satellite evidence
-- `GET /api/satellite-imagery?region=europe&start=2005&end=2024&layer=true_color`
-  → NASA GIBS WMS baseline and recent URLs, cloud-minimized seasonal dates,
-  and NASA Worldview deep links (supports custom `bbox=min_lon,min_lat,max_lon,max_lat`)
-
----
-
-## Tests
-
-```bash
-cd terratrend/backend
-python test_analysis.py      # ALL PASS (25 tests: MK, Sen CI, t-test, couplings, contrast, teleconnections)
-python test_catalog.py       # ALL PASS (11 tests: catalog structure & completeness)
-python test_currency.py      # ALL PASS (8 tests: data currency & partial-year protection)
-python test_gibs.py          # ALL PASS (4 tests: GIBS WMS & Worldview URL engine)
-```
-
-Covers: strong rising/falling detection, flat-noise rejection, Theil–Sen on
-perfect linear data, outlier robustness, Theil-Sen 95% confidence intervals,
-OLS $t$-test agreement with Student's $t$ CDF, short-series rejection, gap handling,
-seasonal-MK cycle rejection, seasonal-MK real-trend detection, multi-sphere coupling,
-and regional contrast.
-
----
-
-## Honest limitations
-
-- POWER provides monthly/annual data per point; true raster trend maps would use
-  **Harmony + GES DISC** netCDF subsets (the natural next step).
-- The globe's analysis grid is **visually amplified 2.8×** so 25 cells are
-  readable at planetary scale. Geography is preserved in the popups and
-  coordinate readout; the mesh spacing is exaggerated for legibility.
-- Regions are 23 curated focus boxes covering continents and major ocean basins; freehand bbox selection is a small
-  follow-up.
-- Add **Pettitt change-point detection** for "when did it start changing."
+See [implementation notes](docs/UI_OVERHAUL_IMPLEMENTATION.md) for the architecture, validated behavior, API and remaining work. The [integration review](docs/UI_OVERHAUL_REVIEW.md) records the original assessment. The pre-overhaul README is preserved as [historical documentation](docs/LEGACY_README.md); its demo claims and old workflow are not the current contract.

@@ -1,0 +1,1241 @@
+{
+  "region": {
+    "id": "country:gha",
+    "name": "Ghana",
+    "level": "country",
+    "parent": "subcontinent:western_africa",
+    "geometry_version": "35339921e7a23101",
+    "bbox": [
+      -3.243896,
+      4.762451,
+      1.187207,
+      11.166895
+    ],
+    "surface": "land",
+    "desc": "Ghana \u00b7 country \u00b7 full boundary selection",
+    "iso3": "GHA",
+    "iso2": "GH",
+    "continent": "continent:africa",
+    "center": [
+      -1.036941,
+      7.717639
+    ],
+    "boundary_source": "Natural Earth 1:50m",
+    "boundary_scheme": "UN regional grouping",
+    "children": [
+      "region:gha:upper_west",
+      "region:gha:upper_east",
+      "region:gha:north_east",
+      "region:gha:savannah",
+      "region:gha:northern",
+      "region:gha:oti",
+      "region:gha:bono_east",
+      "region:gha:bono",
+      "region:gha:western_north",
+      "region:gha:ahafo",
+      "region:gha:ashanti",
+      "region:gha:eastern",
+      "region:gha:volta",
+      "region:gha:western",
+      "region:gha:central",
+      "region:gha:greater_accra"
+    ]
+  },
+  "start": 2016,
+  "end": 2024,
+  "months": [
+    "2016-01",
+    "2016-02",
+    "2016-03",
+    "2016-04",
+    "2016-05",
+    "2016-06",
+    "2016-07",
+    "2016-08",
+    "2016-09",
+    "2016-10",
+    "2016-11",
+    "2016-12",
+    "2017-01",
+    "2017-02",
+    "2017-03",
+    "2017-04",
+    "2017-05",
+    "2017-06",
+    "2017-07",
+    "2017-08",
+    "2017-09",
+    "2017-10",
+    "2017-11",
+    "2017-12",
+    "2018-01",
+    "2018-02",
+    "2018-03",
+    "2018-04",
+    "2018-05",
+    "2018-06",
+    "2018-07",
+    "2018-08",
+    "2018-09",
+    "2018-10",
+    "2018-11",
+    "2018-12",
+    "2019-01",
+    "2019-02",
+    "2019-03",
+    "2019-04",
+    "2019-05",
+    "2019-06",
+    "2019-07",
+    "2019-08",
+    "2019-09",
+    "2019-10",
+    "2019-11",
+    "2019-12",
+    "2020-01",
+    "2020-02",
+    "2020-03",
+    "2020-04",
+    "2020-05",
+    "2020-06",
+    "2020-07",
+    "2020-08",
+    "2020-09",
+    "2020-10",
+    "2020-11",
+    "2020-12",
+    "2021-01",
+    "2021-02",
+    "2021-03",
+    "2021-04",
+    "2021-05",
+    "2021-06",
+    "2021-07",
+    "2021-08",
+    "2021-09",
+    "2021-10",
+    "2021-11",
+    "2021-12",
+    "2022-01",
+    "2022-02",
+    "2022-03",
+    "2022-04",
+    "2022-05",
+    "2022-06",
+    "2022-07",
+    "2022-08",
+    "2022-09",
+    "2022-10",
+    "2022-11",
+    "2022-12",
+    "2023-01",
+    "2023-02",
+    "2023-03",
+    "2023-04",
+    "2023-05",
+    "2023-06",
+    "2023-07",
+    "2023-08",
+    "2023-09",
+    "2023-10",
+    "2023-11",
+    "2023-12",
+    "2024-01",
+    "2024-02",
+    "2024-03",
+    "2024-04",
+    "2024-05",
+    "2024-06",
+    "2024-07",
+    "2024-08",
+    "2024-09",
+    "2024-10",
+    "2024-11",
+    "2024-12"
+  ],
+  "series": [
+    {
+      "variable": {
+        "id": "STATION_TAVG",
+        "name": "Station Air Temperature \u00b7 NOAA",
+        "unit": "\u00b0C",
+        "mission": "NOAA stations",
+        "group": "temperature",
+        "sphere": "atmosphere",
+        "sphere_code": "ATM",
+        "sphere_name": "Atmosphere",
+        "desc": "Fixed-cohort mean of monthly station temperatures inside the boundary; not an area average",
+        "color": "#ffb087",
+        "dataset": "Global Summary of the Month",
+        "source_field": "TAVG"
+      },
+      "provenance": {
+        "provider": "noaa-cdo",
+        "source": "NOAA NCEI / Climate Data Online observations",
+        "resource": "Climate Data Online",
+        "dataset": "Global Summary of the Month",
+        "collection_version": "NCEI access service v1",
+        "field": "TAVG",
+        "policy": "challenge_resource",
+        "citation": "https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00946",
+        "access": "Public NCEI monthly station API; no CDO v2 token required",
+        "aggregation": "Fixed station cohort inside polygon; equal station weights, not an area average. At least 80% cohort support each month.",
+        "quality": "Stations require 80% monthly availability over the requested period; records reporting missing days, failed quality checks or rain accumulations over gaps excluded. Spatial representativeness and station homogenization are not established.",
+        "stations": [],
+        "station_count": 0,
+        "candidate_station_count": 15,
+        "geometry_version": "35339921e7a23101",
+        "spatial_detail_available": false,
+        "monthly_area_coverage_known": false,
+        "cache_hit": false,
+        "retrieved_utc": "2026-11-15T07:40:45.997432+00:00",
+        "first_observed_month": null,
+        "last_observed_month": null
+      },
+      "monthly_timeseries": [
+        {
+          "month": "2016-01",
+          "value": null
+        },
+        {
+          "month": "2016-02",
+          "value": null
+        },
+        {
+          "month": "2016-03",
+          "value": null
+        },
+        {
+          "month": "2016-04",
+          "value": null
+        },
+        {
+          "month": "2016-05",
+          "value": null
+        },
+        {
+          "month": "2016-06",
+          "value": null
+        },
+        {
+          "month": "2016-07",
+          "value": null
+        },
+        {
+          "month": "2016-08",
+          "value": null
+        },
+        {
+          "month": "2016-09",
+          "value": null
+        },
+        {
+          "month": "2016-10",
+          "value": null
+        },
+        {
+          "month": "2016-11",
+          "value": null
+        },
+        {
+          "month": "2016-12",
+          "value": null
+        },
+        {
+          "month": "2017-01",
+          "value": null
+        },
+        {
+          "month": "2017-02",
+          "value": null
+        },
+        {
+          "month": "2017-03",
+          "value": null
+        },
+        {
+          "month": "2017-04",
+          "value": null
+        },
+        {
+          "month": "2017-05",
+          "value": null
+        },
+        {
+          "month": "2017-06",
+          "value": null
+        },
+        {
+          "month": "2017-07",
+          "value": null
+        },
+        {
+          "month": "2017-08",
+          "value": null
+        },
+        {
+          "month": "2017-09",
+          "value": null
+        },
+        {
+          "month": "2017-10",
+          "value": null
+        },
+        {
+          "month": "2017-11",
+          "value": null
+        },
+        {
+          "month": "2017-12",
+          "value": null
+        },
+        {
+          "month": "2018-01",
+          "value": null
+        },
+        {
+          "month": "2018-02",
+          "value": null
+        },
+        {
+          "month": "2018-03",
+          "value": null
+        },
+        {
+          "month": "2018-04",
+          "value": null
+        },
+        {
+          "month": "2018-05",
+          "value": null
+        },
+        {
+          "month": "2018-06",
+          "value": null
+        },
+        {
+          "month": "2018-07",
+          "value": null
+        },
+        {
+          "month": "2018-08",
+          "value": null
+        },
+        {
+          "month": "2018-09",
+          "value": null
+        },
+        {
+          "month": "2018-10",
+          "value": null
+        },
+        {
+          "month": "2018-11",
+          "value": null
+        },
+        {
+          "month": "2018-12",
+          "value": null
+        },
+        {
+          "month": "2019-01",
+          "value": null
+        },
+        {
+          "month": "2019-02",
+          "value": null
+        },
+        {
+          "month": "2019-03",
+          "value": null
+        },
+        {
+          "month": "2019-04",
+          "value": null
+        },
+        {
+          "month": "2019-05",
+          "value": null
+        },
+        {
+          "month": "2019-06",
+          "value": null
+        },
+        {
+          "month": "2019-07",
+          "value": null
+        },
+        {
+          "month": "2019-08",
+          "value": null
+        },
+        {
+          "month": "2019-09",
+          "value": null
+        },
+        {
+          "month": "2019-10",
+          "value": null
+        },
+        {
+          "month": "2019-11",
+          "value": null
+        },
+        {
+          "month": "2019-12",
+          "value": null
+        },
+        {
+          "month": "2020-01",
+          "value": null
+        },
+        {
+          "month": "2020-02",
+          "value": null
+        },
+        {
+          "month": "2020-03",
+          "value": null
+        },
+        {
+          "month": "2020-04",
+          "value": null
+        },
+        {
+          "month": "2020-05",
+          "value": null
+        },
+        {
+          "month": "2020-06",
+          "value": null
+        },
+        {
+          "month": "2020-07",
+          "value": null
+        },
+        {
+          "month": "2020-08",
+          "value": null
+        },
+        {
+          "month": "2020-09",
+          "value": null
+        },
+        {
+          "month": "2020-10",
+          "value": null
+        },
+        {
+          "month": "2020-11",
+          "value": null
+        },
+        {
+          "month": "2020-12",
+          "value": null
+        },
+        {
+          "month": "2021-01",
+          "value": null
+        },
+        {
+          "month": "2021-02",
+          "value": null
+        },
+        {
+          "month": "2021-03",
+          "value": null
+        },
+        {
+          "month": "2021-04",
+          "value": null
+        },
+        {
+          "month": "2021-05",
+          "value": null
+        },
+        {
+          "month": "2021-06",
+          "value": null
+        },
+        {
+          "month": "2021-07",
+          "value": null
+        },
+        {
+          "month": "2021-08",
+          "value": null
+        },
+        {
+          "month": "2021-09",
+          "value": null
+        },
+        {
+          "month": "2021-10",
+          "value": null
+        },
+        {
+          "month": "2021-11",
+          "value": null
+        },
+        {
+          "month": "2021-12",
+          "value": null
+        },
+        {
+          "month": "2022-01",
+          "value": null
+        },
+        {
+          "month": "2022-02",
+          "value": null
+        },
+        {
+          "month": "2022-03",
+          "value": null
+        },
+        {
+          "month": "2022-04",
+          "value": null
+        },
+        {
+          "month": "2022-05",
+          "value": null
+        },
+        {
+          "month": "2022-06",
+          "value": null
+        },
+        {
+          "month": "2022-07",
+          "value": null
+        },
+        {
+          "month": "2022-08",
+          "value": null
+        },
+        {
+          "month": "2022-09",
+          "value": null
+        },
+        {
+          "month": "2022-10",
+          "value": null
+        },
+        {
+          "month": "2022-11",
+          "value": null
+        },
+        {
+          "month": "2022-12",
+          "value": null
+        },
+        {
+          "month": "2023-01",
+          "value": null
+        },
+        {
+          "month": "2023-02",
+          "value": null
+        },
+        {
+          "month": "2023-03",
+          "value": null
+        },
+        {
+          "month": "2023-04",
+          "value": null
+        },
+        {
+          "month": "2023-05",
+          "value": null
+        },
+        {
+          "month": "2023-06",
+          "value": null
+        },
+        {
+          "month": "2023-07",
+          "value": null
+        },
+        {
+          "month": "2023-08",
+          "value": null
+        },
+        {
+          "month": "2023-09",
+          "value": null
+        },
+        {
+          "month": "2023-10",
+          "value": null
+        },
+        {
+          "month": "2023-11",
+          "value": null
+        },
+        {
+          "month": "2023-12",
+          "value": null
+        },
+        {
+          "month": "2024-01",
+          "value": null
+        },
+        {
+          "month": "2024-02",
+          "value": null
+        },
+        {
+          "month": "2024-03",
+          "value": null
+        },
+        {
+          "month": "2024-04",
+          "value": null
+        },
+        {
+          "month": "2024-05",
+          "value": null
+        },
+        {
+          "month": "2024-06",
+          "value": null
+        },
+        {
+          "month": "2024-07",
+          "value": null
+        },
+        {
+          "month": "2024-08",
+          "value": null
+        },
+        {
+          "month": "2024-09",
+          "value": null
+        },
+        {
+          "month": "2024-10",
+          "value": null
+        },
+        {
+          "month": "2024-11",
+          "value": null
+        },
+        {
+          "month": "2024-12",
+          "value": null
+        }
+      ],
+      "yearly_timeseries": [],
+      "cells": [],
+      "overall": {
+        "ok": false,
+        "reason": "insufficient data (<8 points)",
+        "seasonal_z": 0.0,
+        "seasonal_p": 1.0,
+        "seasonal_significant": false
+      },
+      "seasonal": [
+        0.0,
+        1.0,
+        0.0,
+        false
+      ],
+      "summary": {
+        "total_cells": 0,
+        "valid_cells": 0,
+        "significant_cells": 0,
+        "rising_cells": 0,
+        "falling_cells": 0,
+        "consensus": "none",
+        "spatial_detail_available": false
+      }
+    },
+    {
+      "variable": {
+        "id": "STATION_WIND",
+        "name": "Station Wind \u00b7 NOAA",
+        "unit": "m/s",
+        "mission": "NOAA stations",
+        "group": "energy",
+        "sphere": "atmosphere",
+        "sphere_code": "ATM",
+        "sphere_name": "Atmosphere",
+        "desc": "Station wind observations at source instrument heights; coverage varies by region",
+        "color": "#b3b3df",
+        "dataset": "Global Summary of the Month",
+        "source_field": "AWND"
+      },
+      "provenance": {
+        "provider": "noaa-cdo",
+        "source": "NOAA NCEI / Climate Data Online observations",
+        "resource": "Climate Data Online",
+        "dataset": "Global Summary of the Month",
+        "collection_version": "NCEI access service v1",
+        "field": "AWND",
+        "policy": "challenge_resource",
+        "citation": "https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00946",
+        "access": "Public NCEI monthly station API; no CDO v2 token required",
+        "aggregation": "Fixed station cohort inside polygon; equal station weights, not an area average. At least 80% cohort support each month.",
+        "quality": "Stations require 80% monthly availability over the requested period; records reporting missing days, failed quality checks or rain accumulations over gaps excluded. Spatial representativeness and station homogenization are not established.",
+        "stations": [],
+        "station_count": 0,
+        "candidate_station_count": 0,
+        "geometry_version": "35339921e7a23101",
+        "spatial_detail_available": false,
+        "monthly_area_coverage_known": false,
+        "cache_hit": false,
+        "retrieved_utc": "2026-11-15T07:40:48.493974+00:00",
+        "first_observed_month": null,
+        "last_observed_month": null
+      },
+      "monthly_timeseries": [
+        {
+          "month": "2016-01",
+          "value": null
+        },
+        {
+          "month": "2016-02",
+          "value": null
+        },
+        {
+          "month": "2016-03",
+          "value": null
+        },
+        {
+          "month": "2016-04",
+          "value": null
+        },
+        {
+          "month": "2016-05",
+          "value": null
+        },
+        {
+          "month": "2016-06",
+          "value": null
+        },
+        {
+          "month": "2016-07",
+          "value": null
+        },
+        {
+          "month": "2016-08",
+          "value": null
+        },
+        {
+          "month": "2016-09",
+          "value": null
+        },
+        {
+          "month": "2016-10",
+          "value": null
+        },
+        {
+          "month": "2016-11",
+          "value": null
+        },
+        {
+          "month": "2016-12",
+          "value": null
+        },
+        {
+          "month": "2017-01",
+          "value": null
+        },
+        {
+          "month": "2017-02",
+          "value": null
+        },
+        {
+          "month": "2017-03",
+          "value": null
+        },
+        {
+          "month": "2017-04",
+          "value": null
+        },
+        {
+          "month": "2017-05",
+          "value": null
+        },
+        {
+          "month": "2017-06",
+          "value": null
+        },
+        {
+          "month": "2017-07",
+          "value": null
+        },
+        {
+          "month": "2017-08",
+          "value": null
+        },
+        {
+          "month": "2017-09",
+          "value": null
+        },
+        {
+          "month": "2017-10",
+          "value": null
+        },
+        {
+          "month": "2017-11",
+          "value": null
+        },
+        {
+          "month": "2017-12",
+          "value": null
+        },
+        {
+          "month": "2018-01",
+          "value": null
+        },
+        {
+          "month": "2018-02",
+          "value": null
+        },
+        {
+          "month": "2018-03",
+          "value": null
+        },
+        {
+          "month": "2018-04",
+          "value": null
+        },
+        {
+          "month": "2018-05",
+          "value": null
+        },
+        {
+          "month": "2018-06",
+          "value": null
+        },
+        {
+          "month": "2018-07",
+          "value": null
+        },
+        {
+          "month": "2018-08",
+          "value": null
+        },
+        {
+          "month": "2018-09",
+          "value": null
+        },
+        {
+          "month": "2018-10",
+          "value": null
+        },
+        {
+          "month": "2018-11",
+          "value": null
+        },
+        {
+          "month": "2018-12",
+          "value": null
+        },
+        {
+          "month": "2019-01",
+          "value": null
+        },
+        {
+          "month": "2019-02",
+          "value": null
+        },
+        {
+          "month": "2019-03",
+          "value": null
+        },
+        {
+          "month": "2019-04",
+          "value": null
+        },
+        {
+          "month": "2019-05",
+          "value": null
+        },
+        {
+          "month": "2019-06",
+          "value": null
+        },
+        {
+          "month": "2019-07",
+          "value": null
+        },
+        {
+          "month": "2019-08",
+          "value": null
+        },
+        {
+          "month": "2019-09",
+          "value": null
+        },
+        {
+          "month": "2019-10",
+          "value": null
+        },
+        {
+          "month": "2019-11",
+          "value": null
+        },
+        {
+          "month": "2019-12",
+          "value": null
+        },
+        {
+          "month": "2020-01",
+          "value": null
+        },
+        {
+          "month": "2020-02",
+          "value": null
+        },
+        {
+          "month": "2020-03",
+          "value": null
+        },
+        {
+          "month": "2020-04",
+          "value": null
+        },
+        {
+          "month": "2020-05",
+          "value": null
+        },
+        {
+          "month": "2020-06",
+          "value": null
+        },
+        {
+          "month": "2020-07",
+          "value": null
+        },
+        {
+          "month": "2020-08",
+          "value": null
+        },
+        {
+          "month": "2020-09",
+          "value": null
+        },
+        {
+          "month": "2020-10",
+          "value": null
+        },
+        {
+          "month": "2020-11",
+          "value": null
+        },
+        {
+          "month": "2020-12",
+          "value": null
+        },
+        {
+          "month": "2021-01",
+          "value": null
+        },
+        {
+          "month": "2021-02",
+          "value": null
+        },
+        {
+          "month": "2021-03",
+          "value": null
+        },
+        {
+          "month": "2021-04",
+          "value": null
+        },
+        {
+          "month": "2021-05",
+          "value": null
+        },
+        {
+          "month": "2021-06",
+          "value": null
+        },
+        {
+          "month": "2021-07",
+          "value": null
+        },
+        {
+          "month": "2021-08",
+          "value": null
+        },
+        {
+          "month": "2021-09",
+          "value": null
+        },
+        {
+          "month": "2021-10",
+          "value": null
+        },
+        {
+          "month": "2021-11",
+          "value": null
+        },
+        {
+          "month": "2021-12",
+          "value": null
+        },
+        {
+          "month": "2022-01",
+          "value": null
+        },
+        {
+          "month": "2022-02",
+          "value": null
+        },
+        {
+          "month": "2022-03",
+          "value": null
+        },
+        {
+          "month": "2022-04",
+          "value": null
+        },
+        {
+          "month": "2022-05",
+          "value": null
+        },
+        {
+          "month": "2022-06",
+          "value": null
+        },
+        {
+          "month": "2022-07",
+          "value": null
+        },
+        {
+          "month": "2022-08",
+          "value": null
+        },
+        {
+          "month": "2022-09",
+          "value": null
+        },
+        {
+          "month": "2022-10",
+          "value": null
+        },
+        {
+          "month": "2022-11",
+          "value": null
+        },
+        {
+          "month": "2022-12",
+          "value": null
+        },
+        {
+          "month": "2023-01",
+          "value": null
+        },
+        {
+          "month": "2023-02",
+          "value": null
+        },
+        {
+          "month": "2023-03",
+          "value": null
+        },
+        {
+          "month": "2023-04",
+          "value": null
+        },
+        {
+          "month": "2023-05",
+          "value": null
+        },
+        {
+          "month": "2023-06",
+          "value": null
+        },
+        {
+          "month": "2023-07",
+          "value": null
+        },
+        {
+          "month": "2023-08",
+          "value": null
+        },
+        {
+          "month": "2023-09",
+          "value": null
+        },
+        {
+          "month": "2023-10",
+          "value": null
+        },
+        {
+          "month": "2023-11",
+          "value": null
+        },
+        {
+          "month": "2023-12",
+          "value": null
+        },
+        {
+          "month": "2024-01",
+          "value": null
+        },
+        {
+          "month": "2024-02",
+          "value": null
+        },
+        {
+          "month": "2024-03",
+          "value": null
+        },
+        {
+          "month": "2024-04",
+          "value": null
+        },
+        {
+          "month": "2024-05",
+          "value": null
+        },
+        {
+          "month": "2024-06",
+          "value": null
+        },
+        {
+          "month": "2024-07",
+          "value": null
+        },
+        {
+          "month": "2024-08",
+          "value": null
+        },
+        {
+          "month": "2024-09",
+          "value": null
+        },
+        {
+          "month": "2024-10",
+          "value": null
+        },
+        {
+          "month": "2024-11",
+          "value": null
+        },
+        {
+          "month": "2024-12",
+          "value": null
+        }
+      ],
+      "yearly_timeseries": [],
+      "cells": [],
+      "overall": {
+        "ok": false,
+        "reason": "insufficient data (<8 points)",
+        "seasonal_z": 0.0,
+        "seasonal_p": 1.0,
+        "seasonal_significant": false
+      },
+      "seasonal": [
+        0.0,
+        1.0,
+        0.0,
+        false
+      ],
+      "summary": {
+        "total_cells": 0,
+        "valid_cells": 0,
+        "significant_cells": 0,
+        "rising_cells": 0,
+        "falling_cells": 0,
+        "consensus": "none",
+        "spatial_detail_available": false
+      }
+    }
+  ],
+  "grid": {
+    "nx": 5,
+    "ny": 5,
+    "bbox": [
+      -3.243896,
+      4.762451,
+      1.187207,
+      11.166895
+    ]
+  },
+  "satellite": {
+    "enabled": false,
+    "reason": "Imagery route not enabled by the challenge source policy"
+  },
+  "couplings": [
+    {
+      "var_a": "STATION_TAVG",
+      "var_b": "STATION_WIND",
+      "var_a_name": "Station Air Temperature \u00b7 NOAA",
+      "var_b_name": "Station Wind \u00b7 NOAA",
+      "sphere_a": "Atmosphere",
+      "sphere_b": "Atmosphere",
+      "sphere_a_code": "ATM",
+      "sphere_b_code": "ATM",
+      "same_sphere": true,
+      "r": 0.0,
+      "phase": "decoupled",
+      "phase_label": "DECOUPLED / INDEPENDENT",
+      "title": "Station Air Temperature \u00b7 NOAA <-> Station Wind \u00b7 NOAA Coupling",
+      "description": "Co-trend association. Possible mechanism: Observed correlation of r = 0.00 between Station Air Temperature \u00b7 NOAA and Station Wind \u00b7 NOAA across the analyzed timeline.",
+      "evidence_type": "co_trend_association"
+    }
+  ],
+  "window": {
+    "first_month": null,
+    "last_month": null,
+    "partial_years": []
+  },
+  "sources": [
+    "NOAA NCEI / Climate Data Online observations"
+  ],
+  "provenance": [
+    {
+      "provider": "noaa-cdo",
+      "source": "NOAA NCEI / Climate Data Online observations",
+      "resource": "Climate Data Online",
+      "dataset": "Global Summary of the Month",
+      "collection_version": "NCEI access service v1",
+      "field": "TAVG",
+      "policy": "challenge_resource",
+      "citation": "https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00946",
+      "access": "Public NCEI monthly station API; no CDO v2 token required",
+      "aggregation": "Fixed station cohort inside polygon; equal station weights, not an area average. At least 80% cohort support each month.",
+      "quality": "Stations require 80% monthly availability over the requested period; records reporting missing days, failed quality checks or rain accumulations over gaps excluded. Spatial representativeness and station homogenization are not established.",
+      "stations": [],
+      "station_count": 0,
+      "candidate_station_count": 15,
+      "geometry_version": "35339921e7a23101",
+      "spatial_detail_available": false,
+      "monthly_area_coverage_known": false,
+      "cache_hit": false,
+      "retrieved_utc": "2026-11-15T07:40:45.997432+00:00",
+      "first_observed_month": null,
+      "last_observed_month": null
+    },
+    {
+      "provider": "noaa-cdo",
+      "source": "NOAA NCEI / Climate Data Online observations",
+      "resource": "Climate Data Online",
+      "dataset": "Global Summary of the Month",
+      "collection_version": "NCEI access service v1",
+      "field": "AWND",
+      "policy": "challenge_resource",
+      "citation": "https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00946",
+      "access": "Public NCEI monthly station API; no CDO v2 token required",
+      "aggregation": "Fixed station cohort inside polygon; equal station weights, not an area average. At least 80% cohort support each month.",
+      "quality": "Stations require 80% monthly availability over the requested period; records reporting missing days, failed quality checks or rain accumulations over gaps excluded. Spatial representativeness and station homogenization are not established.",
+      "stations": [],
+      "station_count": 0,
+      "candidate_station_count": 0,
+      "geometry_version": "35339921e7a23101",
+      "spatial_detail_available": false,
+      "monthly_area_coverage_known": false,
+      "cache_hit": false,
+      "retrieved_utc": "2026-11-15T07:40:48.493974+00:00",
+      "first_observed_month": null,
+      "last_observed_month": null
+    }
+  ]
+}

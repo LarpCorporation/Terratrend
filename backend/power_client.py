@@ -6,6 +6,8 @@ import random
 import time
 import urllib.request
 import urllib.error
+import threading
+import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
@@ -17,23 +19,34 @@ MAX_WORKERS = 6
 MAX_RETRIES = 4
 
 _CACHE_INDEX = None
+_CACHE_LOCK = threading.RLock()
 
 
 def _get_cache_index():
+    """Index cached files by (param, lon, lat), keeping each file's own period.
+
+    The period is part of the key: a cached 2005-2024 file must never answer a
+    2015-2024 request, because it would silently return 20 years of data for a
+    10-year question (and the caller would report the wrong trend with full
+    confidence).
+    """
     global _CACHE_INDEX
-    if _CACHE_INDEX is None:
-        _CACHE_INDEX = {}
-        for p in CACHE_DIR.glob("*.json"):
-            name = p.name
-            try:
-                parts = name.replace(".json", "").split("_")
-                param = parts[0][1:]
-                lon_str = parts[-2][1:]
-                lat_str = parts[-1][1:]
-                _CACHE_INDEX.setdefault((param, lon_str, lat_str), []).append(p)
-            except Exception:
-                continue
+    with _CACHE_LOCK:
+        if _CACHE_INDEX is None:
+            idx = {}
+            for p in CACHE_DIR.glob("*.json"):
+                match = re.fullmatch(r"P(.+)_S(\d+)_E(\d+)_x(-?[\d.]+)_y(-?[\d.]+)\.json", p.name)
+                if match:
+                    param, start, end, lon, lat = match.groups()
+                    idx.setdefault((param, lon, lat), []).append((int(start), int(end), p))
+            _CACHE_INDEX = idx
     return _CACHE_INDEX
+
+
+def _slice_months(data, start, end):
+    """Restrict a YYYYMM-keyed series to the requested years."""
+    lo, hi = start * 100, end * 100 + 12
+    return {k: v for k, v in data.items() if lo <= int(k) <= hi}
 
 
 def _cache_path(lon, lat, param, start, end):
@@ -42,7 +55,11 @@ def _cache_path(lon, lat, param, start, end):
 
 
 def _fetch_one(lon, lat, param, start, end):
-    """Fetch monthly series for one point. Returns dict[YYYYMM -> value]."""
+    """Fetch monthly series for one point. Returns dict[YYYYMM -> value].
+
+    The returned series is guaranteed to lie inside [start, end]. A cache hit
+    is only used when the cached file fully covers the request.
+    """
     cpath = _cache_path(lon, lat, param, start, end)
     if cpath.exists():
         try:
@@ -52,17 +69,24 @@ def _fetch_one(lon, lat, param, start, end):
         except Exception:
             pass
 
-    # High-speed in-memory lookup across any existing cached period
+    # Reuse an existing cached file ONLY when it fully covers the requested
+    # period. A partial cover would drop whole years and bias the trend.
     idx = _get_cache_index()
     matches = idx.get((param, f"{lon:.2f}", f"{lat:.2f}"), [])
-    for m in matches:
+    best = None
+    for cstart, cend, path in matches:
+        if cstart <= start and cend >= end:
+            if best is None or (cend - cstart) < (best[1] - best[0]):
+                best = (cstart, cend, path)
+    if best is not None:
         try:
-            blob = json.loads(m.read_text())
+            blob = json.loads(best[2].read_text())
             data = blob.get("data", {})
-            if data:
-                return data
+            sliced = _slice_months(data, start, end)
+            if sliced:
+                return sliced
         except Exception:
-            continue
+            pass
 
     url = (f"{BASE}?community=AG&longitude={lon:.4f}&latitude={lat:.4f}"
            f"&start={start}&end={end}&parameters={param}&format=JSON")
@@ -81,6 +105,10 @@ def _fetch_one(lon, lat, param, start, end):
                 raise RuntimeError(f"empty series {msgs[:2]}")
             cpath.parent.mkdir(parents=True, exist_ok=True)
             cpath.write_text(json.dumps({"t": time.time(), "data": series}))
+            # a new file changes what the index can serve
+            global _CACHE_INDEX
+            with _CACHE_LOCK:
+                _CACHE_INDEX = None
             return series
         except Exception as e:  # noqa: BLE001
             last_err = e
@@ -96,6 +124,23 @@ def _clean(v):
     if math.isnan(f) or f < -900:
         return None
     return f
+
+
+# POWER returns radiation in MJ/m^2/day. The catalog advertises these
+# variables in the units scientists actually quote them in, so convert once at
+# ingest rather than leaving every downstream "how much is it changing" wrong
+# by a constant factor.
+UNIT_SCALE = {
+    "ALLSKY_SFC_LW_DWN": 1e6 / 86400.0,   # MJ/m^2/day -> W/m^2
+    "ALLSKY_SFC_SW_DNI": 1.0 / 3.6,       # MJ/m^2/day -> kWh/m^2/day
+}
+
+
+def _scale(param, value):
+    factor = UNIT_SCALE.get(param)
+    if factor is None or value is None:
+        return value
+    return value * factor
 
 
 def fetch_grid(param, bbox, start, end, nx=5, ny=5):
@@ -118,7 +163,9 @@ def fetch_grid(param, bbox, start, end, nx=5, ny=5):
         for fut in as_completed(futs):
             pt, series = fut.result()
             lon, lat = pt
-            results.setdefault(lon, {})[lat] = {k: _clean(v) for k, v in series.items()}
+            results.setdefault(lon, {})[lat] = {
+                k: _scale(param, _clean(v)) for k, v in series.items()
+            }
 
     got = sum(1 for lo in results for la in results[lo]
               if any(v is not None for v in results[lo][la].values()))

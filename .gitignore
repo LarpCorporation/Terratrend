@@ -19,6 +19,7 @@ desktop.ini
 *.swp
 
 # ---- local scratch ----
+.scratch/
 *.log
 _probe.py
 _smoke.py
@@ -27,3 +28,8 @@ _check.py
 _check2.py
 _gen_globe.py
 _land.geojson
+
+# ---- large local media / session dumps (not part of the deliverable) ----
+*.MOV
+sessions/
+backend/literature.py.disabled

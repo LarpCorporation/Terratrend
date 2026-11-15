@@ -1,0 +1,2081 @@
+{
+  "region": {
+    "id": "custom:b81d5ba97ebe69b39192",
+    "name": "Ghana \u00b7 one GLDAS validation cell",
+    "level": "custom",
+    "parent": null,
+    "geometry_version": "ee77fa7ce16d81c3",
+    "bbox": [
+      -1.25,
+      9.0,
+      -1.0,
+      9.25
+    ],
+    "surface": "mixed",
+    "desc": "Ghana \u00b7 one GLDAS validation cell \u00b7 763.0 km\u00b2 \u00b7 user-defined boundary",
+    "center": [
+      -1.125,
+      9.125
+    ],
+    "selection_kind": "bounds",
+    "area_km2": 762.9914,
+    "boundary_source": "User-defined selection"
+  },
+  "start": 2016,
+  "end": 2024,
+  "months": [
+    "2016-01",
+    "2016-02",
+    "2016-03",
+    "2016-04",
+    "2016-05",
+    "2016-06",
+    "2016-07",
+    "2016-08",
+    "2016-09",
+    "2016-10",
+    "2016-11",
+    "2016-12",
+    "2017-01",
+    "2017-02",
+    "2017-03",
+    "2017-04",
+    "2017-05",
+    "2017-06",
+    "2017-07",
+    "2017-08",
+    "2017-09",
+    "2017-10",
+    "2017-11",
+    "2017-12",
+    "2018-01",
+    "2018-02",
+    "2018-03",
+    "2018-04",
+    "2018-05",
+    "2018-06",
+    "2018-07",
+    "2018-08",
+    "2018-09",
+    "2018-10",
+    "2018-11",
+    "2018-12",
+    "2019-01",
+    "2019-02",
+    "2019-03",
+    "2019-04",
+    "2019-05",
+    "2019-06",
+    "2019-07",
+    "2019-08",
+    "2019-09",
+    "2019-10",
+    "2019-11",
+    "2019-12",
+    "2020-01",
+    "2020-02",
+    "2020-03",
+    "2020-04",
+    "2020-05",
+    "2020-06",
+    "2020-07",
+    "2020-08",
+    "2020-09",
+    "2020-10",
+    "2020-11",
+    "2020-12",
+    "2021-01",
+    "2021-02",
+    "2021-03",
+    "2021-04",
+    "2021-05",
+    "2021-06",
+    "2021-07",
+    "2021-08",
+    "2021-09",
+    "2021-10",
+    "2021-11",
+    "2021-12",
+    "2022-01",
+    "2022-02",
+    "2022-03",
+    "2022-04",
+    "2022-05",
+    "2022-06",
+    "2022-07",
+    "2022-08",
+    "2022-09",
+    "2022-10",
+    "2022-11",
+    "2022-12",
+    "2023-01",
+    "2023-02",
+    "2023-03",
+    "2023-04",
+    "2023-05",
+    "2023-06",
+    "2023-07",
+    "2023-08",
+    "2023-09",
+    "2023-10",
+    "2023-11",
+    "2023-12",
+    "2024-01",
+    "2024-02",
+    "2024-03",
+    "2024-04",
+    "2024-05",
+    "2024-06",
+    "2024-07",
+    "2024-08",
+    "2024-09",
+    "2024-10",
+    "2024-11",
+    "2024-12"
+  ],
+  "series": [
+    {
+      "variable": {
+        "id": "GLDAS_SM_TOP",
+        "name": "Soil Water \u00b7 GLDAS (0\u201310 cm)",
+        "unit": "kg/m\u00b2",
+        "mission": "GLDAS",
+        "group": "water",
+        "sphere": "land",
+        "sphere_code": "LND",
+        "sphere_name": "Land & Biosphere",
+        "desc": "Soil water mass per ground area; not the MERRA-2 saturation fraction",
+        "color": "#89bfa2",
+        "dataset": "GLDAS_NOAH025_M",
+        "source_field": "SoilMoi0_10cm_inst"
+      },
+      "provenance": {
+        "provider": "nasa-hydrology",
+        "source": "NASA Hydrology Time Series / GLDAS",
+        "resource": "Hydrology Time Series",
+        "dataset": "GLDAS_NOAH025_M",
+        "collection_version": "2.1",
+        "field": "SoilMoi0_10cm_inst",
+        "policy": "challenge_resource",
+        "citation": "https://doi.org/10.5067/SXAVCZFAQLNO",
+        "access": "Monthly point-series API for every intersecting GLDAS source cell",
+        "aggregation": "Native-cell polygon overlap \u00d7 cos(latitude); at least 80% selected area each month",
+        "quality": "GLDAS model estimates; provider fill excluded. Soil water mass is not a saturation fraction; wind is near-surface forcing, not a verified 2 m measurement.",
+        "geometry_version": "ee77fa7ce16d81c3",
+        "dlon": 0.25,
+        "dlat": 0.25,
+        "expected_cells": 1,
+        "available_cells": 1,
+        "cached_series": 0,
+        "monthly_area_coverage_known": true,
+        "first_observed_month": 201601,
+        "last_observed_month": 202412,
+        "retrieved_utc": "2026-11-15T06:51:22.351850+00:00"
+      },
+      "monthly_timeseries": [
+        {
+          "month": "2016-01",
+          "value": 8.25398
+        },
+        {
+          "month": "2016-02",
+          "value": 7.99068
+        },
+        {
+          "month": "2016-03",
+          "value": 15.6898
+        },
+        {
+          "month": "2016-04",
+          "value": 18.9588
+        },
+        {
+          "month": "2016-05",
+          "value": 22.83
+        },
+        {
+          "month": "2016-06",
+          "value": 23.289
+        },
+        {
+          "month": "2016-07",
+          "value": 26.8786
+        },
+        {
+          "month": "2016-08",
+          "value": 26.9746
+        },
+        {
+          "month": "2016-09",
+          "value": 29.0484
+        },
+        {
+          "month": "2016-10",
+          "value": 24.7732
+        },
+        {
+          "month": "2016-11",
+          "value": 13.8527
+        },
+        {
+          "month": "2016-12",
+          "value": 11.3326
+        },
+        {
+          "month": "2017-01",
+          "value": 9.50733
+        },
+        {
+          "month": "2017-02",
+          "value": 9.41715
+        },
+        {
+          "month": "2017-03",
+          "value": 11.6976
+        },
+        {
+          "month": "2017-04",
+          "value": 18.2978
+        },
+        {
+          "month": "2017-05",
+          "value": 22.4889
+        },
+        {
+          "month": "2017-06",
+          "value": 25.7131
+        },
+        {
+          "month": "2017-07",
+          "value": 26.8397
+        },
+        {
+          "month": "2017-08",
+          "value": 27.6566
+        },
+        {
+          "month": "2017-09",
+          "value": 27.685
+        },
+        {
+          "month": "2017-10",
+          "value": 23.8408
+        },
+        {
+          "month": "2017-11",
+          "value": 16.1455
+        },
+        {
+          "month": "2017-12",
+          "value": 11.0663
+        },
+        {
+          "month": "2018-01",
+          "value": 9.01661
+        },
+        {
+          "month": "2018-02",
+          "value": 11.1906
+        },
+        {
+          "month": "2018-03",
+          "value": 16.1811
+        },
+        {
+          "month": "2018-04",
+          "value": 19.5879
+        },
+        {
+          "month": "2018-05",
+          "value": 21.9848
+        },
+        {
+          "month": "2018-06",
+          "value": 22.5728
+        },
+        {
+          "month": "2018-07",
+          "value": 26.7023
+        },
+        {
+          "month": "2018-08",
+          "value": 27.5353
+        },
+        {
+          "month": "2018-09",
+          "value": 29.914
+        },
+        {
+          "month": "2018-10",
+          "value": 27.4649
+        },
+        {
+          "month": "2018-11",
+          "value": 17.3222
+        },
+        {
+          "month": "2018-12",
+          "value": 10.3727
+        },
+        {
+          "month": "2019-01",
+          "value": 9.61987
+        },
+        {
+          "month": "2019-02",
+          "value": 14.0193
+        },
+        {
+          "month": "2019-03",
+          "value": 15.0425
+        },
+        {
+          "month": "2019-04",
+          "value": 21.4795
+        },
+        {
+          "month": "2019-05",
+          "value": 25.0678
+        },
+        {
+          "month": "2019-06",
+          "value": 24.9045
+        },
+        {
+          "month": "2019-07",
+          "value": 27.3436
+        },
+        {
+          "month": "2019-08",
+          "value": 28.3566
+        },
+        {
+          "month": "2019-09",
+          "value": 30.6409
+        },
+        {
+          "month": "2019-10",
+          "value": 29.9577
+        },
+        {
+          "month": "2019-11",
+          "value": 21.5164
+        },
+        {
+          "month": "2019-12",
+          "value": 11.0194
+        },
+        {
+          "month": "2020-01",
+          "value": 8.6761
+        },
+        {
+          "month": "2020-02",
+          "value": 8.02879
+        },
+        {
+          "month": "2020-03",
+          "value": 14.3343
+        },
+        {
+          "month": "2020-04",
+          "value": 20.1756
+        },
+        {
+          "month": "2020-05",
+          "value": 24.6201
+        },
+        {
+          "month": "2020-06",
+          "value": 27.2252
+        },
+        {
+          "month": "2020-07",
+          "value": 28.4717
+        },
+        {
+          "month": "2020-08",
+          "value": 26.4385
+        },
+        {
+          "month": "2020-09",
+          "value": 30.1334
+        },
+        {
+          "month": "2020-10",
+          "value": 27.6597
+        },
+        {
+          "month": "2020-11",
+          "value": 15.6803
+        },
+        {
+          "month": "2020-12",
+          "value": 10.3594
+        },
+        {
+          "month": "2021-01",
+          "value": 8.72576
+        },
+        {
+          "month": "2021-02",
+          "value": 9.50783
+        },
+        {
+          "month": "2021-03",
+          "value": 15.8136
+        },
+        {
+          "month": "2021-04",
+          "value": 19.5762
+        },
+        {
+          "month": "2021-05",
+          "value": 23.0931
+        },
+        {
+          "month": "2021-06",
+          "value": 23.5516
+        },
+        {
+          "month": "2021-07",
+          "value": 25.569
+        },
+        {
+          "month": "2021-08",
+          "value": 29.1883
+        },
+        {
+          "month": "2021-09",
+          "value": 29.7225
+        },
+        {
+          "month": "2021-10",
+          "value": 27.1857
+        },
+        {
+          "month": "2021-11",
+          "value": 20.5822
+        },
+        {
+          "month": "2021-12",
+          "value": 10.956
+        },
+        {
+          "month": "2022-01",
+          "value": 8.89667
+        },
+        {
+          "month": "2022-02",
+          "value": 8.24303
+        },
+        {
+          "month": "2022-03",
+          "value": 12.6437
+        },
+        {
+          "month": "2022-04",
+          "value": 21.7075
+        },
+        {
+          "month": "2022-05",
+          "value": 23.5259
+        },
+        {
+          "month": "2022-06",
+          "value": 26.5102
+        },
+        {
+          "month": "2022-07",
+          "value": 25.8751
+        },
+        {
+          "month": "2022-08",
+          "value": 27.224
+        },
+        {
+          "month": "2022-09",
+          "value": 30.6179
+        },
+        {
+          "month": "2022-10",
+          "value": 27.3377
+        },
+        {
+          "month": "2022-11",
+          "value": 15.7006
+        },
+        {
+          "month": "2022-12",
+          "value": 11.5275
+        },
+        {
+          "month": "2023-01",
+          "value": 8.7505
+        },
+        {
+          "month": "2023-02",
+          "value": 8.541
+        },
+        {
+          "month": "2023-03",
+          "value": 13.3682
+        },
+        {
+          "month": "2023-04",
+          "value": 21.7442
+        },
+        {
+          "month": "2023-05",
+          "value": 23.7609
+        },
+        {
+          "month": "2023-06",
+          "value": 27.1154
+        },
+        {
+          "month": "2023-07",
+          "value": 28.7851
+        },
+        {
+          "month": "2023-08",
+          "value": 29.2531
+        },
+        {
+          "month": "2023-09",
+          "value": 29.9761
+        },
+        {
+          "month": "2023-10",
+          "value": 27.6028
+        },
+        {
+          "month": "2023-11",
+          "value": 18.4619
+        },
+        {
+          "month": "2023-12",
+          "value": 10.8871
+        },
+        {
+          "month": "2024-01",
+          "value": 8.65189
+        },
+        {
+          "month": "2024-02",
+          "value": 8.12507
+        },
+        {
+          "month": "2024-03",
+          "value": 12.4803
+        },
+        {
+          "month": "2024-04",
+          "value": 18.2869
+        },
+        {
+          "month": "2024-05",
+          "value": 21.9197
+        },
+        {
+          "month": "2024-06",
+          "value": 26.2255
+        },
+        {
+          "month": "2024-07",
+          "value": 25.7157
+        },
+        {
+          "month": "2024-08",
+          "value": 20.7325
+        },
+        {
+          "month": "2024-09",
+          "value": 26.5198
+        },
+        {
+          "month": "2024-10",
+          "value": 28.3839
+        },
+        {
+          "month": "2024-11",
+          "value": 16.0305
+        },
+        {
+          "month": "2024-12",
+          "value": 9.9551
+        }
+      ],
+      "yearly_timeseries": [
+        {
+          "year": 2016,
+          "value": 19.156,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2017,
+          "value": 19.1963,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2018,
+          "value": 19.9871,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2019,
+          "value": 21.5807,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2020,
+          "value": 20.1503,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2021,
+          "value": 20.2893,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2022,
+          "value": 19.9841,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2023,
+          "value": 20.6872,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2024,
+          "value": 18.5856,
+          "months": 12,
+          "complete": true
+        }
+      ],
+      "cells": [
+        {
+          "lon": -1.125,
+          "lat": 9.125,
+          "n": 9,
+          "slope": 0.11937500000000009,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.6050440034538904,
+          "per_decade": 1.193750000000001,
+          "stars": "",
+          "ci_low_per_decade": -3.0519999999999925,
+          "ci_high_per_decade": 2.4857500000000066,
+          "t_p": 0.9073964706972428,
+          "methods_agree": true
+        }
+      ],
+      "overall": {
+        "ok": true,
+        "n": 9,
+        "slope": 0.11937500000000009,
+        "intercept": -220.9872000000002,
+        "z": 0.5171606716001593,
+        "p": 0.6050440034538904,
+        "tau": 0.16666666666666666,
+        "significant": false,
+        "stars": "",
+        "direction": "flat",
+        "change_total": -0.5703999999999994,
+        "change_pct": -2.9776571309250333,
+        "autocorr_r1": 0.007945132689395997,
+        "autocorr_factor": 1.0160175267542102,
+        "p_uncorrected": 0.6021675277481959,
+        "z_uncorrected": 0.5212860351426869,
+        "per_decade": 1.193750000000001,
+        "t_slope": 0.014895000000000044,
+        "t_se": 0.12350739980241023,
+        "t_per_decade": 0.14895000000000044,
+        "t_p": 0.9073964706972428,
+        "t_df": 7,
+        "t_significant": false,
+        "t_ci_low_per_decade": -2.77153592823945,
+        "t_ci_high_per_decade": 3.0694359282394506,
+        "methods_agree": true,
+        "ci_low": -0.30519999999999925,
+        "ci_high": 0.24857500000000066,
+        "ci_low_per_decade": -3.0519999999999925,
+        "ci_high_per_decade": 2.4857500000000066,
+        "dt_label": "year",
+        "first": 19.156,
+        "last": 18.5856,
+        "seasonal_z": 0.2708681694429807,
+        "seasonal_p": 0.7864924272252569,
+        "seasonal_significant": false
+      },
+      "seasonal": [
+        0.2708681694429807,
+        0.7864924272252569,
+        0.0,
+        false
+      ],
+      "summary": {
+        "total_cells": 1,
+        "valid_cells": 1,
+        "significant_cells": 0,
+        "rising_cells": 0,
+        "falling_cells": 0,
+        "consensus": "none",
+        "spatial_detail_available": true
+      }
+    },
+    {
+      "variable": {
+        "id": "GLDAS_SOILT",
+        "name": "Soil Temperature \u00b7 GLDAS (0\u201310 cm)",
+        "unit": "\u00b0C",
+        "mission": "GLDAS",
+        "group": "temperature",
+        "sphere": "land",
+        "sphere_code": "LND",
+        "sphere_name": "Land & Biosphere",
+        "desc": "Monthly upper-soil temperature from the GLDAS Noah model",
+        "color": "#d5a16c",
+        "dataset": "GLDAS_NOAH025_M",
+        "source_field": "SoilTMP0_10cm_inst"
+      },
+      "provenance": {
+        "provider": "nasa-hydrology",
+        "source": "NASA Hydrology Time Series / GLDAS",
+        "resource": "Hydrology Time Series",
+        "dataset": "GLDAS_NOAH025_M",
+        "collection_version": "2.1",
+        "field": "SoilTMP0_10cm_inst",
+        "policy": "challenge_resource",
+        "citation": "https://doi.org/10.5067/SXAVCZFAQLNO",
+        "access": "Monthly point-series API for every intersecting GLDAS source cell",
+        "aggregation": "Native-cell polygon overlap \u00d7 cos(latitude); at least 80% selected area each month",
+        "quality": "GLDAS model estimates; provider fill excluded. Soil water mass is not a saturation fraction; wind is near-surface forcing, not a verified 2 m measurement.",
+        "geometry_version": "ee77fa7ce16d81c3",
+        "dlon": 0.25,
+        "dlat": 0.25,
+        "expected_cells": 1,
+        "available_cells": 1,
+        "cached_series": 0,
+        "monthly_area_coverage_known": true,
+        "first_observed_month": 201601,
+        "last_observed_month": 202412,
+        "retrieved_utc": "2026-11-15T06:51:25.309556+00:00"
+      },
+      "monthly_timeseries": [
+        {
+          "month": "2016-01",
+          "value": 28.61
+        },
+        {
+          "month": "2016-02",
+          "value": 30.248
+        },
+        {
+          "month": "2016-03",
+          "value": 34.742
+        },
+        {
+          "month": "2016-04",
+          "value": 34.934
+        },
+        {
+          "month": "2016-05",
+          "value": 32.19
+        },
+        {
+          "month": "2016-06",
+          "value": 29.326
+        },
+        {
+          "month": "2016-07",
+          "value": 27.15
+        },
+        {
+          "month": "2016-08",
+          "value": 26.379
+        },
+        {
+          "month": "2016-09",
+          "value": 26.469
+        },
+        {
+          "month": "2016-10",
+          "value": 28.156
+        },
+        {
+          "month": "2016-11",
+          "value": 30.046
+        },
+        {
+          "month": "2016-12",
+          "value": 29.652
+        },
+        {
+          "month": "2017-01",
+          "value": 28.26
+        },
+        {
+          "month": "2017-02",
+          "value": 30.704
+        },
+        {
+          "month": "2017-03",
+          "value": 34.587
+        },
+        {
+          "month": "2017-04",
+          "value": 34.724
+        },
+        {
+          "month": "2017-05",
+          "value": 32.302
+        },
+        {
+          "month": "2017-06",
+          "value": 29.491
+        },
+        {
+          "month": "2017-07",
+          "value": 27.328
+        },
+        {
+          "month": "2017-08",
+          "value": 26.363
+        },
+        {
+          "month": "2017-09",
+          "value": 26.285
+        },
+        {
+          "month": "2017-10",
+          "value": 28.964
+        },
+        {
+          "month": "2017-11",
+          "value": 31.672
+        },
+        {
+          "month": "2017-12",
+          "value": 31.659
+        },
+        {
+          "month": "2018-01",
+          "value": 30.051
+        },
+        {
+          "month": "2018-02",
+          "value": 33.927
+        },
+        {
+          "month": "2018-03",
+          "value": 35.447
+        },
+        {
+          "month": "2018-04",
+          "value": 35.226
+        },
+        {
+          "month": "2018-05",
+          "value": 32.962
+        },
+        {
+          "month": "2018-06",
+          "value": 30.714
+        },
+        {
+          "month": "2018-07",
+          "value": 27.695
+        },
+        {
+          "month": "2018-08",
+          "value": 26.287
+        },
+        {
+          "month": "2018-09",
+          "value": 26.349
+        },
+        {
+          "month": "2018-10",
+          "value": 28.575
+        },
+        {
+          "month": "2018-11",
+          "value": 31.742
+        },
+        {
+          "month": "2018-12",
+          "value": 30.29
+        },
+        {
+          "month": "2019-01",
+          "value": 31.663
+        },
+        {
+          "month": "2019-02",
+          "value": 33.884
+        },
+        {
+          "month": "2019-03",
+          "value": 36.012
+        },
+        {
+          "month": "2019-04",
+          "value": 35.988
+        },
+        {
+          "month": "2019-05",
+          "value": 33.182
+        },
+        {
+          "month": "2019-06",
+          "value": 29.461
+        },
+        {
+          "month": "2019-07",
+          "value": 26.775
+        },
+        {
+          "month": "2019-08",
+          "value": 25.336
+        },
+        {
+          "month": "2019-09",
+          "value": 25.775
+        },
+        {
+          "month": "2019-10",
+          "value": 26.576
+        },
+        {
+          "month": "2019-11",
+          "value": 29.971
+        },
+        {
+          "month": "2019-12",
+          "value": 29.859
+        },
+        {
+          "month": "2020-01",
+          "value": 29.65
+        },
+        {
+          "month": "2020-02",
+          "value": 30.507
+        },
+        {
+          "month": "2020-03",
+          "value": 34.593
+        },
+        {
+          "month": "2020-04",
+          "value": 34.329
+        },
+        {
+          "month": "2020-05",
+          "value": 32.051
+        },
+        {
+          "month": "2020-06",
+          "value": 28.675
+        },
+        {
+          "month": "2020-07",
+          "value": 26.397
+        },
+        {
+          "month": "2020-08",
+          "value": 25.823
+        },
+        {
+          "month": "2020-09",
+          "value": 25.273
+        },
+        {
+          "month": "2020-10",
+          "value": 27.123
+        },
+        {
+          "month": "2020-11",
+          "value": 29.599
+        },
+        {
+          "month": "2020-12",
+          "value": 32.537
+        },
+        {
+          "month": "2021-01",
+          "value": 30.879
+        },
+        {
+          "month": "2021-02",
+          "value": 32.345
+        },
+        {
+          "month": "2021-03",
+          "value": 34.485
+        },
+        {
+          "month": "2021-04",
+          "value": 34.159
+        },
+        {
+          "month": "2021-05",
+          "value": 31.92
+        },
+        {
+          "month": "2021-06",
+          "value": 29.677
+        },
+        {
+          "month": "2021-07",
+          "value": 26.875
+        },
+        {
+          "month": "2021-08",
+          "value": 25.799
+        },
+        {
+          "month": "2021-09",
+          "value": 25.799
+        },
+        {
+          "month": "2021-10",
+          "value": 27.988
+        },
+        {
+          "month": "2021-11",
+          "value": 30.419
+        },
+        {
+          "month": "2021-12",
+          "value": 30.053
+        },
+        {
+          "month": "2022-01",
+          "value": 29.58
+        },
+        {
+          "month": "2022-02",
+          "value": 31.56
+        },
+        {
+          "month": "2022-03",
+          "value": 35.582
+        },
+        {
+          "month": "2022-04",
+          "value": 32.84
+        },
+        {
+          "month": "2022-05",
+          "value": 30.784
+        },
+        {
+          "month": "2022-06",
+          "value": 28.05
+        },
+        {
+          "month": "2022-07",
+          "value": 25.883
+        },
+        {
+          "month": "2022-08",
+          "value": 25.135
+        },
+        {
+          "month": "2022-09",
+          "value": 24.641
+        },
+        {
+          "month": "2022-10",
+          "value": 26.693
+        },
+        {
+          "month": "2022-11",
+          "value": 28.814
+        },
+        {
+          "month": "2022-12",
+          "value": 29.219
+        },
+        {
+          "month": "2023-01",
+          "value": 29.963
+        },
+        {
+          "month": "2023-02",
+          "value": 32.513
+        },
+        {
+          "month": "2023-03",
+          "value": 34.679
+        },
+        {
+          "month": "2023-04",
+          "value": 33.119
+        },
+        {
+          "month": "2023-05",
+          "value": 30.922
+        },
+        {
+          "month": "2023-06",
+          "value": 27.988
+        },
+        {
+          "month": "2023-07",
+          "value": 26.517
+        },
+        {
+          "month": "2023-08",
+          "value": 25.605
+        },
+        {
+          "month": "2023-09",
+          "value": 25.92
+        },
+        {
+          "month": "2023-10",
+          "value": 27.727
+        },
+        {
+          "month": "2023-11",
+          "value": 30.664
+        },
+        {
+          "month": "2023-12",
+          "value": 29.583
+        },
+        {
+          "month": "2024-01",
+          "value": 30.342
+        },
+        {
+          "month": "2024-02",
+          "value": 32.67
+        },
+        {
+          "month": "2024-03",
+          "value": 36.843
+        },
+        {
+          "month": "2024-04",
+          "value": 34.802
+        },
+        {
+          "month": "2024-05",
+          "value": 32.372
+        },
+        {
+          "month": "2024-06",
+          "value": 29.426
+        },
+        {
+          "month": "2024-07",
+          "value": 27.2
+        },
+        {
+          "month": "2024-08",
+          "value": 27.078
+        },
+        {
+          "month": "2024-09",
+          "value": 26.226
+        },
+        {
+          "month": "2024-10",
+          "value": 27.24
+        },
+        {
+          "month": "2024-11",
+          "value": 28.04
+        },
+        {
+          "month": "2024-12",
+          "value": 28.606
+        }
+      ],
+      "yearly_timeseries": [
+        {
+          "year": 2016,
+          "value": 29.8252,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2017,
+          "value": 30.1949,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2018,
+          "value": 30.7721,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2019,
+          "value": 30.3735,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2020,
+          "value": 29.7131,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2021,
+          "value": 30.0332,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2022,
+          "value": 29.0651,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2023,
+          "value": 29.6,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2024,
+          "value": 30.0704,
+          "months": 12,
+          "complete": true
+        }
+      ],
+      "cells": [
+        {
+          "lon": -1.125,
+          "lat": 9.125,
+          "n": 9,
+          "slope": -0.050522500000000026,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.39919565996613615,
+          "per_decade": -0.5052250000000003,
+          "stars": "",
+          "ci_low_per_decade": -2.3441999999999936,
+          "ci_high_per_decade": 0.8932499999999965,
+          "t_p": 0.25355697070501426,
+          "methods_agree": true
+        }
+      ],
+      "overall": {
+        "ok": true,
+        "n": 9,
+        "slope": -0.050522500000000026,
+        "intercept": 132.09878250000006,
+        "z": -0.8430586199984684,
+        "p": 0.39919565996613615,
+        "tau": -0.2777777777777778,
+        "significant": false,
+        "stars": "",
+        "direction": "flat",
+        "change_total": 0.24520000000000053,
+        "change_pct": null,
+        "autocorr_r1": 0.10664203077014921,
+        "autocorr_factor": 1.2387442311889456,
+        "p_uncorrected": 0.34808262363292397,
+        "z_uncorrected": -0.9383148632568366,
+        "per_decade": -0.5052250000000003,
+        "t_slope": -0.07596999999999982,
+        "t_se": 0.06107171869048385,
+        "t_per_decade": -0.7596999999999982,
+        "t_p": 0.25355697070501426,
+        "t_df": 7,
+        "t_significant": false,
+        "t_ci_low_per_decade": -2.2038166710197022,
+        "t_ci_high_per_decade": 0.6844166710197058,
+        "methods_agree": true,
+        "ci_low": -0.23441999999999935,
+        "ci_high": 0.08932499999999965,
+        "ci_low_per_decade": -2.3441999999999936,
+        "ci_high_per_decade": 0.8932499999999965,
+        "dt_label": "year",
+        "first": 29.8252,
+        "last": 30.0704,
+        "seasonal_z": -2.498006451529711,
+        "seasonal_p": 0.012489392082025486,
+        "seasonal_significant": true
+      },
+      "seasonal": [
+        -2.498006451529711,
+        0.012489392082025486,
+        0.0,
+        true
+      ],
+      "summary": {
+        "total_cells": 1,
+        "valid_cells": 1,
+        "significant_cells": 0,
+        "rising_cells": 0,
+        "falling_cells": 0,
+        "consensus": "none",
+        "spatial_detail_available": true
+      }
+    },
+    {
+      "variable": {
+        "id": "GLDAS_WIND",
+        "name": "Near-Surface Wind \u00b7 GLDAS",
+        "unit": "m/s",
+        "mission": "GLDAS",
+        "group": "energy",
+        "sphere": "atmosphere",
+        "sphere_code": "ATM",
+        "sphere_name": "Atmosphere",
+        "desc": "Monthly near-surface forcing wind; no equivalence to 2 m wind is claimed",
+        "color": "#c4a5df",
+        "dataset": "GLDAS_NOAH025_M",
+        "source_field": "Wind_f_inst"
+      },
+      "provenance": {
+        "provider": "nasa-hydrology",
+        "source": "NASA Hydrology Time Series / GLDAS",
+        "resource": "Hydrology Time Series",
+        "dataset": "GLDAS_NOAH025_M",
+        "collection_version": "2.1",
+        "field": "Wind_f_inst",
+        "policy": "challenge_resource",
+        "citation": "https://doi.org/10.5067/SXAVCZFAQLNO",
+        "access": "Monthly point-series API for every intersecting GLDAS source cell",
+        "aggregation": "Native-cell polygon overlap \u00d7 cos(latitude); at least 80% selected area each month",
+        "quality": "GLDAS model estimates; provider fill excluded. Soil water mass is not a saturation fraction; wind is near-surface forcing, not a verified 2 m measurement.",
+        "geometry_version": "ee77fa7ce16d81c3",
+        "dlon": 0.25,
+        "dlat": 0.25,
+        "expected_cells": 1,
+        "available_cells": 1,
+        "cached_series": 0,
+        "monthly_area_coverage_known": true,
+        "first_observed_month": 201601,
+        "last_observed_month": 202412,
+        "retrieved_utc": "2026-11-15T06:51:28.002210+00:00"
+      },
+      "monthly_timeseries": [
+        {
+          "month": "2016-01",
+          "value": 4.00576
+        },
+        {
+          "month": "2016-02",
+          "value": 3.20884
+        },
+        {
+          "month": "2016-03",
+          "value": 3.2413
+        },
+        {
+          "month": "2016-04",
+          "value": 3.88
+        },
+        {
+          "month": "2016-05",
+          "value": 3.43519
+        },
+        {
+          "month": "2016-06",
+          "value": 3.05617
+        },
+        {
+          "month": "2016-07",
+          "value": 2.95829
+        },
+        {
+          "month": "2016-08",
+          "value": 2.58014
+        },
+        {
+          "month": "2016-09",
+          "value": 2.21901
+        },
+        {
+          "month": "2016-10",
+          "value": 2.2678
+        },
+        {
+          "month": "2016-11",
+          "value": 2.26135
+        },
+        {
+          "month": "2016-12",
+          "value": 2.49119
+        },
+        {
+          "month": "2017-01",
+          "value": 2.61139
+        },
+        {
+          "month": "2017-02",
+          "value": 2.80618
+        },
+        {
+          "month": "2017-03",
+          "value": 2.55526
+        },
+        {
+          "month": "2017-04",
+          "value": 3.2384
+        },
+        {
+          "month": "2017-05",
+          "value": 3.2024
+        },
+        {
+          "month": "2017-06",
+          "value": 2.91933
+        },
+        {
+          "month": "2017-07",
+          "value": 2.74848
+        },
+        {
+          "month": "2017-08",
+          "value": 2.28841
+        },
+        {
+          "month": "2017-09",
+          "value": 2.04193
+        },
+        {
+          "month": "2017-10",
+          "value": 1.85348
+        },
+        {
+          "month": "2017-11",
+          "value": 1.68601
+        },
+        {
+          "month": "2017-12",
+          "value": 1.98477
+        },
+        {
+          "month": "2018-01",
+          "value": 2.22511
+        },
+        {
+          "month": "2018-02",
+          "value": 2.2429
+        },
+        {
+          "month": "2018-03",
+          "value": 2.62113
+        },
+        {
+          "month": "2018-04",
+          "value": 2.99085
+        },
+        {
+          "month": "2018-05",
+          "value": 2.74865
+        },
+        {
+          "month": "2018-06",
+          "value": 2.77083
+        },
+        {
+          "month": "2018-07",
+          "value": 2.44763
+        },
+        {
+          "month": "2018-08",
+          "value": 2.19485
+        },
+        {
+          "month": "2018-09",
+          "value": 1.92113
+        },
+        {
+          "month": "2018-10",
+          "value": 1.90604
+        },
+        {
+          "month": "2018-11",
+          "value": 1.75328
+        },
+        {
+          "month": "2018-12",
+          "value": 2.06084
+        },
+        {
+          "month": "2019-01",
+          "value": 2.05318
+        },
+        {
+          "month": "2019-02",
+          "value": 2.13855
+        },
+        {
+          "month": "2019-03",
+          "value": 2.32143
+        },
+        {
+          "month": "2019-04",
+          "value": 2.92096
+        },
+        {
+          "month": "2019-05",
+          "value": 2.75121
+        },
+        {
+          "month": "2019-06",
+          "value": 2.57135
+        },
+        {
+          "month": "2019-07",
+          "value": 2.32897
+        },
+        {
+          "month": "2019-08",
+          "value": 2.39282
+        },
+        {
+          "month": "2019-09",
+          "value": 1.70633
+        },
+        {
+          "month": "2019-10",
+          "value": 1.79473
+        },
+        {
+          "month": "2019-11",
+          "value": 1.66125
+        },
+        {
+          "month": "2019-12",
+          "value": 1.94401
+        },
+        {
+          "month": "2020-01",
+          "value": 2.51141
+        },
+        {
+          "month": "2020-02",
+          "value": 2.38456
+        },
+        {
+          "month": "2020-03",
+          "value": 2.28044
+        },
+        {
+          "month": "2020-04",
+          "value": 2.75239
+        },
+        {
+          "month": "2020-05",
+          "value": 2.56541
+        },
+        {
+          "month": "2020-06",
+          "value": 2.44754
+        },
+        {
+          "month": "2020-07",
+          "value": 2.4894
+        },
+        {
+          "month": "2020-08",
+          "value": 2.46578
+        },
+        {
+          "month": "2020-09",
+          "value": 1.85331
+        },
+        {
+          "month": "2020-10",
+          "value": 1.71676
+        },
+        {
+          "month": "2020-11",
+          "value": 1.68723
+        },
+        {
+          "month": "2020-12",
+          "value": 1.8227
+        },
+        {
+          "month": "2021-01",
+          "value": 2.01693
+        },
+        {
+          "month": "2021-02",
+          "value": 1.96275
+        },
+        {
+          "month": "2021-03",
+          "value": 2.39465
+        },
+        {
+          "month": "2021-04",
+          "value": 2.59919
+        },
+        {
+          "month": "2021-05",
+          "value": 2.71249
+        },
+        {
+          "month": "2021-06",
+          "value": 2.33924
+        },
+        {
+          "month": "2021-07",
+          "value": 2.60617
+        },
+        {
+          "month": "2021-08",
+          "value": 2.10747
+        },
+        {
+          "month": "2021-09",
+          "value": 1.86176
+        },
+        {
+          "month": "2021-10",
+          "value": 1.91822
+        },
+        {
+          "month": "2021-11",
+          "value": 1.75223
+        },
+        {
+          "month": "2021-12",
+          "value": 2.3122
+        },
+        {
+          "month": "2022-01",
+          "value": 2.9302
+        },
+        {
+          "month": "2022-02",
+          "value": 2.17832
+        },
+        {
+          "month": "2022-03",
+          "value": 2.25324
+        },
+        {
+          "month": "2022-04",
+          "value": 2.60309
+        },
+        {
+          "month": "2022-05",
+          "value": 2.26939
+        },
+        {
+          "month": "2022-06",
+          "value": 2.22476
+        },
+        {
+          "month": "2022-07",
+          "value": 2.42587
+        },
+        {
+          "month": "2022-08",
+          "value": 2.32446
+        },
+        {
+          "month": "2022-09",
+          "value": 1.84388
+        },
+        {
+          "month": "2022-10",
+          "value": 1.69667
+        },
+        {
+          "month": "2022-11",
+          "value": 1.73333
+        },
+        {
+          "month": "2022-12",
+          "value": 2.4156
+        },
+        {
+          "month": "2023-01",
+          "value": 2.37972
+        },
+        {
+          "month": "2023-02",
+          "value": 2.16442
+        },
+        {
+          "month": "2023-03",
+          "value": 2.30635
+        },
+        {
+          "month": "2023-04",
+          "value": 2.65786
+        },
+        {
+          "month": "2023-05",
+          "value": 2.38278
+        },
+        {
+          "month": "2023-06",
+          "value": 2.46475
+        },
+        {
+          "month": "2023-07",
+          "value": 2.17151
+        },
+        {
+          "month": "2023-08",
+          "value": 2.10303
+        },
+        {
+          "month": "2023-09",
+          "value": 1.86248
+        },
+        {
+          "month": "2023-10",
+          "value": 1.84344
+        },
+        {
+          "month": "2023-11",
+          "value": 1.90832
+        },
+        {
+          "month": "2023-12",
+          "value": 2.36849
+        },
+        {
+          "month": "2024-01",
+          "value": 2.31862
+        },
+        {
+          "month": "2024-02",
+          "value": 2.38651
+        },
+        {
+          "month": "2024-03",
+          "value": 2.31066
+        },
+        {
+          "month": "2024-04",
+          "value": 2.64026
+        },
+        {
+          "month": "2024-05",
+          "value": 2.57837
+        },
+        {
+          "month": "2024-06",
+          "value": 2.37244
+        },
+        {
+          "month": "2024-07",
+          "value": 2.48706
+        },
+        {
+          "month": "2024-08",
+          "value": 2.62656
+        },
+        {
+          "month": "2024-09",
+          "value": 1.76597
+        },
+        {
+          "month": "2024-10",
+          "value": 1.85477
+        },
+        {
+          "month": "2024-11",
+          "value": 2.15599
+        },
+        {
+          "month": "2024-12",
+          "value": 2.65875
+        }
+      ],
+      "yearly_timeseries": [
+        {
+          "year": 2016,
+          "value": 2.9671,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2017,
+          "value": 2.4947,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2018,
+          "value": 2.3236,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2019,
+          "value": 2.2154,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2020,
+          "value": 2.2481,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2021,
+          "value": 2.2153,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2022,
+          "value": 2.2416,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2023,
+          "value": 2.2178,
+          "months": 12,
+          "complete": true
+        },
+        {
+          "year": 2024,
+          "value": 2.3463,
+          "months": 12,
+          "complete": true
+        }
+      ],
+      "cells": [
+        {
+          "lon": -1.125,
+          "lat": 9.125,
+          "n": 9,
+          "slope": -0.028299999999999992,
+          "direction": "flat",
+          "significant": false,
+          "p": 0.28338071386499664,
+          "per_decade": -0.2829999999999999,
+          "stars": "",
+          "ci_low_per_decade": -1.0820000000000007,
+          "ci_high_per_decade": 0.03783333333333324,
+          "t_p": 0.05791737753046888,
+          "methods_agree": true
+        }
+      ],
+      "overall": {
+        "ok": true,
+        "n": 9,
+        "slope": -0.028299999999999992,
+        "intercept": 59.464199999999984,
+        "z": -1.0727557623987998,
+        "p": 0.28338071386499664,
+        "tau": -0.3888888888888889,
+        "significant": false,
+        "stars": "",
+        "direction": "flat",
+        "change_total": -0.6208,
+        "change_pct": -20.922786559266626,
+        "autocorr_r1": 0.22965407648380845,
+        "autocorr_factor": 1.596236234847763,
+        "p_uncorrected": 0.17530808080827365,
+        "z_uncorrected": -1.355343691370986,
+        "per_decade": -0.2829999999999999,
+        "t_slope": -0.05796666666666665,
+        "t_se": 0.025594270605560993,
+        "t_per_decade": -0.5796666666666666,
+        "t_p": 0.05791737753046888,
+        "t_df": 7,
+        "t_significant": false,
+        "t_ci_low_per_decade": -1.1848749964240453,
+        "t_ci_high_per_decade": 0.025541663090712027,
+        "methods_agree": true,
+        "ci_low": -0.10820000000000007,
+        "ci_high": 0.003783333333333324,
+        "ci_low_per_decade": -1.0820000000000007,
+        "ci_high_per_decade": 0.03783333333333324,
+        "dt_label": "year",
+        "first": 2.9671,
+        "last": 2.3463,
+        "seasonal_z": -4.424180100902018,
+        "seasonal_p": 9.680923565902333e-06,
+        "seasonal_significant": true
+      },
+      "seasonal": [
+        -4.424180100902018,
+        9.680923565902333e-06,
+        0.0,
+        true
+      ],
+      "summary": {
+        "total_cells": 1,
+        "valid_cells": 1,
+        "significant_cells": 0,
+        "rising_cells": 0,
+        "falling_cells": 0,
+        "consensus": "none",
+        "spatial_detail_available": true
+      }
+    }
+  ],
+  "grid": {
+    "nx": 5,
+    "ny": 5,
+    "bbox": [
+      -1.25,
+      9.0,
+      -1.0,
+      9.25
+    ]
+  },
+  "satellite": {
+    "enabled": false,
+    "reason": "Imagery route not enabled by the challenge source policy"
+  },
+  "couplings": [
+    {
+      "var_a": "GLDAS_SM_TOP",
+      "var_b": "GLDAS_SOILT",
+      "var_a_name": "Soil Water \u00b7 GLDAS (0\u201310 cm)",
+      "var_b_name": "Soil Temperature \u00b7 GLDAS (0\u201310 cm)",
+      "sphere_a": "Land & Biosphere",
+      "sphere_b": "Land & Biosphere",
+      "sphere_a_code": "LND",
+      "sphere_b_code": "LND",
+      "same_sphere": true,
+      "r": 0.047,
+      "phase": "decoupled",
+      "phase_label": "DECOUPLED / INDEPENDENT",
+      "title": "Soil Water \u00b7 GLDAS (0\u201310 cm) <-> Soil Temperature \u00b7 GLDAS (0\u201310 cm) Coupling",
+      "description": "Co-trend association. Possible mechanism: Observed correlation of r = 0.05 between Soil Water \u00b7 GLDAS (0\u201310 cm) and Soil Temperature \u00b7 GLDAS (0\u201310 cm) across the analyzed timeline.",
+      "evidence_type": "co_trend_association"
+    },
+    {
+      "var_a": "GLDAS_SM_TOP",
+      "var_b": "GLDAS_WIND",
+      "var_a_name": "Soil Water \u00b7 GLDAS (0\u201310 cm)",
+      "var_b_name": "Near-Surface Wind \u00b7 GLDAS",
+      "sphere_a": "Land & Biosphere",
+      "sphere_b": "Atmosphere",
+      "sphere_a_code": "LND",
+      "sphere_b_code": "ATM",
+      "same_sphere": false,
+      "r": -0.562,
+      "phase": "divergent",
+      "phase_label": "COUPLED DIVERGENCE (OPPOSING)",
+      "title": "Soil Water \u00b7 GLDAS (0\u201310 cm) <-> Near-Surface Wind \u00b7 GLDAS Coupling",
+      "description": "Co-trend association. Possible mechanism: Observed correlation of r = -0.56 between Soil Water \u00b7 GLDAS (0\u201310 cm) and Near-Surface Wind \u00b7 GLDAS across the analyzed timeline.",
+      "evidence_type": "co_trend_association"
+    },
+    {
+      "var_a": "GLDAS_SOILT",
+      "var_b": "GLDAS_WIND",
+      "var_a_name": "Soil Temperature \u00b7 GLDAS (0\u201310 cm)",
+      "var_b_name": "Near-Surface Wind \u00b7 GLDAS",
+      "sphere_a": "Land & Biosphere",
+      "sphere_b": "Atmosphere",
+      "sphere_a_code": "LND",
+      "sphere_b_code": "ATM",
+      "same_sphere": false,
+      "r": 0.035,
+      "phase": "decoupled",
+      "phase_label": "DECOUPLED / INDEPENDENT",
+      "title": "Soil Temperature \u00b7 GLDAS (0\u201310 cm) <-> Near-Surface Wind \u00b7 GLDAS Coupling",
+      "description": "Co-trend association. Possible mechanism: Observed correlation of r = 0.03 between Soil Temperature \u00b7 GLDAS (0\u201310 cm) and Near-Surface Wind \u00b7 GLDAS across the analyzed timeline.",
+      "evidence_type": "co_trend_association"
+    }
+  ],
+  "window": {
+    "first_month": "2016-01",
+    "last_month": "2024-12",
+    "partial_years": []
+  },
+  "sources": [
+    "NASA Hydrology Time Series / GLDAS"
+  ],
+  "provenance": [
+    {
+      "provider": "nasa-hydrology",
+      "source": "NASA Hydrology Time Series / GLDAS",
+      "resource": "Hydrology Time Series",
+      "dataset": "GLDAS_NOAH025_M",
+      "collection_version": "2.1",
+      "field": "SoilMoi0_10cm_inst",
+      "policy": "challenge_resource",
+      "citation": "https://doi.org/10.5067/SXAVCZFAQLNO",
+      "access": "Monthly point-series API for every intersecting GLDAS source cell",
+      "aggregation": "Native-cell polygon overlap \u00d7 cos(latitude); at least 80% selected area each month",
+      "quality": "GLDAS model estimates; provider fill excluded. Soil water mass is not a saturation fraction; wind is near-surface forcing, not a verified 2 m measurement.",
+      "geometry_version": "ee77fa7ce16d81c3",
+      "dlon": 0.25,
+      "dlat": 0.25,
+      "expected_cells": 1,
+      "available_cells": 1,
+      "cached_series": 0,
+      "monthly_area_coverage_known": true,
+      "first_observed_month": 201601,
+      "last_observed_month": 202412,
+      "retrieved_utc": "2026-11-15T06:51:22.351850+00:00"
+    },
+    {
+      "provider": "nasa-hydrology",
+      "source": "NASA Hydrology Time Series / GLDAS",
+      "resource": "Hydrology Time Series",
+      "dataset": "GLDAS_NOAH025_M",
+      "collection_version": "2.1",
+      "field": "SoilTMP0_10cm_inst",
+      "policy": "challenge_resource",
+      "citation": "https://doi.org/10.5067/SXAVCZFAQLNO",
+      "access": "Monthly point-series API for every intersecting GLDAS source cell",
+      "aggregation": "Native-cell polygon overlap \u00d7 cos(latitude); at least 80% selected area each month",
+      "quality": "GLDAS model estimates; provider fill excluded. Soil water mass is not a saturation fraction; wind is near-surface forcing, not a verified 2 m measurement.",
+      "geometry_version": "ee77fa7ce16d81c3",
+      "dlon": 0.25,
+      "dlat": 0.25,
+      "expected_cells": 1,
+      "available_cells": 1,
+      "cached_series": 0,
+      "monthly_area_coverage_known": true,
+      "first_observed_month": 201601,
+      "last_observed_month": 202412,
+      "retrieved_utc": "2026-11-15T06:51:25.309556+00:00"
+    },
+    {
+      "provider": "nasa-hydrology",
+      "source": "NASA Hydrology Time Series / GLDAS",
+      "resource": "Hydrology Time Series",
+      "dataset": "GLDAS_NOAH025_M",
+      "collection_version": "2.1",
+      "field": "Wind_f_inst",
+      "policy": "challenge_resource",
+      "citation": "https://doi.org/10.5067/SXAVCZFAQLNO",
+      "access": "Monthly point-series API for every intersecting GLDAS source cell",
+      "aggregation": "Native-cell polygon overlap \u00d7 cos(latitude); at least 80% selected area each month",
+      "quality": "GLDAS model estimates; provider fill excluded. Soil water mass is not a saturation fraction; wind is near-surface forcing, not a verified 2 m measurement.",
+      "geometry_version": "ee77fa7ce16d81c3",
+      "dlon": 0.25,
+      "dlat": 0.25,
+      "expected_cells": 1,
+      "available_cells": 1,
+      "cached_series": 0,
+      "monthly_area_coverage_known": true,
+      "first_observed_month": 201601,
+      "last_observed_month": 202412,
+      "retrieved_utc": "2026-11-15T06:51:28.002210+00:00"
+    }
+  ]
+}

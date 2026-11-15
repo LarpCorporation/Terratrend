@@ -1,0 +1,44 @@
+ M .gitignore
+ M README.md
+ M backend/analysis.py
+ M backend/catalog.py
+ M backend/interconnect.py
+ D backend/literature.py
+ M backend/power_client.py
+ M backend/server.py
+ M backend/test_analysis.py
+ M backend/test_contract.py
+ M frontend/app.js
+ M frontend/index.html
+ M frontend/styles.css
+?? CONTINUE_LOCALLY.txt
+?? LOCAL_SESSION_HANDOFF.md
+?? TerraTrend_Algorithms_and_Data_Architecture.pdf
+?? backend/data_sources.py
+?? backend/geography.py
+?? backend/jobs.py
+?? backend/nasa_data.py
+?? backend/spatial.py
+?? backend/test_geographic_workflow.py
+?? backend/test_nasa_data.py
+?? backend/test_statistics.py
+?? backend/test_window.py
+?? docs/LEGACY_README.md
+?? docs/TerraTrend_Algorithms_and_Data_Architecture.pdf
+?? docs/UI_OVERHAUL_IMPLEMENTATION.md
+?? docs/UI_OVERHAUL_REVIEW.md
+?? docs/local-handoff/
+?? docs/screenshot-cybermap.png
+?? frontend/data/
+?? frontend/earth-renderer.js
+?? frontend/map-panels.js
+?? frontend/overhaul.css
+?? frontend/selection-geometry.js
+?? frontend/selection-tools.js
+?? frontend/textures/
+?? frontend/theme.css
+?? frontend/vendor/
+?? frontend/workflow.js
+?? requirements.txt
+?? start.sh
+?? tests/

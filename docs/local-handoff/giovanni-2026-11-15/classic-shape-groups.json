@@ -1,0 +1,42 @@
+{
+  "gpmLandMask": {
+    "title": "Land Only file",
+    "sourceName": "GES DISC",
+    "sourceURL": "https://giovanni.gsfc.nasa.gov/giovanni/doc/UsersManualworkingdocument.docx.html#h.a2ynfrhyo6pc"
+  },
+  "gpmSeaMask": {
+    "title": "Sea Only file",
+    "sourceName": "GES DISC",
+    "sourceURL": "https://giovanni.gsfc.nasa.gov/giovanni/doc/UsersManualworkingdocument.docx.html#h.a2ynfrhyo6pc"
+  },
+  "lakes": {
+    "title": "Lakes and Reservoirs",
+    "sourceName": "World Wildlife Fund",
+    "sourceURL": "https://www.worldwildlife.org/our-work/science/global-lakes-and-wetlands-database/"
+  },
+  "state_dept_countries_2017": {
+    "title": "Countries and Areas",
+    "sourceName": "US State Department",
+    "sourceURL": "https://geodata.state.gov/geonetwork/srv/api/records/3bdb81a0-c1b9-439a-a0b1-85dac30c59b2"
+  },
+  "tl_2014_us_state": {
+    "title": "US States",
+    "sourceName": "TIGER/Line, US Census Bureau",
+    "sourceURL": "https://www.census.gov/geo/maps-data/data/tiger-line.html"
+  },
+  "tl_2023_us_aiannh": {
+    "title": "Tribal Land",
+    "sourceName": "U.S. Census Bureau",
+    "sourceURL": "https://www2.census.gov/geo/tiger/TIGER2023/AIANNH/"
+  },
+  "watersheds": {
+    "title": "Watersheds",
+    "sourceName": "Major Hydrological Basins, FAO (United Nations)",
+    "sourceURL": "https://www.fao.org/agroinformatics/training-and-resources/data-sets/data-set-detail/hydrological-basins-new-release/en"
+  },
+  "world_regions": {
+    "title": "World_Regions",
+    "sourceName": "ESRI",
+    "sourceURL": "https://hub.arcgis.com/datasets/esri::world-regions/"
+  }
+}

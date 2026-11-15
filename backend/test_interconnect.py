@@ -81,6 +81,14 @@ class TestGranger(unittest.TestCase):
 
 
 class TestLocalCouplings(unittest.TestCase):
+    def test_relationship_explanation_squares_correlation_and_limits_attribution(self):
+        pair={'a':'A','b':'B','r_lagged':.65,'p':.0000005,'r_partial':.6,'lag_months':0}
+        text=interconnect.describe_coupling({'name':'Soil temperature'},{'name':'Air temperature'},pair)
+        self.assertIn('42%',text);self.assertNotIn('65%',text)
+        self.assertIn('p<0.001',text)
+        self.assertIn('does not establish physical causation',text)
+        self.assertNotIn('evidence of a direct',text)
+
     def test_recovers_planted_driver(self):
         n = 240
         driver = _seasonal(n, amp=1.0, noise=0.08, seed=21)

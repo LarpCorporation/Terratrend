@@ -236,8 +236,14 @@ def test_explain_teleconnection():
     dst_var = {"id": "T2M", "name": "Air Temperature"}
 
     exp = explain_teleconnection(src_reg, src_var, dst_reg, dst_var, -0.62, 0.003)
-    assert "teleconnection" in exp.lower() or "circulation" in exp.lower()
+    # The wording must be derived from the computed statistics, never from a
+    # lookup table of expected region pairs.
+    assert "r = -0.62" in exp and "p = 0.003" in exp
     assert len(exp) > 20
+
+    pos = explain_teleconnection(src_reg, src_var, dst_reg, dst_var, 0.70, 0.001)
+    neg = explain_teleconnection(src_reg, src_var, dst_reg, dst_var, -0.70, 0.001)
+    assert pos != neg, "sign must change the description"
 
 
 if __name__ == "__main__":

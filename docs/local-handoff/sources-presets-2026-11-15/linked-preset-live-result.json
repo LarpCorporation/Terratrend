@@ -1,0 +1,415 @@
+{
+  "local": {
+    "region": {
+      "id": "focus:ghana_north",
+      "name": "Ghana North (Savannah)",
+      "level": "preset",
+      "parent": null,
+      "geometry_version": "88f50f8325ea1565",
+      "bbox": [
+        -2.5,
+        9.0,
+        0.0,
+        11.0
+      ],
+      "surface": "land",
+      "desc": "Northern Ghana / Savannah agro-ecological zone \u00b7 preset focus box",
+      "boundary_source": "TerraTrend curated focus box; not an official ecological boundary",
+      "center": [
+        -1.25,
+        10.0
+      ],
+      "selection_kind": "bounds"
+    },
+    "start": 2016,
+    "end": 2024,
+    "variables": [
+      {
+        "id": "GLDAS_SOILT",
+        "name": "Soil Temperature \u00b7 GLDAS (0\u201310 cm)",
+        "unit": "\u00b0C",
+        "color": "#d5a16c",
+        "sphere": "land",
+        "sphere_code": "LND"
+      },
+      {
+        "id": "T10M",
+        "name": "Air Temperature at 10 m",
+        "unit": "\u00b0C",
+        "color": "#eda27f",
+        "sphere": "atmosphere",
+        "sphere_code": "ATM"
+      }
+    ],
+    "pairs": [
+      {
+        "source_a": "NASA Hydrology Time Series / GLDAS",
+        "source_b": "NASA Giovanni / MERRA-2",
+        "overlapping_months": 108,
+        "a": {
+          "id": "GLDAS_SOILT",
+          "name": "Soil Temperature \u00b7 GLDAS (0\u201310 cm)",
+          "unit": "\u00b0C",
+          "color": "#d5a16c",
+          "sphere": "land",
+          "sphere_code": "LND"
+        },
+        "b": {
+          "id": "T10M",
+          "name": "Air Temperature at 10 m",
+          "unit": "\u00b0C",
+          "color": "#eda27f",
+          "sphere": "atmosphere",
+          "sphere_code": "ATM"
+        },
+        "r": 0.65,
+        "r_lagged": 0.65,
+        "p": 0.0,
+        "p_adjusted": 5.83149023292151e-07,
+        "lag_months": 0,
+        "driver": null,
+        "response": null,
+        "lag_note": "Simultaneous \u2014 no clear lead",
+        "r_partial": null,
+        "p_partial": null,
+        "granger_a_b": 0.25687,
+        "granger_b_a": 0.83988,
+        "phase": "in_phase",
+        "strength": "STRONG",
+        "confidence": "LOW",
+        "title": "Soil Temperature \u00b7 GLDAS (0\u201310 cm) \u2194 Air Temperature at 10 m",
+        "mechanism": "Possible mechanism: Soil temperature \u00b7 gldas (0\u201310 cm) and air temperature at 10 m move simultaneously. After the seasonal cycle and shared trend are removed they stay correlated in the same direction at r=+0.65 (p=0.000), so about 65% of the month-to-month variation is shared. Neither history predicts the other beyond their shared variance, so the ordering between them is unresolved.",
+        "mechanism_status": "hypothesis"
+      }
+    ],
+    "source_errors": {},
+    "analysable_variables": [
+      "GLDAS_SOILT",
+      "T10M"
+    ],
+    "source_anomaly": {
+      "region": {
+        "id": "focus:ghana_north",
+        "name": "Ghana North (Savannah)",
+        "level": "preset",
+        "parent": null,
+        "geometry_version": "88f50f8325ea1565",
+        "bbox": [
+          -2.5,
+          9.0,
+          0.0,
+          11.0
+        ],
+        "surface": "land",
+        "desc": "Northern Ghana / Savannah agro-ecological zone \u00b7 preset focus box",
+        "boundary_source": "TerraTrend curated focus box; not an official ecological boundary",
+        "center": [
+          -1.25,
+          10.0
+        ],
+        "selection_kind": "bounds"
+      },
+      "variable": {
+        "id": "GLDAS_SOILT",
+        "name": "Soil Temperature \u00b7 GLDAS (0\u201310 cm)",
+        "unit": "\u00b0C",
+        "mission": "GLDAS",
+        "group": "temperature",
+        "sphere": "land",
+        "sphere_code": "LND",
+        "sphere_name": "Land & Biosphere",
+        "desc": "Monthly upper-soil temperature from the GLDAS Noah model",
+        "color": "#d5a16c"
+      },
+      "anomaly_report": {
+        "sigma": 0.7597,
+        "months_above": 13,
+        "months_below": 17,
+        "total_months": 108,
+        "peak_sigma": 2.73,
+        "peak_month": "2020-12",
+        "episodes": [
+          {
+            "start": "2018-02",
+            "end": "2018-02",
+            "months": 1,
+            "peak_sigma": 2.36,
+            "peak_month": "2018-02"
+          },
+          {
+            "start": "2018-06",
+            "end": "2018-06",
+            "months": 1,
+            "peak_sigma": 1.53,
+            "peak_month": "2018-06"
+          },
+          {
+            "start": "2018-10",
+            "end": "2018-11",
+            "months": 2,
+            "peak_sigma": 1.53,
+            "peak_month": "2018-11"
+          },
+          {
+            "start": "2019-01",
+            "end": "2019-02",
+            "months": 2,
+            "peak_sigma": 2.08,
+            "peak_month": "2019-02"
+          },
+          {
+            "start": "2019-04",
+            "end": "2019-05",
+            "months": 2,
+            "peak_sigma": 1.66,
+            "peak_month": "2019-04"
+          },
+          {
+            "start": "2020-12",
+            "end": "2021-01",
+            "months": 2,
+            "peak_sigma": 2.73,
+            "peak_month": "2020-12"
+          },
+          {
+            "start": "2023-11",
+            "end": "2023-11",
+            "months": 1,
+            "peak_sigma": 1.61,
+            "peak_month": "2023-11"
+          },
+          {
+            "start": "2024-03",
+            "end": "2024-03",
+            "months": 1,
+            "peak_sigma": 2.15,
+            "peak_month": "2024-03"
+          },
+          {
+            "start": "2024-08",
+            "end": "2024-08",
+            "months": 1,
+            "peak_sigma": 1.25,
+            "peak_month": "2024-08"
+          }
+        ],
+        "narrative": "ran above its own trend in 13 of 108 months (12%); below it in 17; peak +2.7\u03c3 in 2020-12; across 9 distinct episodes."
+      },
+      "anomaly_yearly": [
+        {
+          "year": 2016,
+          "value": -0.3099
+        },
+        {
+          "year": 2017,
+          "value": -0.0942
+        },
+        {
+          "year": 2018,
+          "value": 0.6344
+        },
+        {
+          "year": 2019,
+          "value": 0.29
+        },
+        {
+          "year": 2020,
+          "value": -0.2506
+        },
+        {
+          "year": 2021,
+          "value": 0.102
+        },
+        {
+          "year": 2022,
+          "value": -0.7371
+        },
+        {
+          "year": 2023,
+          "value": 0.0527
+        },
+        {
+          "year": 2024,
+          "value": 0.3127
+        }
+      ],
+      "month_labels": [
+        "2016-01",
+        "2016-02",
+        "2016-03",
+        "2016-04",
+        "2016-05",
+        "2016-06",
+        "2016-07",
+        "2016-08",
+        "2016-09",
+        "2016-10",
+        "2016-11",
+        "2016-12",
+        "2017-01",
+        "2017-02",
+        "2017-03",
+        "2017-04",
+        "2017-05",
+        "2017-06",
+        "2017-07",
+        "2017-08",
+        "2017-09",
+        "2017-10",
+        "2017-11",
+        "2017-12",
+        "2018-01",
+        "2018-02",
+        "2018-03",
+        "2018-04",
+        "2018-05",
+        "2018-06",
+        "2018-07",
+        "2018-08",
+        "2018-09",
+        "2018-10",
+        "2018-11",
+        "2018-12",
+        "2019-01",
+        "2019-02",
+        "2019-03",
+        "2019-04",
+        "2019-05",
+        "2019-06",
+        "2019-07",
+        "2019-08",
+        "2019-09",
+        "2019-10",
+        "2019-11",
+        "2019-12",
+        "2020-01",
+        "2020-02",
+        "2020-03",
+        "2020-04",
+        "2020-05",
+        "2020-06",
+        "2020-07",
+        "2020-08",
+        "2020-09",
+        "2020-10",
+        "2020-11",
+        "2020-12",
+        "2021-01",
+        "2021-02",
+        "2021-03",
+        "2021-04",
+        "2021-05",
+        "2021-06",
+        "2021-07",
+        "2021-08",
+        "2021-09",
+        "2021-10",
+        "2021-11",
+        "2021-12",
+        "2022-01",
+        "2022-02",
+        "2022-03",
+        "2022-04",
+        "2022-05",
+        "2022-06",
+        "2022-07",
+        "2022-08",
+        "2022-09",
+        "2022-10",
+        "2022-11",
+        "2022-12",
+        "2023-01",
+        "2023-02",
+        "2023-03",
+        "2023-04",
+        "2023-05",
+        "2023-06",
+        "2023-07",
+        "2023-08",
+        "2023-09",
+        "2023-10",
+        "2023-11",
+        "2023-12",
+        "2024-01",
+        "2024-02",
+        "2024-03",
+        "2024-04",
+        "2024-05",
+        "2024-06",
+        "2024-07",
+        "2024-08",
+        "2024-09",
+        "2024-10",
+        "2024-11",
+        "2024-12"
+      ]
+    },
+    "conditional_drivers": {
+      "ok": false,
+      "reason": "No directional candidates with joint coverage"
+    },
+    "provenance": {
+      "GLDAS_SOILT": {
+        "provider": "nasa-hydrology",
+        "source": "NASA Hydrology Time Series / GLDAS",
+        "resource": "Hydrology Time Series",
+        "dataset": "GLDAS_NOAH025_M",
+        "collection_version": "2.1",
+        "field": "SoilTMP0_10cm_inst",
+        "policy": "challenge_resource",
+        "citation": "https://doi.org/10.5067/SXAVCZFAQLNO",
+        "access": "Monthly point-series API for every intersecting GLDAS source cell",
+        "aggregation": "Native-cell polygon overlap \u00d7 cos(latitude); at least 80% selected area each month",
+        "quality": "GLDAS model estimates; provider fill excluded. Soil water mass is not a saturation fraction; wind is near-surface forcing, not a verified 2 m measurement.",
+        "geometry_version": "88f50f8325ea1565",
+        "dlon": 0.25,
+        "dlat": 0.25,
+        "expected_cells": 80,
+        "available_cells": 80,
+        "cached_series": 1,
+        "monthly_area_coverage_known": true,
+        "first_observed_month": 201601,
+        "last_observed_month": 202412,
+        "retrieved_utc": "2026-11-15T07:20:56.523987+00:00"
+      },
+      "T10M": {
+        "provider": "nasa-giovanni",
+        "source": "NASA Giovanni / MERRA-2",
+        "resource": "Giovanni",
+        "dataset": "M2IMNXASM",
+        "collection_version": "5.12.4",
+        "field": "T10M",
+        "policy": "challenge_resource",
+        "citation": "https://disc.gsfc.nasa.gov/datasets/M2IMNXASM_5.12.4/summary",
+        "access": "Giovanni area averaging through NASA Harmony; regional CSV only",
+        "aggregation": "NASA server rectangle average; monthly spatial support is not supplied",
+        "quality": "Monthly mean instantaneous assimilation diagnostics; a different product from native mode. Cell weighting follows NASA's service.",
+        "geometry_version": "88f50f8325ea1565",
+        "requested_bbox": [
+          -2.5,
+          9.0,
+          0.0,
+          11.0
+        ],
+        "spatial_detail_available": false,
+        "monthly_area_coverage_known": false,
+        "dlon": 0.625,
+        "dlat": 0.5,
+        "cache_hit": true,
+        "remote_job_id": "b7486a6a-02c4-4ad2-bdb0-d45f0f01df18",
+        "requested_months": 108,
+        "published_months": 108,
+        "first_observed_month": 201601,
+        "last_observed_month": 202412,
+        "retrieved_utc": "2026-11-15T06:58:58.002598+00:00"
+      }
+    },
+    "method": "Seasonal decomposition (monthly climatology + linear trend removed) \u00b7 lagged cross-correlation (\u00b16 mo) for direction \u00b7 first-order partial correlation (T2M confounder) \u00b7 two-way Granger F-test (3 lags) \u00b7 \u03b1=0.05",
+    "sources": [
+      "NASA Hydrology Time Series / GLDAS",
+      "NASA Giovanni / MERRA-2"
+    ]
+  },
+  "global": null,
+  "scope": "local"
+}

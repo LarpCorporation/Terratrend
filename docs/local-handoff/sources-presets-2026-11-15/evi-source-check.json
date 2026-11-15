@@ -1,0 +1,38 @@
+{
+  "values": {
+    "202401": 0.1083,
+    "202402": 0.115825,
+    "202403": 0.175425,
+    "202404": 0.243925,
+    "202405": 0.24495,
+    "202406": 0.3311,
+    "202407": 0.435325,
+    "202408": 0.48185,
+    "202409": 0.419675,
+    "202410": 0.412325,
+    "202411": 0.297175,
+    "202412": 0.185825
+  },
+  "provenance": {
+    "provider": "nasa-appeears",
+    "source": "NASA AppEEARS / Terra MODIS",
+    "resource": "AppEEARS",
+    "dataset": "MOD13A3",
+    "collection_version": "061",
+    "field": "_1_km_monthly_EVI",
+    "policy": "challenge_resource",
+    "citation": "https://doi.org/10.5067/MODIS/MOD13A3.061",
+    "access": "AppEEARS polygon processing; statistics CSV only, no raster downloads",
+    "aggregation": "AppEEARS monthly polygon summary mean; physical index values supplied by NASA, no additional raster scaling",
+    "quality": "Monthly vegetation composites; fill and range checks applied. No additional per-pixel VI quality filtering or monthly valid-area audit; exploratory screening.",
+    "geometry_version": "4e1ef0e94fc2a399",
+    "spatial_detail_available": false,
+    "monthly_area_coverage_known": false,
+    "resolution": "1 km",
+    "cache_hit": false,
+    "remote_job_id": "2cba00fe-aabe-4152-b4ad-3daa50be2a99",
+    "retrieved_utc": "2026-11-15T07:17:27.379589+00:00",
+    "first_observed_month": 202401,
+    "last_observed_month": 202412
+  }
+}

@@ -1,0 +1,2718 @@
+{
+  "id": "fd53831ac01955c3498b",
+  "status": "complete",
+  "created": 1794708733.4938803,
+  "updated": 1794708788.9273462,
+  "message": "Analysis complete",
+  "result": {
+    "region": {
+      "id": "custom:6027db8ecbaf85fbc908",
+      "name": "Ghana interior rectangle",
+      "level": "custom",
+      "parent": null,
+      "geometry_version": "1dc5aba6733f8455",
+      "bbox": [
+        -2.0,
+        6.0,
+        0.0,
+        8.0
+      ],
+      "surface": "mixed",
+      "desc": "Ghana interior rectangle \u00b7 49,086.2 km\u00b2 \u00b7 user-defined boundary",
+      "center": [
+        -1.0,
+        7.0
+      ],
+      "selection_kind": "bounds",
+      "area_km2": 49086.2435,
+      "boundary_source": "User-defined selection"
+    },
+    "start": 2016,
+    "end": 2024,
+    "months": [
+      "2016-01",
+      "2016-02",
+      "2016-03",
+      "2016-04",
+      "2016-05",
+      "2016-06",
+      "2016-07",
+      "2016-08",
+      "2016-09",
+      "2016-10",
+      "2016-11",
+      "2016-12",
+      "2017-01",
+      "2017-02",
+      "2017-03",
+      "2017-04",
+      "2017-05",
+      "2017-06",
+      "2017-07",
+      "2017-08",
+      "2017-09",
+      "2017-10",
+      "2017-11",
+      "2017-12",
+      "2018-01",
+      "2018-02",
+      "2018-03",
+      "2018-04",
+      "2018-05",
+      "2018-06",
+      "2018-07",
+      "2018-08",
+      "2018-09",
+      "2018-10",
+      "2018-11",
+      "2018-12",
+      "2019-01",
+      "2019-02",
+      "2019-03",
+      "2019-04",
+      "2019-05",
+      "2019-06",
+      "2019-07",
+      "2019-08",
+      "2019-09",
+      "2019-10",
+      "2019-11",
+      "2019-12",
+      "2020-01",
+      "2020-02",
+      "2020-03",
+      "2020-04",
+      "2020-05",
+      "2020-06",
+      "2020-07",
+      "2020-08",
+      "2020-09",
+      "2020-10",
+      "2020-11",
+      "2020-12",
+      "2021-01",
+      "2021-02",
+      "2021-03",
+      "2021-04",
+      "2021-05",
+      "2021-06",
+      "2021-07",
+      "2021-08",
+      "2021-09",
+      "2021-10",
+      "2021-11",
+      "2021-12",
+      "2022-01",
+      "2022-02",
+      "2022-03",
+      "2022-04",
+      "2022-05",
+      "2022-06",
+      "2022-07",
+      "2022-08",
+      "2022-09",
+      "2022-10",
+      "2022-11",
+      "2022-12",
+      "2023-01",
+      "2023-02",
+      "2023-03",
+      "2023-04",
+      "2023-05",
+      "2023-06",
+      "2023-07",
+      "2023-08",
+      "2023-09",
+      "2023-10",
+      "2023-11",
+      "2023-12",
+      "2024-01",
+      "2024-02",
+      "2024-03",
+      "2024-04",
+      "2024-05",
+      "2024-06",
+      "2024-07",
+      "2024-08",
+      "2024-09",
+      "2024-10",
+      "2024-11",
+      "2024-12"
+    ],
+    "series": [
+      {
+        "variable": {
+          "id": "T2M",
+          "name": "Air Temperature",
+          "unit": "\u00b0C",
+          "color": "#ff7a33",
+          "mission": "MERRA-2",
+          "group": "temperature",
+          "sphere": "atmosphere",
+          "sphere_code": "ATM",
+          "sphere_name": "Atmosphere",
+          "desc": "Mean near-surface air temperature at 2 m",
+          "plain": "How warm the air is, about 2 metres above the ground \u2014 roughly what you feel standing outside.",
+          "trend_means": "Rising means the air is getting warmer on average.",
+          "dataset": "M2IMNXASM",
+          "source_field": "T2M"
+        },
+        "provenance": {
+          "provider": "nasa-giovanni",
+          "source": "NASA Giovanni / MERRA-2",
+          "resource": "Giovanni",
+          "dataset": "M2IMNXASM",
+          "collection_version": "5.12.4",
+          "field": "T2M",
+          "policy": "challenge_resource",
+          "citation": "https://disc.gsfc.nasa.gov/datasets/M2IMNXASM_5.12.4/summary",
+          "access": "Giovanni area averaging through NASA Harmony; regional CSV only",
+          "aggregation": "NASA server rectangle average; monthly spatial support is not supplied",
+          "quality": "Monthly mean instantaneous assimilation diagnostics; a different product from native mode. Cell weighting follows NASA's service.",
+          "geometry_version": "1dc5aba6733f8455",
+          "requested_bbox": [
+            -2.0,
+            6.0,
+            0.0,
+            8.0
+          ],
+          "spatial_detail_available": false,
+          "monthly_area_coverage_known": false,
+          "dlon": 0.625,
+          "dlat": 0.5,
+          "cache_hit": true,
+          "remote_job_id": "6217fbca-ebde-40ea-a5e9-bc42b294050c",
+          "requested_months": 108,
+          "published_months": 108,
+          "first_observed_month": 201601,
+          "last_observed_month": 202412,
+          "retrieved_utc": "2026-11-15T02:10:33.742663+00:00"
+        },
+        "monthly_timeseries": [
+          {
+            "month": "2016-01",
+            "value": 27.089930000000038
+          },
+          {
+            "month": "2016-02",
+            "value": 29.251900000000035
+          },
+          {
+            "month": "2016-03",
+            "value": 29.371270000000038
+          },
+          {
+            "month": "2016-04",
+            "value": 28.797420000000045
+          },
+          {
+            "month": "2016-05",
+            "value": 27.5317
+          },
+          {
+            "month": "2016-06",
+            "value": 25.776850000000024
+          },
+          {
+            "month": "2016-07",
+            "value": 25.344480000000033
+          },
+          {
+            "month": "2016-08",
+            "value": 25.68792000000002
+          },
+          {
+            "month": "2016-09",
+            "value": 25.430780000000027
+          },
+          {
+            "month": "2016-10",
+            "value": 26.194270000000017
+          },
+          {
+            "month": "2016-11",
+            "value": 26.675160000000005
+          },
+          {
+            "month": "2016-12",
+            "value": 26.533200000000022
+          },
+          {
+            "month": "2017-01",
+            "value": 27.016530000000046
+          },
+          {
+            "month": "2017-02",
+            "value": 28.280100000000004
+          },
+          {
+            "month": "2017-03",
+            "value": 28.68643000000003
+          },
+          {
+            "month": "2017-04",
+            "value": 28.11187000000001
+          },
+          {
+            "month": "2017-05",
+            "value": 27.360500000000002
+          },
+          {
+            "month": "2017-06",
+            "value": 25.649500000000046
+          },
+          {
+            "month": "2017-07",
+            "value": 24.87650000000002
+          },
+          {
+            "month": "2017-08",
+            "value": 24.894920000000013
+          },
+          {
+            "month": "2017-09",
+            "value": 25.444330000000036
+          },
+          {
+            "month": "2017-10",
+            "value": 26.09620000000001
+          },
+          {
+            "month": "2017-11",
+            "value": 26.35080000000005
+          },
+          {
+            "month": "2017-12",
+            "value": 26.59340000000003
+          },
+          {
+            "month": "2018-01",
+            "value": 26.554040000000043
+          },
+          {
+            "month": "2018-02",
+            "value": 29.06277
+          },
+          {
+            "month": "2018-03",
+            "value": 27.760500000000036
+          },
+          {
+            "month": "2018-04",
+            "value": 27.604430000000036
+          },
+          {
+            "month": "2018-05",
+            "value": 26.615049999999997
+          },
+          {
+            "month": "2018-06",
+            "value": 25.629800000000046
+          },
+          {
+            "month": "2018-07",
+            "value": 24.878750000000025
+          },
+          {
+            "month": "2018-08",
+            "value": 24.797780000000046
+          },
+          {
+            "month": "2018-09",
+            "value": 25.09408000000002
+          },
+          {
+            "month": "2018-10",
+            "value": 25.976620000000025
+          },
+          {
+            "month": "2018-11",
+            "value": 26.567679999999996
+          },
+          {
+            "month": "2018-12",
+            "value": 25.786580000000015
+          },
+          {
+            "month": "2019-01",
+            "value": 26.884029999999996
+          },
+          {
+            "month": "2019-02",
+            "value": 28.055960000000027
+          },
+          {
+            "month": "2019-03",
+            "value": 28.513400000000047
+          },
+          {
+            "month": "2019-04",
+            "value": 28.18395000000004
+          },
+          {
+            "month": "2019-05",
+            "value": 26.925350000000037
+          },
+          {
+            "month": "2019-06",
+            "value": 25.92867000000001
+          },
+          {
+            "month": "2019-07",
+            "value": 25.25920000000002
+          },
+          {
+            "month": "2019-08",
+            "value": 25.249540000000025
+          },
+          {
+            "month": "2019-09",
+            "value": 25.458500000000015
+          },
+          {
+            "month": "2019-10",
+            "value": 25.25128000000001
+          },
+          {
+            "month": "2019-11",
+            "value": 26.68237000000005
+          },
+          {
+            "month": "2019-12",
+            "value": 26.108150000000023
+          },
+          {
+            "month": "2020-01",
+            "value": 25.57552000000004
+          },
+          {
+            "month": "2020-02",
+            "value": 27.457400000000007
+          },
+          {
+            "month": "2020-03",
+            "value": 28.076260000000048
+          },
+          {
+            "month": "2020-04",
+            "value": 27.719719999999995
+          },
+          {
+            "month": "2020-05",
+            "value": 27.129140000000007
+          },
+          {
+            "month": "2020-06",
+            "value": 25.566030000000012
+          },
+          {
+            "month": "2020-07",
+            "value": 24.64608000000004
+          },
+          {
+            "month": "2020-08",
+            "value": 24.71102000000002
+          },
+          {
+            "month": "2020-09",
+            "value": 25.472650000000044
+          },
+          {
+            "month": "2020-10",
+            "value": 25.84823
+          },
+          {
+            "month": "2020-11",
+            "value": 26.33570000000003
+          },
+          {
+            "month": "2020-12",
+            "value": 26.81164000000001
+          },
+          {
+            "month": "2021-01",
+            "value": 27.26092
+          },
+          {
+            "month": "2021-02",
+            "value": 28.192470000000014
+          },
+          {
+            "month": "2021-03",
+            "value": 27.233850000000018
+          },
+          {
+            "month": "2021-04",
+            "value": 27.559720000000027
+          },
+          {
+            "month": "2021-05",
+            "value": 27.38918000000001
+          },
+          {
+            "month": "2021-06",
+            "value": 26.28832
+          },
+          {
+            "month": "2021-07",
+            "value": 25.101220000000012
+          },
+          {
+            "month": "2021-08",
+            "value": 25.292930000000013
+          },
+          {
+            "month": "2021-09",
+            "value": 25.31650000000002
+          },
+          {
+            "month": "2021-10",
+            "value": 25.912130000000047
+          },
+          {
+            "month": "2021-11",
+            "value": 26.187070000000006
+          },
+          {
+            "month": "2021-12",
+            "value": 26.19726000000003
+          },
+          {
+            "month": "2022-01",
+            "value": 25.48818
+          },
+          {
+            "month": "2022-02",
+            "value": 27.719660000000033
+          },
+          {
+            "month": "2022-03",
+            "value": 27.714650000000006
+          },
+          {
+            "month": "2022-04",
+            "value": 26.846339999999998
+          },
+          {
+            "month": "2022-05",
+            "value": 26.31567000000001
+          },
+          {
+            "month": "2022-06",
+            "value": 25.383080000000007
+          },
+          {
+            "month": "2022-07",
+            "value": 24.804560000000038
+          },
+          {
+            "month": "2022-08",
+            "value": 24.566130000000044
+          },
+          {
+            "month": "2022-09",
+            "value": 24.88574
+          },
+          {
+            "month": "2022-10",
+            "value": 25.836420000000032
+          },
+          {
+            "month": "2022-11",
+            "value": 25.916500000000042
+          },
+          {
+            "month": "2022-12",
+            "value": 24.919730000000015
+          },
+          {
+            "month": "2023-01",
+            "value": 25.659500000000037
+          },
+          {
+            "month": "2023-02",
+            "value": 27.830200000000048
+          },
+          {
+            "month": "2023-03",
+            "value": 27.832760000000007
+          },
+          {
+            "month": "2023-04",
+            "value": 27.53400000000005
+          },
+          {
+            "month": "2023-05",
+            "value": 27.419579999999996
+          },
+          {
+            "month": "2023-06",
+            "value": 25.761250000000018
+          },
+          {
+            "month": "2023-07",
+            "value": 25.45666
+          },
+          {
+            "month": "2023-08",
+            "value": 25.462980000000016
+          },
+          {
+            "month": "2023-09",
+            "value": 25.860929999999996
+          },
+          {
+            "month": "2023-10",
+            "value": 26.153700000000015
+          },
+          {
+            "month": "2023-11",
+            "value": 26.49517000000003
+          },
+          {
+            "month": "2023-12",
+            "value": 25.703100000000006
+          },
+          {
+            "month": "2024-01",
+            "value": 26.734800000000007
+          },
+          {
+            "month": "2024-02",
+            "value": 28.06432000000001
+          },
+          {
+            "month": "2024-03",
+            "value": 28.539000000000044
+          },
+          {
+            "month": "2024-04",
+            "value": 28.262500000000045
+          },
+          {
+            "month": "2024-05",
+            "value": 27.71550000000002
+          },
+          {
+            "month": "2024-06",
+            "value": 26.337270000000046
+          },
+          {
+            "month": "2024-07",
+            "value": 25.68780000000004
+          },
+          {
+            "month": "2024-08",
+            "value": 25.760280000000023
+          },
+          {
+            "month": "2024-09",
+            "value": 26.014800000000037
+          },
+          {
+            "month": "2024-10",
+            "value": 26.08026000000001
+          },
+          {
+            "month": "2024-11",
+            "value": 26.29427000000004
+          },
+          {
+            "month": "2024-12",
+            "value": 25.684720000000027
+          }
+        ],
+        "yearly_timeseries": [
+          {
+            "year": 2016,
+            "value": 26.9737,
+            "months": 12,
+            "complete": true
+          },
+          {
+            "year": 2017,
+            "value": 26.6134,
+            "months": 12,
+            "complete": true
+          },
+          {
+            "year": 2018,
+            "value": 26.3607,
+            "months": 12,
+            "complete": true
+          },
+          {
+            "year": 2019,
+            "value": 26.5417,
+            "months": 12,
+            "complete": true
+          },
+          {
+            "year": 2020,
+            "value": 26.2791,
+            "months": 12,
+            "complete": true
+          },
+          {
+            "year": 2021,
+            "value": 26.4943,
+            "months": 12,
+            "complete": true
+          },
+          {
+            "year": 2022,
+            "value": 25.8664,
+            "months": 12,
+            "complete": true
+          },
+          {
+            "year": 2023,
+            "value": 26.4308,
+            "months": 12,
+            "complete": true
+          },
+          {
+            "year": 2024,
+            "value": 26.7646,
+            "months": 12,
+            "complete": true
+          }
+        ],
+        "cells": [],
+        "overall": {
+          "ok": true,
+          "n": 9,
+          "slope": -0.03109166666666585,
+          "intercept": 89.32529166666502,
+          "z": -0.9383148632568366,
+          "p": 0.34808262363292397,
+          "tau": -0.2777777777777778,
+          "significant": false,
+          "stars": "",
+          "direction": "flat",
+          "change_total": -0.2090999999999994,
+          "change_pct": null,
+          "autocorr_r1": -0.06427067563456712,
+          "autocorr_factor": 1.0,
+          "p_uncorrected": 0.34808262363292397,
+          "z_uncorrected": -0.9383148632568366,
+          "per_decade": -0.3109166666666585,
+          "t_slope": -0.04033666666666657,
+          "t_se": 0.040309441021301004,
+          "t_per_decade": -0.4033666666666657,
+          "t_p": 0.35031191681622875,
+          "t_df": 7,
+          "t_significant": false,
+          "t_ci_low_per_decade": -1.3565334847378394,
+          "t_ci_high_per_decade": 0.5498001514045079,
+          "methods_agree": true,
+          "ci_low": -0.1736500000000003,
+          "ci_high": 0.05056666666666724,
+          "ci_low_per_decade": -1.736500000000003,
+          "ci_high_per_decade": 0.5056666666666724,
+          "dt_label": "year",
+          "first": 26.9737,
+          "last": 26.7646,
+          "seasonal_z": -1.7154984064722112,
+          "seasonal_p": 0.08625388730356232,
+          "seasonal_significant": false
+        },
+        "seasonal": [
+          -1.7154984064722112,
+          0.08625388730356232,
+          0.0,
+          false
+        ],
+        "summary": {
+          "total_cells": 0,
+          "valid_cells": 0,
+          "significant_cells": 0,
+          "rising_cells": 0,
+          "falling_cells": 0,
+          "consensus": "none",
+          "spatial_detail_available": false
+        }
+      },
+      {
+        "variable": {
+          "id": "QV2M",
+          "name": "Specific Humidity",
+          "unit": "g/kg",
+          "color": "#7fd3a0",
+          "mission": "MERRA-2",
+          "group": "water",
+          "sphere": "hydrosphere",
+          "sphere_code": "HYD",
+          "sphere_name": "Hydrosphere",
+          "desc": "Mass of water vapour per kilogram of air \u2014 actual moisture content",
+          "plain": "The actual mass of water vapour in a kilogram of air \u2014 the true moisture content, whatever the temperature.",
+          "trend_means": "Rising means the atmosphere is holding more water, which can feed heavier rain when it condenses.",
+          "dataset": "M2IMNXASM",
+          "source_field": "QV2M"
+        },
+        "provenance": {
+          "provider": "nasa-giovanni",
+          "source": "NASA Giovanni / MERRA-2",
+          "resource": "Giovanni",
+          "dataset": "M2IMNXASM",
+          "collection_version": "5.12.4",
+          "field": "QV2M",
+          "policy": "challenge_resource",
+          "citation": "https://disc.gsfc.nasa.gov/datasets/M2IMNXASM_5.12.4/summary",
+          "access": "Giovanni area averaging through NASA Harmony; regional CSV only",
+          "aggregation": "NASA server rectangle average; monthly spatial support is not supplied",
+          "quality": "Monthly mean instantaneous assimilation diagnostics; a different product from native mode. Cell weighting follows NASA's service.",
+          "geometry_version": "1dc5aba6733f8455",
+          "requested_bbox": [
+            -2.0,
+            6.0,
+            0.0,
+            8.0
+          ],
+          "spatial_detail_available": false,
+          "monthly_area_coverage_known": false,
+          "dlon": 0.625,
+          "dlat": 0.5,
+          "cache_hit": false,
+          "remote_job_id": "b8fe658c-24b8-4381-9d13-f42d3f305dc6",
+          "requested_months": 108,
+          "published_months": 108,
+          "first_observed_month": 201601,
+          "last_observed_month": 202412,
+          "retrieved_utc": "2026-11-15T02:12:13.500239+00:00"
+        },
+        "monthly_timeseries": [
+          {
+            "month": "2016-01",
+            "value": 10.14085
+          },
+          {
+            "month": "2016-02",
+            "value": 11.4500895
+          },
+          {
+            "month": "2016-03",
+            "value": 17.373012
+          },
+          {
+            "month": "2016-04",
+            "value": 18.348072
+          },
+          {
+            "month": "2016-05",
+            "value": 17.956724
+          },
+          {
+            "month": "2016-06",
+            "value": 17.526058
+          },
+          {
+            "month": "2016-07",
+            "value": 17.16788
+          },
+          {
+            "month": "2016-08",
+            "value": 16.930794
+          },
+          {
+            "month": "2016-09",
+            "value": 17.353026
+          },
+          {
+            "month": "2016-10",
+            "value": 18.053448
+          },
+          {
+            "month": "2016-11",
+            "value": 17.557941
+          },
+          {
+            "month": "2016-12",
+            "value": 15.601919
+          },
+          {
+            "month": "2017-01",
+            "value": 13.297844
+          },
+          {
+            "month": "2017-02",
+            "value": 14.964286
+          },
+          {
+            "month": "2017-03",
+            "value": 17.090985999999997
+          },
+          {
+            "month": "2017-04",
+            "value": 17.833674000000002
+          },
+          {
+            "month": "2017-05",
+            "value": 18.327541999999998
+          },
+          {
+            "month": "2017-06",
+            "value": 18.089078
+          },
+          {
+            "month": "2017-07",
+            "value": 17.287841
+          },
+          {
+            "month": "2017-08",
+            "value": 17.018632999999998
+          },
+          {
+            "month": "2017-09",
+            "value": 17.503561
+          },
+          {
+            "month": "2017-10",
+            "value": 17.771836
+          },
+          {
+            "month": "2017-11",
+            "value": 16.980978
+          },
+          {
+            "month": "2017-12",
+            "value": 14.552451
+          },
+          {
+            "month": "2018-01",
+            "value": 12.006565
+          },
+          {
+            "month": "2018-02",
+            "value": 14.905839
+          },
+          {
+            "month": "2018-03",
+            "value": 17.147293
+          },
+          {
+            "month": "2018-04",
+            "value": 17.730691999999998
+          },
+          {
+            "month": "2018-05",
+            "value": 17.84741
+          },
+          {
+            "month": "2018-06",
+            "value": 17.732836
+          },
+          {
+            "month": "2018-07",
+            "value": 17.306017
+          },
+          {
+            "month": "2018-08",
+            "value": 16.850686
+          },
+          {
+            "month": "2018-09",
+            "value": 17.637325
+          },
+          {
+            "month": "2018-10",
+            "value": 18.059801
+          },
+          {
+            "month": "2018-11",
+            "value": 17.537668
+          },
+          {
+            "month": "2018-12",
+            "value": 13.979671000000002
+          },
+          {
+            "month": "2019-01",
+            "value": 13.59544
+          },
+          {
+            "month": "2019-02",
+            "value": 15.726117000000002
+          },
+          {
+            "month": "2019-03",
+            "value": 16.848072
+          },
+          {
+            "month": "2019-04",
+            "value": 18.496655
+          },
+          {
+            "month": "2019-05",
+            "value": 18.37247
+          },
+          {
+            "month": "2019-06",
+            "value": 18.154844999999998
+          },
+          {
+            "month": "2019-07",
+            "value": 17.598413
+          },
+          {
+            "month": "2019-08",
+            "value": 17.015483
+          },
+          {
+            "month": "2019-09",
+            "value": 17.945138999999998
+          },
+          {
+            "month": "2019-10",
+            "value": 17.963426000000002
+          },
+          {
+            "month": "2019-11",
+            "value": 18.00794
+          },
+          {
+            "month": "2019-12",
+            "value": 14.877828
+          },
+          {
+            "month": "2020-01",
+            "value": 12.712118
+          },
+          {
+            "month": "2020-02",
+            "value": 13.233327
+          },
+          {
+            "month": "2020-03",
+            "value": 17.845267
+          },
+          {
+            "month": "2020-04",
+            "value": 18.246174
+          },
+          {
+            "month": "2020-05",
+            "value": 18.591791
+          },
+          {
+            "month": "2020-06",
+            "value": 18.081747
+          },
+          {
+            "month": "2020-07",
+            "value": 17.137269
+          },
+          {
+            "month": "2020-08",
+            "value": 16.132741999999997
+          },
+          {
+            "month": "2020-09",
+            "value": 17.192226
+          },
+          {
+            "month": "2020-10",
+            "value": 17.735975
+          },
+          {
+            "month": "2020-11",
+            "value": 17.216057
+          },
+          {
+            "month": "2020-12",
+            "value": 16.126141
+          },
+          {
+            "month": "2021-01",
+            "value": 15.310497
+          },
+          {
+            "month": "2021-02",
+            "value": 15.880360999999999
+          },
+          {
+            "month": "2021-03",
+            "value": 17.452793
+          },
+          {
+            "month": "2021-04",
+            "value": 17.984716000000002
+          },
+          {
+            "month": "2021-05",
+            "value": 17.962145
+          },
+          {
+            "month": "2021-06",
+            "value": 17.47476
+          },
+          {
+            "month": "2021-07",
+            "value": 16.999282
+          },
+          {
+            "month": "2021-08",
+            "value": 17.075473000000002
+          },
+          {
+            "month": "2021-09",
+            "value": 17.539194000000002
+          },
+          {
+            "month": "2021-10",
+            "value": 18.235947999999997
+          },
+          {
+            "month": "2021-11",
+            "value": 18.044671
+          },
+          {
+            "month": "2021-12",
+            "value": 15.85655
+          },
+          {
+            "month": "2022-01",
+            "value": 13.323743
+          },
+          {
+            "month": "2022-02",
+            "value": 15.577957
+          },
+          {
+            "month": "2022-03",
+            "value": 17.896127
+          },
+          {
+            "month": "2022-04",
+            "value": 17.90602
+          },
+          {
+            "month": "2022-05",
+            "value": 18.382998
+          },
+          {
+            "month": "2022-06",
+            "value": 17.610872
+          },
+          {
+            "month": "2022-07",
+            "value": 17.005306
+          },
+          {
+            "month": "2022-08",
+            "value": 16.74707
+          },
+          {
+            "month": "2022-09",
+            "value": 17.346678
+          },
+          {
+            "month": "2022-10",
+            "value": 17.946271
+          },
+          {
+            "month": "2022-11",
+            "value": 16.687198
+          },
+          {
+            "month": "2022-12",
+            "value": 14.338830999999999
+          },
+          {
+            "month": "2023-01",
+            "value": 13.707227000000001
+          },
+          {
+            "month": "2023-02",
+            "value": 15.354124
+          },
+          {
+            "month": "2023-03",
+            "value": 17.019384
+          },
+          {
+            "month": "2023-04",
+            "value": 17.926902000000002
+          },
+          {
+            "month": "2023-05",
+            "value": 18.461175
+          },
+          {
+            "month": "2023-06",
+            "value": 17.87577
+          },
+          {
+            "month": "2023-07",
+            "value": 18.155253
+          },
+          {
+            "month": "2023-08",
+            "value": 17.956505
+          },
+          {
+            "month": "2023-09",
+            "value": 18.3812
+          },
+          {
+            "month": "2023-10",
+            "value": 18.627929
+          },
+          {
+            "month": "2023-11",
+            "value": 18.51688
+          },
+          {
+            "month": "2023-12",
+            "value": 14.105799000000001
+          },
+          {
+            "month": "2024-01",
+            "value": 14.222976
+          },
+          {
+            "month": "2024-02",
+            "value": 15.861334000000001
+          },
+          {
+            "month": "2024-03",
+            "value": 18.808084
+          },
+          {
+            "month": "2024-04",
+            "value": 19.035002
+          },
+          {
+            "month": "2024-05",
+            "value": 19.084716
+          },
+          {
+            "month": "2024-06",
+            "value": 18.552834
+          },
+          {
+            "month": "2024-07",
+            "value": 17.724964999999997
+          },
+          {
+            "month": "2024-08",
+            "value": 17.063398
+          },
+          {
+            "month": "2024-09",
+            "value": 17.497575
+          },
+          {
+            "month": "2024-10",
+            "value": 18.395315999999998
+          },
+          {
+            "month": "2024-11",
+            "value": 15.937822
+          },
+          {
+            "month": "2024-12",
+            "value": 13.002219
+          }
+        ],
+        "yearly_timeseries": [
+          {
+            "year": 2016,
+            "value": 16.2883,
+            "months": 12,
+            "complete": true
+          },
+          {
+            "year": 2017,
+            "value": 16.7266,
+            "months": 12,
+            "complete": true
+          },
+          {
+            "year": 2018,
+            "value": 16.5618,
+            "months": 12,
+            "complete": true
+          },
+          {
+            "year": 2019,
+            "value": 17.0502,
+            "months": 12,
+            "complete": true
+          },
+          {
+            "year": 2020,
+            "value": 16.6876,
+            "months": 12,
+            "complete": true
+          },
+          {
+            "year": 2021,
+            "value": 17.1514,
+            "months": 12,
+            "complete": true
+          },
+          {
+            "year": 2022,
+            "value": 16.7308,
+            "months": 12,
+            "complete": true
+          },
+          {
+            "year": 2023,
+            "value": 17.174,
+            "months": 12,
+            "complete": true
+          },
+          {
+            "year": 2024,
+            "value": 17.0989,
+            "months": 12,
+            "complete": true
+          }
+        ],
+        "cells": [],
+        "overall": {
+          "ok": true,
+          "n": 9,
+          "slope": 0.08204166666666643,
+          "intercept": -148.95343333333284,
+          "z": 2.189401347599285,
+          "p": 0.028567681801512812,
+          "tau": 0.6111111111111112,
+          "significant": true,
+          "stars": "**",
+          "direction": "rising",
+          "change_total": 0.8106000000000009,
+          "change_pct": 4.97657828011518,
+          "autocorr_r1": -0.7573207572216007,
+          "autocorr_factor": 1.0,
+          "p_uncorrected": 0.028567681801512812,
+          "z_uncorrected": 2.189401347599285,
+          "per_decade": 0.8204166666666644,
+          "t_slope": 0.08372999999999985,
+          "t_se": 0.02794409845789144,
+          "t_per_decade": 0.8372999999999985,
+          "t_p": 0.020045676626776032,
+          "t_df": 7,
+          "t_significant": true,
+          "t_ci_low_per_decade": 0.1765270709757323,
+          "t_ci_high_per_decade": 1.4980729290242645,
+          "methods_agree": true,
+          "ci_low": 0.009740000000000037,
+          "ci_high": 0.16213333333333324,
+          "ci_low_per_decade": 0.09740000000000038,
+          "ci_high_per_decade": 1.6213333333333324,
+          "dt_label": "year",
+          "first": 16.2883,
+          "last": 17.0989,
+          "seasonal_z": 2.919356937329903,
+          "seasonal_p": 0.003507543501249266,
+          "seasonal_significant": true
+        },
+        "seasonal": [
+          2.919356937329903,
+          0.003507543501249266,
+          0.0,
+          true
+        ],
+        "summary": {
+          "total_cells": 0,
+          "valid_cells": 0,
+          "significant_cells": 0,
+          "rising_cells": 0,
+          "falling_cells": 0,
+          "consensus": "none",
+          "spatial_detail_available": false
+        }
+      }
+    ],
+    "grid": {
+      "nx": 5,
+      "ny": 5,
+      "bbox": [
+        -2.0,
+        6.0,
+        0.0,
+        8.0
+      ]
+    },
+    "satellite": {
+      "enabled": false,
+      "reason": "Imagery route not enabled by the challenge source policy"
+    },
+    "couplings": [
+      {
+        "var_a": "T2M",
+        "var_b": "QV2M",
+        "var_a_name": "Air Temperature",
+        "var_b_name": "Specific Humidity",
+        "sphere_a": "Atmosphere",
+        "sphere_b": "Hydrosphere",
+        "sphere_a_code": "ATM",
+        "sphere_b_code": "HYD",
+        "same_sphere": false,
+        "r": -0.107,
+        "phase": "decoupled",
+        "phase_label": "DECOUPLED / INDEPENDENT",
+        "title": "Air Temperature <-> Specific Humidity Coupling",
+        "description": "Co-trend association. Possible mechanism: Observed correlation of r = -0.11 between Air Temperature and Specific Humidity across the analyzed timeline.",
+        "evidence_type": "co_trend_association"
+      }
+    ],
+    "window": {
+      "first_month": "2016-01",
+      "last_month": "2024-12",
+      "partial_years": []
+    },
+    "sources": [
+      "NASA Giovanni / MERRA-2"
+    ],
+    "provenance": [
+      {
+        "provider": "nasa-giovanni",
+        "source": "NASA Giovanni / MERRA-2",
+        "resource": "Giovanni",
+        "dataset": "M2IMNXASM",
+        "collection_version": "5.12.4",
+        "field": "T2M",
+        "policy": "challenge_resource",
+        "citation": "https://disc.gsfc.nasa.gov/datasets/M2IMNXASM_5.12.4/summary",
+        "access": "Giovanni area averaging through NASA Harmony; regional CSV only",
+        "aggregation": "NASA server rectangle average; monthly spatial support is not supplied",
+        "quality": "Monthly mean instantaneous assimilation diagnostics; a different product from native mode. Cell weighting follows NASA's service.",
+        "geometry_version": "1dc5aba6733f8455",
+        "requested_bbox": [
+          -2.0,
+          6.0,
+          0.0,
+          8.0
+        ],
+        "spatial_detail_available": false,
+        "monthly_area_coverage_known": false,
+        "dlon": 0.625,
+        "dlat": 0.5,
+        "cache_hit": true,
+        "remote_job_id": "6217fbca-ebde-40ea-a5e9-bc42b294050c",
+        "requested_months": 108,
+        "published_months": 108,
+        "first_observed_month": 201601,
+        "last_observed_month": 202412,
+        "retrieved_utc": "2026-11-15T02:10:33.742663+00:00"
+      },
+      {
+        "provider": "nasa-giovanni",
+        "source": "NASA Giovanni / MERRA-2",
+        "resource": "Giovanni",
+        "dataset": "M2IMNXASM",
+        "collection_version": "5.12.4",
+        "field": "QV2M",
+        "policy": "challenge_resource",
+        "citation": "https://disc.gsfc.nasa.gov/datasets/M2IMNXASM_5.12.4/summary",
+        "access": "Giovanni area averaging through NASA Harmony; regional CSV only",
+        "aggregation": "NASA server rectangle average; monthly spatial support is not supplied",
+        "quality": "Monthly mean instantaneous assimilation diagnostics; a different product from native mode. Cell weighting follows NASA's service.",
+        "geometry_version": "1dc5aba6733f8455",
+        "requested_bbox": [
+          -2.0,
+          6.0,
+          0.0,
+          8.0
+        ],
+        "spatial_detail_available": false,
+        "monthly_area_coverage_known": false,
+        "dlon": 0.625,
+        "dlat": 0.5,
+        "cache_hit": false,
+        "remote_job_id": "b8fe658c-24b8-4381-9d13-f42d3f305dc6",
+        "requested_months": 108,
+        "published_months": 108,
+        "first_observed_month": 201601,
+        "last_observed_month": 202412,
+        "retrieved_utc": "2026-11-15T02:12:13.500239+00:00"
+      }
+    ],
+    "compare": {
+      "region": {
+        "id": "custom:1222355f88247b7128ad",
+        "name": "Northern Ghana rectangle",
+        "level": "custom",
+        "parent": null,
+        "geometry_version": "ccc5c3827f964cae",
+        "bbox": [
+          -1.0,
+          8.0,
+          0.0,
+          10.0
+        ],
+        "surface": "mixed",
+        "desc": "Northern Ghana rectangle \u00b7 24,423.0 km\u00b2 \u00b7 user-defined boundary",
+        "center": [
+          -0.5,
+          9.0
+        ],
+        "selection_kind": "bounds",
+        "area_km2": 24423.0005,
+        "boundary_source": "User-defined selection"
+      },
+      "series": [
+        {
+          "variable": {
+            "id": "T2M",
+            "name": "Air Temperature",
+            "unit": "\u00b0C",
+            "color": "#ff7a33",
+            "mission": "MERRA-2",
+            "group": "temperature",
+            "sphere": "atmosphere",
+            "sphere_code": "ATM",
+            "sphere_name": "Atmosphere",
+            "desc": "Mean near-surface air temperature at 2 m",
+            "plain": "How warm the air is, about 2 metres above the ground \u2014 roughly what you feel standing outside.",
+            "trend_means": "Rising means the air is getting warmer on average.",
+            "dataset": "M2IMNXASM",
+            "source_field": "T2M"
+          },
+          "provenance": {
+            "provider": "nasa-giovanni",
+            "source": "NASA Giovanni / MERRA-2",
+            "resource": "Giovanni",
+            "dataset": "M2IMNXASM",
+            "collection_version": "5.12.4",
+            "field": "T2M",
+            "policy": "challenge_resource",
+            "citation": "https://disc.gsfc.nasa.gov/datasets/M2IMNXASM_5.12.4/summary",
+            "access": "Giovanni area averaging through NASA Harmony; regional CSV only",
+            "aggregation": "NASA server rectangle average; monthly spatial support is not supplied",
+            "quality": "Monthly mean instantaneous assimilation diagnostics; a different product from native mode. Cell weighting follows NASA's service.",
+            "geometry_version": "ccc5c3827f964cae",
+            "requested_bbox": [
+              -1.0,
+              8.0,
+              0.0,
+              10.0
+            ],
+            "spatial_detail_available": false,
+            "monthly_area_coverage_known": false,
+            "dlon": 0.625,
+            "dlat": 0.5,
+            "cache_hit": false,
+            "remote_job_id": "6639a616-658d-4b1c-bc67-13b498feb411",
+            "requested_months": 108,
+            "published_months": 108,
+            "first_observed_month": 201601,
+            "last_observed_month": 202412,
+            "retrieved_utc": "2026-11-15T02:12:32.473697+00:00"
+          },
+          "monthly_timeseries": [
+            {
+              "month": "2016-01",
+              "value": 24.95703000000003
+            },
+            {
+              "month": "2016-02",
+              "value": 28.234800000000007
+            },
+            {
+              "month": "2016-03",
+              "value": 30.892449999999997
+            },
+            {
+              "month": "2016-04",
+              "value": 29.974000000000046
+            },
+            {
+              "month": "2016-05",
+              "value": 28.537350000000004
+            },
+            {
+              "month": "2016-06",
+              "value": 27.226130000000012
+            },
+            {
+              "month": "2016-07",
+              "value": 25.97670000000005
+            },
+            {
+              "month": "2016-08",
+              "value": 26.02203000000003
+            },
+            {
+              "month": "2016-09",
+              "value": 26.058680000000038
+            },
+            {
+              "month": "2016-10",
+              "value": 27.228080000000034
+            },
+            {
+              "month": "2016-11",
+              "value": 27.2389
+            },
+            {
+              "month": "2016-12",
+              "value": 25.916500000000042
+            },
+            {
+              "month": "2017-01",
+              "value": 26.07125000000002
+            },
+            {
+              "month": "2017-02",
+              "value": 27.916530000000023
+            },
+            {
+              "month": "2017-03",
+              "value": 30.48004000000003
+            },
+            {
+              "month": "2017-04",
+              "value": 29.571529999999996
+            },
+            {
+              "month": "2017-05",
+              "value": 28.682180000000017
+            },
+            {
+              "month": "2017-06",
+              "value": 26.79740000000004
+            },
+            {
+              "month": "2017-07",
+              "value": 26.044240000000002
+            },
+            {
+              "month": "2017-08",
+              "value": 25.929250000000025
+            },
+            {
+              "month": "2017-09",
+              "value": 26.51248000000004
+            },
+            {
+              "month": "2017-10",
+              "value": 27.024040000000014
+            },
+            {
+              "month": "2017-11",
+              "value": 26.896100000000047
+            },
+            {
+              "month": "2017-12",
+              "value": 26.006200000000035
+            },
+            {
+              "month": "2018-01",
+              "value": 25.00970000000001
+            },
+            {
+              "month": "2018-02",
+              "value": 29.121939999999995
+            },
+            {
+              "month": "2018-03",
+              "value": 29.555020000000013
+            },
+            {
+              "month": "2018-04",
+              "value": 29.401820000000043
+            },
+            {
+              "month": "2018-05",
+              "value": 28.248000000000047
+            },
+            {
+              "month": "2018-06",
+              "value": 26.900630000000035
+            },
+            {
+              "month": "2018-07",
+              "value": 25.718870000000038
+            },
+            {
+              "month": "2018-08",
+              "value": 25.67846000000003
+            },
+            {
+              "month": "2018-09",
+              "value": 25.679250000000025
+            },
+            {
+              "month": "2018-10",
+              "value": 26.966330000000028
+            },
+            {
+              "month": "2018-11",
+              "value": 27.16314
+            },
+            {
+              "month": "2018-12",
+              "value": 24.72085000000004
+            },
+            {
+              "month": "2019-01",
+              "value": 26.351770000000045
+            },
+            {
+              "month": "2019-02",
+              "value": 28.656920000000014
+            },
+            {
+              "month": "2019-03",
+              "value": 30.25033000000002
+            },
+            {
+              "month": "2019-04",
+              "value": 29.97308000000004
+            },
+            {
+              "month": "2019-05",
+              "value": 28.03665000000001
+            },
+            {
+              "month": "2019-06",
+              "value": 27.079060000000027
+            },
+            {
+              "month": "2019-07",
+              "value": 26.32525000000004
+            },
+            {
+              "month": "2019-08",
+              "value": 25.82620000000003
+            },
+            {
+              "month": "2019-09",
+              "value": 26.388329999999996
+            },
+            {
+              "month": "2019-10",
+              "value": 25.82324
+            },
+            {
+              "month": "2019-11",
+              "value": 27.53964000000002
+            },
+            {
+              "month": "2019-12",
+              "value": 25.12817000000001
+            },
+            {
+              "month": "2020-01",
+              "value": 24.550530000000037
+            },
+            {
+              "month": "2020-02",
+              "value": 26.55218000000002
+            },
+            {
+              "month": "2020-03",
+              "value": 29.555800000000033
+            },
+            {
+              "month": "2020-04",
+              "value": 28.93282000000005
+            },
+            {
+              "month": "2020-05",
+              "value": 28.373620000000017
+            },
+            {
+              "month": "2020-06",
+              "value": 26.735900000000015
+            },
+            {
+              "month": "2020-07",
+              "value": 25.736170000000016
+            },
+            {
+              "month": "2020-08",
+              "value": 25.883080000000007
+            },
+            {
+              "month": "2020-09",
+              "value": 26.034880000000044
+            },
+            {
+              "month": "2020-10",
+              "value": 26.495720000000006
+            },
+            {
+              "month": "2020-11",
+              "value": 26.472470000000044
+            },
+            {
+              "month": "2020-12",
+              "value": 26.923969999999997
+            },
+            {
+              "month": "2021-01",
+              "value": 26.91183000000001
+            },
+            {
+              "month": "2021-02",
+              "value": 28.633080000000007
+            },
+            {
+              "month": "2021-03",
+              "value": 29.32247000000001
+            },
+            {
+              "month": "2021-04",
+              "value": 30.039800000000014
+            },
+            {
+              "month": "2021-05",
+              "value": 28.86035000000004
+            },
+            {
+              "month": "2021-06",
+              "value": 27.40210000000002
+            },
+            {
+              "month": "2021-07",
+              "value": 26.043420000000026
+            },
+            {
+              "month": "2021-08",
+              "value": 25.787869999999998
+            },
+            {
+              "month": "2021-09",
+              "value": 26.208730000000003
+            },
+            {
+              "month": "2021-10",
+              "value": 27.103330000000028
+            },
+            {
+              "month": "2021-11",
+              "value": 27.216150000000027
+            },
+            {
+              "month": "2021-12",
+              "value": 25.551800000000014
+            },
+            {
+              "month": "2022-01",
+              "value": 25.095270000000028
+            },
+            {
+              "month": "2022-02",
+              "value": 28.043100000000038
+            },
+            {
+              "month": "2022-03",
+              "value": 29.80680000000001
+            },
+            {
+              "month": "2022-04",
+              "value": 28.597530000000006
+            },
+            {
+              "month": "2022-05",
+              "value": 27.523030000000006
+            },
+            {
+              "month": "2022-06",
+              "value": 26.482780000000048
+            },
+            {
+              "month": "2022-07",
+              "value": 25.850000000000023
+            },
+            {
+              "month": "2022-08",
+              "value": 25.48565000000002
+            },
+            {
+              "month": "2022-09",
+              "value": 25.58420000000001
+            },
+            {
+              "month": "2022-10",
+              "value": 26.537770000000023
+            },
+            {
+              "month": "2022-11",
+              "value": 25.806420000000003
+            },
+            {
+              "month": "2022-12",
+              "value": 24.00875000000002
+            },
+            {
+              "month": "2023-01",
+              "value": 24.947050000000047
+            },
+            {
+              "month": "2023-02",
+              "value": 27.552999999999997
+            },
+            {
+              "month": "2023-03",
+              "value": 29.267200000000003
+            },
+            {
+              "month": "2023-04",
+              "value": 29.082400000000007
+            },
+            {
+              "month": "2023-05",
+              "value": 28.87682000000001
+            },
+            {
+              "month": "2023-06",
+              "value": 26.93914000000001
+            },
+            {
+              "month": "2023-07",
+              "value": 26.57098000000002
+            },
+            {
+              "month": "2023-08",
+              "value": 26.207420000000013
+            },
+            {
+              "month": "2023-09",
+              "value": 26.627160000000003
+            },
+            {
+              "month": "2023-10",
+              "value": 27.05078000000003
+            },
+            {
+              "month": "2023-11",
+              "value": 27.474940000000004
+            },
+            {
+              "month": "2023-12",
+              "value": 24.654100000000028
+            },
+            {
+              "month": "2024-01",
+              "value": 25.880200000000002
+            },
+            {
+              "month": "2024-02",
+              "value": 28.0111
+            },
+            {
+              "month": "2024-03",
+              "value": 30.83737000000002
+            },
+            {
+              "month": "2024-04",
+              "value": 30.49478000000005
+            },
+            {
+              "month": "2024-05",
+              "value": 29.597530000000006
+            },
+            {
+              "month": "2024-06",
+              "value": 27.652600000000007
+            },
+            {
+              "month": "2024-07",
+              "value": 26.812620000000038
+            },
+            {
+              "month": "2024-08",
+              "value": 26.88366000000002
+            },
+            {
+              "month": "2024-09",
+              "value": 26.857000000000028
+            },
+            {
+              "month": "2024-10",
+              "value": 27.077140000000043
+            },
+            {
+              "month": "2024-11",
+              "value": 25.217460000000017
+            },
+            {
+              "month": "2024-12",
+              "value": 24.099000000000046
+            }
+          ],
+          "yearly_timeseries": [
+            {
+              "year": 2016,
+              "value": 27.3552,
+              "months": 12,
+              "complete": true
+            },
+            {
+              "year": 2017,
+              "value": 27.3276,
+              "months": 12,
+              "complete": true
+            },
+            {
+              "year": 2018,
+              "value": 27.0137,
+              "months": 12,
+              "complete": true
+            },
+            {
+              "year": 2019,
+              "value": 27.2816,
+              "months": 12,
+              "complete": true
+            },
+            {
+              "year": 2020,
+              "value": 26.8539,
+              "months": 12,
+              "complete": true
+            },
+            {
+              "year": 2021,
+              "value": 27.4234,
+              "months": 12,
+              "complete": true
+            },
+            {
+              "year": 2022,
+              "value": 26.5684,
+              "months": 12,
+              "complete": true
+            },
+            {
+              "year": 2023,
+              "value": 27.1042,
+              "months": 12,
+              "complete": true
+            },
+            {
+              "year": 2024,
+              "value": 27.4517,
+              "months": 12,
+              "complete": true
+            }
+          ],
+          "cells": [],
+          "overall": {
+            "ok": true,
+            "n": 9,
+            "slope": -0.023766666666666346,
+            "intercept": 75.26496666666603,
+            "z": -0.10425720702853739,
+            "p": 0.9169652366288645,
+            "tau": -0.05555555555555555,
+            "significant": false,
+            "stars": "",
+            "direction": "flat",
+            "change_total": 0.09649999999999892,
+            "change_pct": null,
+            "autocorr_r1": -0.4479725795599762,
+            "autocorr_factor": 1.0,
+            "p_uncorrected": 0.9169652366288645,
+            "z_uncorrected": -0.10425720702853739,
+            "per_decade": -0.23766666666666347,
+            "t_slope": -0.017216666666666807,
+            "t_se": 0.04039872945118241,
+            "t_per_decade": -0.17216666666666808,
+            "t_p": 0.6827833775310101,
+            "t_df": 7,
+            "t_significant": false,
+            "t_ci_low_per_decade": -1.1274448206046839,
+            "t_ci_high_per_decade": 0.7831114872713476,
+            "methods_agree": true,
+            "ci_low": -0.1427499999999995,
+            "ci_high": 0.0729999999999998,
+            "ci_low_per_decade": -1.4274999999999949,
+            "ci_high_per_decade": 0.729999999999998,
+            "dt_label": "year",
+            "first": 27.3552,
+            "last": 27.4517,
+            "seasonal_z": -0.2708681694429807,
+            "seasonal_p": 0.7864924272252569,
+            "seasonal_significant": false
+          },
+          "seasonal": [
+            -0.2708681694429807,
+            0.7864924272252569,
+            0.0,
+            false
+          ],
+          "summary": {
+            "total_cells": 0,
+            "valid_cells": 0,
+            "significant_cells": 0,
+            "rising_cells": 0,
+            "falling_cells": 0,
+            "consensus": "none",
+            "spatial_detail_available": false
+          }
+        },
+        {
+          "variable": {
+            "id": "QV2M",
+            "name": "Specific Humidity",
+            "unit": "g/kg",
+            "color": "#7fd3a0",
+            "mission": "MERRA-2",
+            "group": "water",
+            "sphere": "hydrosphere",
+            "sphere_code": "HYD",
+            "sphere_name": "Hydrosphere",
+            "desc": "Mass of water vapour per kilogram of air \u2014 actual moisture content",
+            "plain": "The actual mass of water vapour in a kilogram of air \u2014 the true moisture content, whatever the temperature.",
+            "trend_means": "Rising means the atmosphere is holding more water, which can feed heavier rain when it condenses.",
+            "dataset": "M2IMNXASM",
+            "source_field": "QV2M"
+          },
+          "provenance": {
+            "provider": "nasa-giovanni",
+            "source": "NASA Giovanni / MERRA-2",
+            "resource": "Giovanni",
+            "dataset": "M2IMNXASM",
+            "collection_version": "5.12.4",
+            "field": "QV2M",
+            "policy": "challenge_resource",
+            "citation": "https://disc.gsfc.nasa.gov/datasets/M2IMNXASM_5.12.4/summary",
+            "access": "Giovanni area averaging through NASA Harmony; regional CSV only",
+            "aggregation": "NASA server rectangle average; monthly spatial support is not supplied",
+            "quality": "Monthly mean instantaneous assimilation diagnostics; a different product from native mode. Cell weighting follows NASA's service.",
+            "geometry_version": "ccc5c3827f964cae",
+            "requested_bbox": [
+              -1.0,
+              8.0,
+              0.0,
+              10.0
+            ],
+            "spatial_detail_available": false,
+            "monthly_area_coverage_known": false,
+            "dlon": 0.625,
+            "dlat": 0.5,
+            "cache_hit": false,
+            "remote_job_id": "752362a5-859c-4b52-a133-da45f5fd8e55",
+            "requested_months": 108,
+            "published_months": 108,
+            "first_observed_month": 201601,
+            "last_observed_month": 202412,
+            "retrieved_utc": "2026-11-15T02:12:51.836709+00:00"
+          },
+          "monthly_timeseries": [
+            {
+              "month": "2016-01",
+              "value": 7.3357730000000005
+            },
+            {
+              "month": "2016-02",
+              "value": 7.8779520000000005
+            },
+            {
+              "month": "2016-03",
+              "value": 15.661305
+            },
+            {
+              "month": "2016-04",
+              "value": 18.218228999999997
+            },
+            {
+              "month": "2016-05",
+              "value": 18.188737
+            },
+            {
+              "month": "2016-06",
+              "value": 17.613526
+            },
+            {
+              "month": "2016-07",
+              "value": 17.942466
+            },
+            {
+              "month": "2016-08",
+              "value": 17.913355
+            },
+            {
+              "month": "2016-09",
+              "value": 17.812349
+            },
+            {
+              "month": "2016-10",
+              "value": 17.999850000000002
+            },
+            {
+              "month": "2016-11",
+              "value": 16.101506
+            },
+            {
+              "month": "2016-12",
+              "value": 13.009534
+            },
+            {
+              "month": "2017-01",
+              "value": 10.169905
+            },
+            {
+              "month": "2017-02",
+              "value": 10.818824
+            },
+            {
+              "month": "2017-03",
+              "value": 15.045402
+            },
+            {
+              "month": "2017-04",
+              "value": 17.41518
+            },
+            {
+              "month": "2017-05",
+              "value": 18.40561
+            },
+            {
+              "month": "2017-06",
+              "value": 18.124895
+            },
+            {
+              "month": "2017-07",
+              "value": 17.670635
+            },
+            {
+              "month": "2017-08",
+              "value": 17.747512
+            },
+            {
+              "month": "2017-09",
+              "value": 17.893825
+            },
+            {
+              "month": "2017-10",
+              "value": 17.336013
+            },
+            {
+              "month": "2017-11",
+              "value": 14.947824
+            },
+            {
+              "month": "2017-12",
+              "value": 11.404613
+            },
+            {
+              "month": "2018-01",
+              "value": 7.982201
+            },
+            {
+              "month": "2018-02",
+              "value": 11.750557
+            },
+            {
+              "month": "2018-03",
+              "value": 15.566182
+            },
+            {
+              "month": "2018-04",
+              "value": 17.336149
+            },
+            {
+              "month": "2018-05",
+              "value": 17.700126
+            },
+            {
+              "month": "2018-06",
+              "value": 18.008312
+            },
+            {
+              "month": "2018-07",
+              "value": 17.729495
+            },
+            {
+              "month": "2018-08",
+              "value": 17.562276
+            },
+            {
+              "month": "2018-09",
+              "value": 18.022204
+            },
+            {
+              "month": "2018-10",
+              "value": 18.187914
+            },
+            {
+              "month": "2018-11",
+              "value": 15.62181
+            },
+            {
+              "month": "2018-12",
+              "value": 10.919073
+            },
+            {
+              "month": "2019-01",
+              "value": 10.1062935
+            },
+            {
+              "month": "2019-02",
+              "value": 11.566785
+            },
+            {
+              "month": "2019-03",
+              "value": 14.828724999999999
+            },
+            {
+              "month": "2019-04",
+              "value": 18.00714
+            },
+            {
+              "month": "2019-05",
+              "value": 18.653897999999998
+            },
+            {
+              "month": "2019-06",
+              "value": 18.437106
+            },
+            {
+              "month": "2019-07",
+              "value": 17.99618
+            },
+            {
+              "month": "2019-08",
+              "value": 17.748746999999998
+            },
+            {
+              "month": "2019-09",
+              "value": 18.426284000000003
+            },
+            {
+              "month": "2019-10",
+              "value": 18.22467
+            },
+            {
+              "month": "2019-11",
+              "value": 16.649231
+            },
+            {
+              "month": "2019-12",
+              "value": 11.725841
+            },
+            {
+              "month": "2020-01",
+              "value": 10.198077999999999
+            },
+            {
+              "month": "2020-02",
+              "value": 9.358853
+            },
+            {
+              "month": "2020-03",
+              "value": 16.848512
+            },
+            {
+              "month": "2020-04",
+              "value": 18.164149000000002
+            },
+            {
+              "month": "2020-05",
+              "value": 18.630954000000003
+            },
+            {
+              "month": "2020-06",
+              "value": 18.276155
+            },
+            {
+              "month": "2020-07",
+              "value": 17.777467
+            },
+            {
+              "month": "2020-08",
+              "value": 17.055709
+            },
+            {
+              "month": "2020-09",
+              "value": 17.907618
+            },
+            {
+              "month": "2020-10",
+              "value": 17.389959
+            },
+            {
+              "month": "2020-11",
+              "value": 15.129621
+            },
+            {
+              "month": "2020-12",
+              "value": 13.021122
+            },
+            {
+              "month": "2021-01",
+              "value": 11.09031
+            },
+            {
+              "month": "2021-02",
+              "value": 10.958024
+            },
+            {
+              "month": "2021-03",
+              "value": 15.612028
+            },
+            {
+              "month": "2021-04",
+              "value": 16.697695
+            },
+            {
+              "month": "2021-05",
+              "value": 18.049179
+            },
+            {
+              "month": "2021-06",
+              "value": 17.742865
+            },
+            {
+              "month": "2021-07",
+              "value": 17.627155
+            },
+            {
+              "month": "2021-08",
+              "value": 17.74879
+            },
+            {
+              "month": "2021-09",
+              "value": 17.888735999999998
+            },
+            {
+              "month": "2021-10",
+              "value": 18.408125000000002
+            },
+            {
+              "month": "2021-11",
+              "value": 16.910321999999997
+            },
+            {
+              "month": "2021-12",
+              "value": 12.33816
+            },
+            {
+              "month": "2022-01",
+              "value": 9.581618
+            },
+            {
+              "month": "2022-02",
+              "value": 11.202346499999999
+            },
+            {
+              "month": "2022-03",
+              "value": 16.487503
+            },
+            {
+              "month": "2022-04",
+              "value": 17.401772
+            },
+            {
+              "month": "2022-05",
+              "value": 18.462157
+            },
+            {
+              "month": "2022-06",
+              "value": 17.774152
+            },
+            {
+              "month": "2022-07",
+              "value": 17.551698000000002
+            },
+            {
+              "month": "2022-08",
+              "value": 17.774330000000003
+            },
+            {
+              "month": "2022-09",
+              "value": 17.858498
+            },
+            {
+              "month": "2022-10",
+              "value": 17.63909
+            },
+            {
+              "month": "2022-11",
+              "value": 14.634484
+            },
+            {
+              "month": "2022-12",
+              "value": 11.759905
+            },
+            {
+              "month": "2023-01",
+              "value": 11.225215
+            },
+            {
+              "month": "2023-02",
+              "value": 12.603804499999999
+            },
+            {
+              "month": "2023-03",
+              "value": 16.39661
+            },
+            {
+              "month": "2023-04",
+              "value": 17.57958
+            },
+            {
+              "month": "2023-05",
+              "value": 18.512465
+            },
+            {
+              "month": "2023-06",
+              "value": 18.33322
+            },
+            {
+              "month": "2023-07",
+              "value": 18.412755999999998
+            },
+            {
+              "month": "2023-08",
+              "value": 18.458928999999998
+            },
+            {
+              "month": "2023-09",
+              "value": 18.734934000000003
+            },
+            {
+              "month": "2023-10",
+              "value": 18.828984
+            },
+            {
+              "month": "2023-11",
+              "value": 17.805293
+            },
+            {
+              "month": "2023-12",
+              "value": 11.053096
+            },
+            {
+              "month": "2024-01",
+              "value": 10.432858999999999
+            },
+            {
+              "month": "2024-02",
+              "value": 11.598323500000001
+            },
+            {
+              "month": "2024-03",
+              "value": 17.720906000000003
+            },
+            {
+              "month": "2024-04",
+              "value": 18.21867
+            },
+            {
+              "month": "2024-05",
+              "value": 18.766634
+            },
+            {
+              "month": "2024-06",
+              "value": 18.655414
+            },
+            {
+              "month": "2024-07",
+              "value": 18.355193
+            },
+            {
+              "month": "2024-08",
+              "value": 17.887091
+            },
+            {
+              "month": "2024-09",
+              "value": 18.386368
+            },
+            {
+              "month": "2024-10",
+              "value": 18.379766
+            },
+            {
+              "month": "2024-11",
+              "value": 13.004566
+            },
+            {
+              "month": "2024-12",
+              "value": 10.465788
+            }
+          ],
+          "yearly_timeseries": [
+            {
+              "year": 2016,
+              "value": 15.4729,
+              "months": 12,
+              "complete": true
+            },
+            {
+              "year": 2017,
+              "value": 15.5817,
+              "months": 12,
+              "complete": true
+            },
+            {
+              "year": 2018,
+              "value": 15.5322,
+              "months": 12,
+              "complete": true
+            },
+            {
+              "year": 2019,
+              "value": 16.0309,
+              "months": 12,
+              "complete": true
+            },
+            {
+              "year": 2020,
+              "value": 15.8132,
+              "months": 12,
+              "complete": true
+            },
+            {
+              "year": 2021,
+              "value": 15.9226,
+              "months": 12,
+              "complete": true
+            },
+            {
+              "year": 2022,
+              "value": 15.6773,
+              "months": 12,
+              "complete": true
+            },
+            {
+              "year": 2023,
+              "value": 16.4954,
+              "months": 12,
+              "complete": true
+            },
+            {
+              "year": 2024,
+              "value": 15.9893,
+              "months": 12,
+              "complete": true
+            }
+          ],
+          "cells": [],
+          "overall": {
+            "ok": true,
+            "n": 9,
+            "slope": 0.08112083333333353,
+            "intercept": -148.05088333333373,
+            "z": 1.9808869335422103,
+            "p": 0.04760395472787149,
+            "tau": 0.5555555555555556,
+            "significant": true,
+            "stars": "**",
+            "direction": "rising",
+            "change_total": 0.5164000000000009,
+            "change_pct": 3.3374480543401743,
+            "autocorr_r1": -0.6187437579243046,
+            "autocorr_factor": 1.0,
+            "p_uncorrected": 0.04760395472787149,
+            "z_uncorrected": 1.9808869335422103,
+            "per_decade": 0.8112083333333353,
+            "t_slope": 0.08314333333333344,
+            "t_se": 0.030996467907671552,
+            "t_per_decade": 0.8314333333333345,
+            "t_p": 0.03143212991273514,
+            "t_df": 7,
+            "t_significant": true,
+            "t_ci_low_per_decade": 0.09848333605135859,
+            "t_ci_high_per_decade": 1.5643833306153105,
+            "methods_agree": true,
+            "ci_low": 0.019120000000000203,
+            "ci_high": 0.1522833333333334,
+            "ci_low_per_decade": 0.19120000000000203,
+            "ci_high_per_decade": 1.5228333333333341,
+            "dt_label": "year",
+            "first": 15.4729,
+            "last": 15.9893,
+            "seasonal_z": 3.3407074231300955,
+            "seasonal_p": 0.0008356523340673494,
+            "seasonal_significant": true
+          },
+          "seasonal": [
+            3.3407074231300955,
+            0.0008356523340673494,
+            0.0,
+            true
+          ],
+          "summary": {
+            "total_cells": 0,
+            "valid_cells": 0,
+            "significant_cells": 0,
+            "rising_cells": 0,
+            "falling_cells": 0,
+            "consensus": "none",
+            "spatial_detail_available": false
+          }
+        }
+      ],
+      "contrasts": [
+        {
+          "var_id": "T2M",
+          "var_name": "Air Temperature",
+          "unit": "\u00b0C",
+          "region_a": "Ghana interior rectangle",
+          "region_b": "Northern Ghana rectangle",
+          "slope_a_decade": -0.311,
+          "slope_b_decade": -0.238,
+          "diff_decade": -0.073,
+          "r": 0.888,
+          "p_a": 0.348,
+          "p_b": 0.917,
+          "sig_a": false,
+          "sig_b": false,
+          "p_diff": 0.6022,
+          "diff_z": null,
+          "diff_significant": false,
+          "paired_difference_per_decade": -0.12550000000000505,
+          "difference_method": "Calendar-aligned paired Sen/Mann-Kendall",
+          "common_years": [
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021,
+            2022,
+            2023,
+            2024
+          ],
+          "verdict": "NO SIGNIFICANT DIFFERENCE",
+          "explanation": "The paired contrast does not show a statistically significant change over time (p = 0.602)."
+        },
+        {
+          "var_id": "QV2M",
+          "var_name": "Specific Humidity",
+          "unit": "g/kg",
+          "region_a": "Ghana interior rectangle",
+          "region_b": "Northern Ghana rectangle",
+          "slope_a_decade": 0.82,
+          "slope_b_decade": 0.811,
+          "diff_decade": 0.009,
+          "r": 0.846,
+          "p_a": 0.029,
+          "p_b": 0.048,
+          "sig_a": true,
+          "sig_b": true,
+          "p_diff": 0.917,
+          "diff_z": null,
+          "diff_significant": false,
+          "paired_difference_per_decade": 0.08687499999998921,
+          "difference_method": "Calendar-aligned paired Sen/Mann-Kendall",
+          "common_years": [
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021,
+            2022,
+            2023,
+            2024
+          ],
+          "verdict": "NO SIGNIFICANT DIFFERENCE",
+          "explanation": "The paired contrast does not show a statistically significant change over time (p = 0.917)."
+        }
+      ]
+    }
+  },
+  "completed": 0,
+  "total": 1
+}

@@ -1,7 +1,7 @@
-"""Curated catalog of NASA POWER Earth science variables, Spheres and Regions.
+"""Curated Earth-science measurements, spheres and named focus regions.
 
-Every variable is verified against the live NASA POWER API (MERRA-2 / GPCP / CERES).
-Includes Earth System Spheres classification and plain-English explanatory metadata.
+Provider registries determine which measurements have live mappings. Source-
+qualified additions preserve distinct units, heights and observing methods.
 """
 
 SPHERES = [
@@ -26,7 +26,7 @@ CATALOG = [
      "mission": "MERRA-2", "group": "temperature",
      "sphere": "atmosphere", "sphere_code": "ATM", "sphere_name": "Atmosphere",
      "desc": "Monthly mean of the daily minimum temperature"},
-    {"id": "TS", "name": "Skin Temperature", "unit": "°C", "color": "#ff8f5a",
+    {"id": "TS", "name": "Surface Temperature", "unit": "°C", "color": "#ff8f5a",
      "mission": "MERRA-2", "group": "temperature",
      "sphere": "land", "sphere_code": "LND", "sphere_name": "Land & Biosphere",
      "desc": "Temperature of the Earth's surface skin — the layer a satellite actually sees, over land or ocean"},
@@ -52,15 +52,15 @@ CATALOG = [
      "color": "#58c9b0", "mission": "MERRA-2", "group": "water",
      "sphere": "land", "sphere_code": "LND", "sphere_name": "Land & Biosphere",
      "desc": "Water leaving the surface through evaporation and plant transpiration"},
-    {"id": "EVLAND", "name": "Evaporation (Land)", "unit": "mm/day",
+    {"id": "EVLAND", "name": "Land Evaporation", "unit": "mm/day",
      "color": "#46b39d", "mission": "MERRA-2", "group": "water",
      "sphere": "land", "sphere_code": "LND", "sphere_name": "Land & Biosphere",
-     "desc": "Evaporation from the land surface alone, excluding transpiration"},
-    {"id": "GWETROOT", "name": "Root-Zone Moisture", "unit": "0–1",
+     "desc": "Mean evaporation flux over land, expressed as water depth per day"},
+    {"id": "GWETROOT", "name": "Root-Zone Soil Moisture", "unit": "0–1",
      "color": "#9bd36a", "mission": "MERRA-2", "group": "water",
      "sphere": "land", "sphere_code": "LND", "sphere_name": "Land & Biosphere",
      "desc": "Water content of the root zone as a fraction of saturation (0 = dry, 1 = saturated)"},
-    {"id": "GWETTOP", "name": "Surface Moisture", "unit": "0–1",
+    {"id": "GWETTOP", "name": "Surface Soil Moisture", "unit": "0–1",
      "color": "#b8dd8a", "mission": "MERRA-2", "group": "water",
      "sphere": "land", "sphere_code": "LND", "sphere_name": "Land & Biosphere",
      "desc": "Water content of the top soil layer as a fraction of saturation — early warning sign of flash drought"},
@@ -83,6 +83,36 @@ CATALOG = [
      "sphere": "atmosphere", "sphere_code": "ATM", "sphere_name": "Atmosphere",
      "desc": "Surface air pressure"},
 ]
+
+# Source-qualified additions retain distinct physical definitions. In
+# particular station wind and GLDAS near-surface wind are not 2 m wind.
+for _id,_name,_unit,_mission,_group,_sphere,_code,_desc,_color in [
+    ('NDVI','Vegetation Greenness (NDVI)','index','Terra MODIS','water','land','LND','Monthly MODIS normalized difference vegetation index; a greenness indicator, not a direct crop-yield measurement','#8bcf66'),
+    ('EVI','Vegetation Greenness (EVI)','index','Terra MODIS','water','land','LND','Monthly MODIS enhanced vegetation index','#6cbd80'),
+    ('GLDAS_SM_TOP','Soil Water · GLDAS (0–10 cm)','kg/m²','GLDAS','water','land','LND','Soil water mass per ground area; not the MERRA-2 saturation fraction','#89bfa2'),
+    ('GLDAS_SOILT','Soil Temperature · GLDAS (0–10 cm)','°C','GLDAS','temperature','land','LND','Monthly upper-soil temperature from the GLDAS Noah model','#d5a16c'),
+    ('GLDAS_WIND','Near-Surface Wind · GLDAS','m/s','GLDAS','energy','atmosphere','ATM','Monthly near-surface forcing wind; no equivalence to 2 m wind is claimed','#c4a5df'),
+    ('STATION_TAVG','Station Air Temperature · NOAA','°C','NOAA stations','temperature','atmosphere','ATM','Fixed-cohort mean of monthly station temperatures inside the boundary; not an area average','#ffb087'),
+    ('STATION_TMAX','Station Max Temperature · NOAA','°C','NOAA stations','temperature','atmosphere','ATM','Fixed-cohort monthly mean of daily maximum temperatures','#e4a589'),
+    ('STATION_TMIN','Station Min Temperature · NOAA','°C','NOAA stations','temperature','atmosphere','ATM','Fixed-cohort monthly mean of daily minimum temperatures','#d2baa2'),
+    ('STATION_WIND','Station Wind · NOAA','m/s','NOAA stations','energy','atmosphere','ATM','Station wind observations at source instrument heights; coverage varies by region','#b3b3df'),
+    ('STATION_RAIN','Station Precipitation · NOAA','mm/day','NOAA stations','water','hydrosphere','HYD','Monthly station precipitation totals divided by calendar days; fixed-cohort mean','#8fbae5'),
+    ('T10M','Air Temperature at 10 m','°C','MERRA-2','temperature','atmosphere','ATM','Monthly air temperature at 10 m from M2IMNXASM; different height from T2M','#eda27f'),
+    ('QV10M','Specific Humidity at 10 m','g/kg','MERRA-2','water','hydrosphere','HYD','Monthly specific humidity at 10 m from M2IMNXASM','#a4ccaf'),
+]:
+    CATALOG.append({'id':_id,'name':_name,'unit':_unit,'mission':_mission,'group':_group,'sphere':_sphere,
+        'sphere_code':_code,'sphere_name':{'land':'Land & Biosphere','atmosphere':'Atmosphere','hydrosphere':'Hydrosphere'}[_sphere],
+        'desc':_desc,'color':_color})
+
+# Percent change is only meaningful for ratio-scale variables (a true zero).
+# Celsius and kPa have arbitrary zero points, so "+26% warmer" is meaningless.
+INTERVAL_SCALE = {"T2M", "T2M_MAX", "T2M_MIN", "TS", "T2M_RANGE", "PS"}
+INTERVAL_SCALE.update({'NDVI','EVI','GLDAS_SOILT','STATION_TAVG','STATION_TMAX','STATION_TMIN','T10M'})
+
+
+def percent_change_ok(var_id):
+    return var_id not in INTERVAL_SCALE
+
 
 REGIONS = [
     # ---- land ------------------------------------------------------------

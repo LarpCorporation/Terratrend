@@ -1,0 +1,22 @@
+{
+  "ffba64b72887cca4fea7": {
+    "id": "ffba64b72887cca4fea7",
+    "status": "cancelled",
+    "created": 1794698736.4652505,
+    "updated": 1794698736.468674,
+    "message": "Cancelled; results will not be published",
+    "result": null,
+    "completed": 0,
+    "total": 1
+  },
+  "eae4ea378b820fad4302": {
+    "id": "eae4ea378b820fad4302",
+    "status": "cancelled",
+    "created": 1794698976.6836708,
+    "updated": 1794699049.8692653,
+    "message": "Cancelled; results will not be published",
+    "result": null,
+    "completed": 39,
+    "total": 240
+  }
+}
