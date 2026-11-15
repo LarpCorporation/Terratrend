@@ -340,8 +340,8 @@
       <div class="mt-group">
         <span class="mt-label">MODE:</span>
         <div class="seg modal-seg">
-          <button class="seg-btn on" id="mode-sidebyside" data-sat-mode="side">SIDE-BY-SIDE</button>
-          <button class="seg-btn" id="mode-slider" data-sat-mode="slider">SPLIT SLIDER</button>
+          <button class="seg-btn" id="mode-sidebyside" data-sat-mode="side">SIDE-BY-SIDE</button>
+          <button class="seg-btn on" id="mode-slider" data-sat-mode="slider">SPLIT SLIDER</button>
         </div>
       </div>
 
@@ -405,7 +405,7 @@
 
     <div class="modal-body">
       <!-- SIDE-BY-SIDE VIEW CONTAINER -->
-      <div id="view-sidebyside" class="view-sidebyside">
+      <div id="view-sidebyside" class="view-sidebyside" hidden>
         <div class="side-card">
           <div class="side-card-head">
             <span class="sch-badge" id="side-badge-base">YEAR A · BASELINE</span>
@@ -436,7 +436,7 @@
       </div>
 
       <!-- SPLIT SLIDER VIEW CONTAINER -->
-      <div id="view-slider" class="view-slider" hidden>
+      <div id="view-slider" class="view-slider">
         <div class="slider-wrapper" id="slider-wrapper">
           <!-- RIGHT LAYER (UNDERNEATH): Year B / Comparison -->
           <div class="slider-image-layer slider-comp" id="slider-layer-comp">

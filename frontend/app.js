@@ -35,7 +35,7 @@ const state = {
   selectedCellBbox: null,
   activeSatBbox: null,
   activeSatTitle: null,
-  satModalMode: "side",
+  satModalMode: "slider",
   satModalLayer: "true_color",
   satYearBase: 2005,
   satYearRecent: 2024,
@@ -1440,6 +1440,9 @@ function openSatelliteModal(customBbox = null, customTitle = null) {
   state.activeSatTitle = targetTitle;
 
   showModal(modal);
+  // keep the markup in sync with the remembered mode on every open, so the
+  // split slider is what the user lands on
+  setSatModalMode(state.satModalMode);
   reloadModalSatellite();
 }
 
