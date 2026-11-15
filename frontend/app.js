@@ -2724,6 +2724,41 @@ function buildRegionMesh() {
   globeGroup.add(regionMesh);
 }
 
+/* A ring drawn ON the sphere surface (constant angular radius around a centre
+   direction). A flat disc only works when you look straight at the region:
+   near the limb the sphere curves away and corner cells spill outside it. */
+function makeSphericalRing(center, angRad, thickness, radius, segments = 96) {
+  const c = center.clone().normalize();
+  const up = Math.abs(c.y) > 0.9
+    ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 1, 0);
+  const u = new THREE.Vector3().crossVectors(up, c).normalize();
+  const v = new THREE.Vector3().crossVectors(c, u).normalize();
+
+  const inner = Math.max(0.001, angRad - thickness);
+  const positions = [];
+  const indices = [];
+
+  for (let i = 0; i <= segments; i++) {
+    const t = (i / segments) * Math.PI * 2;
+    for (const ar of [inner, angRad]) {
+      const dir = c.clone().multiplyScalar(Math.cos(ar))
+        .add(u.clone().multiplyScalar(Math.cos(t) * Math.sin(ar)))
+        .add(v.clone().multiplyScalar(Math.sin(t) * Math.sin(ar)))
+        .normalize();
+      positions.push(dir.x * radius, dir.y * radius, dir.z * radius);
+    }
+  }
+  for (let i = 0; i < segments; i++) {
+    const a = i * 2, b = i * 2 + 1, c2 = (i + 1) * 2, d = (i + 1) * 2 + 1;
+    indices.push(a, c2, b, b, c2, d);
+  }
+
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  g.setIndex(indices);
+  return g;
+}
+
 /* ---------- interactive region markers ---------- */
 function renderGlobeRegions(d) {
   regionMarkers.forEach((m) => globeGroup.remove(m));
@@ -2785,20 +2820,21 @@ function renderGlobeRegions(d) {
     });
   });
 
-  // pulsing ring bounding the analyzed region (matches amplified grid spread)
+  // pulsing ring bounding the analyzed region.
+  // The amplified grid reaches to the CORNERS of the box, so the radius must
+  // come from the half-diagonal, and the ring follows the sphere so it keeps
+  // enclosing the cells even when the region sits near the limb.
   const bw = Math.abs(d.grid.bbox[2] - d.grid.bbox[0]) * MAG;
   const bh = Math.abs(d.grid.bbox[3] - d.grid.bbox[1]) * MAG;
-  const angRad = (Math.max(bw, bh) / 2) * Math.PI / 180 * 1.15;
-  const ringGeo = new THREE.RingGeometry(
-    Math.max(0.02, angRad * 0.9), Math.max(0.024, angRad), 64, 1);
+  const angRad = Math.hypot(bw / 2, bh / 2) * Math.PI / 180 * 1.12;
+  const c0 = bboxCenter(d.grid.bbox, 1);
+  const ringGeo = makeSphericalRing(
+    c0, angRad, Math.max(0.006, angRad * 0.08), 1.06);
   const ringMat = new THREE.MeshBasicMaterial({
     color: 0xf0f2f4, side: THREE.DoubleSide, transparent: true,
     opacity: 0.7, depthWrite: false, depthTest: false,
   });
-  const c0 = bboxCenter(d.grid.bbox, 1);
   const ring = new THREE.Mesh(ringGeo, ringMat);
-  ring.position.copy(c0.clone().multiplyScalar(1.014));
-  ring.lookAt(c0.clone().multiplyScalar(2));
   ring.renderOrder = 9;
   ring.userData = { pulsing: true };
   globeGroup.add(ring);
@@ -2832,17 +2868,16 @@ function renderGlobeRegions(d) {
 
     const bwB = Math.abs(bboxB[2] - bboxB[0]) * MAG;
     const bhB = Math.abs(bboxB[3] - bboxB[1]) * MAG;
-    const angRadB = (Math.max(bwB, bhB) / 2) * Math.PI / 180 * 1.15;
-    const ringGeoB = new THREE.RingGeometry(
-      Math.max(0.02, angRadB * 0.9), Math.max(0.024, angRadB), 64, 1);
+    // same half-diagonal fix as region A, so contrast mode agrees
+    const angRadB = Math.hypot(bwB / 2, bhB / 2) * Math.PI / 180 * 1.12;
+    const c0B = bboxCenter(bboxB, 1);
+    const ringGeoB = makeSphericalRing(
+      c0B, angRadB, Math.max(0.006, angRadB * 0.08), 1.06);
     const ringMatB = new THREE.MeshBasicMaterial({
       color: 0x00e5ff, side: THREE.DoubleSide, transparent: true,
       opacity: 0.85, depthWrite: false, depthTest: false,
     });
-    const c0B = bboxCenter(bboxB, 1);
     const ringB = new THREE.Mesh(ringGeoB, ringMatB);
-    ringB.position.copy(c0B.clone().multiplyScalar(1.014));
-    ringB.lookAt(c0B.clone().multiplyScalar(2));
     ringB.renderOrder = 9;
     ringB.userData = { pulsing: true };
     globeGroup.add(ringB);
