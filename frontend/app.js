@@ -60,7 +60,8 @@ async function boot() {
     return;
   }
 
-  state.selected = ["T2M"];
+  // start with nothing selected - the user picks for themselves
+  state.selected = [];
   renderVarList();
   renderRegionSelect();
 
@@ -208,7 +209,7 @@ function renderVarList() {
 function toggleVar(id) {
   const i = state.selected.indexOf(id);
   if (i >= 0) {
-    if (state.selected.length === 1) return;
+    // allow an empty selection: the user should be able to start from nothing
     state.selected.splice(i, 1);
   } else {
     if (state.selected.length >= MAX_VARS) {
@@ -222,7 +223,48 @@ function toggleVar(id) {
   state.activeVarIdx = 0;
   renderVarList();
   updateGlobeOverlay();
+
+  // a selection clears the "pick a variable" warning
+  const st = $("status");
+  if (st && !st.hidden && /SELECT AT LEAST ONE/.test(st.textContent)) {
+    clearTimeout(state.warnTimer);
+    setStatus("ok", "");
+  }
+
+  if (!state.selected.length) {
+    // nothing to analyse any more: clear stale results rather than keep them
+    clearResults();
+    return;
+  }
   if (state.result) analyze();
+}
+
+/* Wipe the analysis state when the selection becomes empty. */
+function clearResults() {
+  state.result = null;
+  state.satellite = null;
+  if (chart) {
+    chart.destroy();
+    chart = null;
+  }
+  const list = $("signal-list");
+  if (list) {
+    list.innerHTML =
+      '<p class="micro">Run an analysis to populate.</p>';
+  }
+  ["cell-summary", "lit-list", "sat-summary"].forEach((id) => {
+    const el = $(id);
+    if (el) el.innerHTML = "";
+  });
+  ["cell-tag", "lit-tag", "verdict-chip"].forEach((id) => {
+    const el = $(id);
+    if (el) el.textContent = "—";
+  });
+  const trend = $("trendline");
+  if (trend) trend.textContent = "—";
+  const threat = $("threat-val");
+  if (threat) threat.textContent = "—";
+  if (typeof renderGlobeRegions === "function") renderGlobeRegions(null);
 }
 
 /* ============================================================
@@ -799,10 +841,14 @@ function setStatus(kind, html) {
     return;
   }
   el.hidden = false;
-  el.className = "hud-status" + (kind === "err" ? " err" : "");
+  // "warn" is for user-input problems (nothing selected) - red text, but it
+  // must not flip the whole system readout to ERROR
+  el.className = "hud-status" + (kind === "err" || kind === "warn" ? " err" : "");
   el.innerHTML = html;
   $("sys-status").textContent =
-    kind === "err" ? "ERROR" : kind === "busy" ? "ANALYZING" : "READY";
+    kind === "err" ? "ERROR"
+      : kind === "warn" ? "CHECK INPUT"
+        : kind === "busy" ? "ANALYZING" : "READY";
 }
 
 /* ============================================================
@@ -810,6 +856,20 @@ function setStatus(kind, html) {
    ============================================================ */
 async function analyze() {
   const btn = $("run");
+
+  // guard: an analysis needs at least one variable
+  if (!state.selected.length) {
+    setStatus("warn", "SELECT AT LEAST ONE VARIABLE FIRST");
+    const list = $("var-list");
+    if (list) {
+      list.classList.add("needs-selection");
+      setTimeout(() => list.classList.remove("needs-selection"), 1600);
+    }
+    clearTimeout(state.warnTimer);
+    state.warnTimer = setTimeout(() => setStatus("ok", ""), 4000);
+    return;
+  }
+
   btn.disabled = true;
   setStatus("busy",
     `<span class="spin"></span>ACQUIRING NASA POWER GRID · TESTING TRENDS…`);
@@ -954,7 +1014,20 @@ function renderRegionalContrast(d) {
 
 function renderLiterature(d) {
   const box = $("lit-list");
-  const s = d.series[Math.min(state.activeVarIdx, d.series.length - 1)];
+  const active = Math.min(state.activeVarIdx, d.series.length - 1);
+
+  // OpenAlex occasionally returns 429/503 for one variable. Rather than showing
+  // OFFLINE while another variable has results, fall back to a series that has
+  // papers and say which one it is.
+  const hasPapers = (s) => s && s.literature && s.literature.ok
+    && (s.literature.papers || []).length;
+  let s = d.series[active];
+  let fallback = false;
+  if (!hasPapers(s)) {
+    const alt = d.series.find((x, i) => i !== active && hasPapers(x));
+    if (alt) { s = alt; fallback = true; }
+  }
+
   const lit = (s && s.literature) || { ok: false, papers: [] };
   if (!lit.ok) {
     $("lit-tag").textContent = "OFFLINE";
@@ -968,8 +1041,10 @@ function renderLiterature(d) {
     box.innerHTML = `<div class="lit-empty">No close matches for this variable + region.</div>`;
     return;
   }
+  const srcTag = lit.degraded ? " · CROSSREF" : "";
   $("lit-tag").textContent =
-    `${papers.length} · ${s.variable.name.split(" ")[0].toUpperCase()}`;
+    `${papers.length} · ${s.variable.name.split(" ")[0].toUpperCase()}${srcTag}` +
+    (fallback ? " (ALT)" : "");
   box.innerHTML = papers.slice(0, 2).map((p) => {
     const href = p.doi
       ? `https://doi.org/${encodeURIComponent(p.doi)}` : "#";
@@ -1108,12 +1183,17 @@ function renderCells(d) {
   $("cell-tag").textContent =
     `${sm.significant_cells}/${sm.total_cells} SIG · ${s.variable.name.split(" ")[0]}`;
 
+  // server returns rising_cells / falling_cells (older payloads used rising /
+  // falling) — tolerate both, and exclude no-data cells from "no trend"
+  const rising = sm.rising_cells ?? sm.rising ?? 0;
+  const falling = sm.falling_cells ?? sm.falling ?? 0;
+  const validCells = sm.valid_cells ?? sm.total_cells ?? 0;
   const rows = [
-    ["RISING", sm.rising, C.rise],
-    ["FALLING", sm.falling, C.fall],
-    ["NO TREND", sm.total_cells - sm.significant_cells, C.flat],
+    ["RISING", rising, C.rise],
+    ["FALLING", falling, C.fall],
+    ["NO TREND", Math.max(0, validCells - (sm.significant_cells || 0)), C.flat],
   ];
-  const max = Math.max(1, sm.total_cells);
+  const max = Math.max(1, validCells, sm.total_cells || 0);
   rows.forEach(([label, n, color]) => {
     const row = document.createElement("div");
     row.className = "cell-row";
@@ -1978,12 +2058,13 @@ function drawExpandedChart() {
     minX = Number(s.yearly_timeseries[0].year);
     maxX = Number(s.yearly_timeseries[s.yearly_timeseries.length - 1].year);
   } else {
-    chartPoints = s.region_timeseries.map((v, i) => ({
+    // the server sends monthly_timeseries as [{month, value}], not a flat array
+    chartPoints = s.monthly_timeseries.map((p, i) => ({
       x: i,
-      y: v,
+      y: p.value,
     }));
     minX = 0;
-    maxX = Math.max(0, d.months.length - 1);
+    maxX = Math.max(0, s.monthly_timeseries.length - 1);
   }
 
   if (expandedChart) expandedChart.destroy();
@@ -2064,9 +2145,9 @@ function drawExpandedChart() {
         y: p.complete === false ? null : p.value,
       }));
     } else {
-      chartPointsB = sB.region_timeseries.map((v, i) => ({
+      chartPointsB = (sB.monthly_timeseries || []).map((p, i) => ({
         x: i,
-        y: v,
+        y: p.value,
       }));
     }
 
@@ -2268,8 +2349,8 @@ function exportDataCSV() {
     });
   } else {
     csvContent = `Month_YYYY_MM,Regional_Mean_${s.variable.id}_${s.variable.unit}\n`;
-    d.months.forEach((m, i) => {
-      csvContent += `${m},${s.region_timeseries[i]}\n`;
+    (s.monthly_timeseries || []).forEach((p) => {
+      csvContent += `${p.month},${p.value}\n`;
     });
   }
 
@@ -2296,10 +2377,10 @@ function drawChart() {
 
   const labels = isYear
     ? s.yearly_timeseries.map((p) => p.year)
-    : d.months;
+    : s.monthly_timeseries.map((p) => p.month);
   const values = isYear
     ? s.yearly_timeseries.map((p) => p.value)
-    : s.region_timeseries;
+    : s.monthly_timeseries.map((p) => p.value);
 
   const partialFlags = isYear
     ? s.yearly_timeseries.map((p) => !p.complete)
@@ -2337,7 +2418,7 @@ function drawChart() {
   if (hasCompare && sB) {
     const valsB = isYear
       ? sB.yearly_timeseries.map((p) => p.value)
-      : sB.region_timeseries;
+      : (sB.monthly_timeseries || []).map((p) => p.value);
     const partialFlagsB = isYear
       ? sB.yearly_timeseries.map((p) => !p.complete)
       : [];
@@ -2586,6 +2667,14 @@ async function initGlobe() {
   buildGridLines();
   buildAtmosphere();
   buildRegionMesh();
+  buildEarthSurface();
+  buildClouds();
+  buildStarfield();
+
+  // the photographic globe is the default; fall back to dots if textures fail
+  initGlobeModeMenu();
+  // dots while the texture is still loading; skip if it already landed
+  if (textureState !== "ready") applyGlobeStyle();
 
   // invisible sphere used to convert a click into a lat/lon
   pickSphere = new THREE.Mesh(
@@ -2656,23 +2745,292 @@ function buildGridLines() {
   const mat = new THREE.LineBasicMaterial({
     color: C.globeLine, transparent: true, opacity: 0.5,
   });
+  gridLines = [];
 
   for (let lat = -60; lat <= 60; lat += 30) {
     const pts = [];
     for (let lon = -180; lon <= 180; lon += 3) {
       pts.push(latLonToVec3(lat, lon, R * 0.999));
     }
-    globeGroup.add(new THREE.Line(
-      new THREE.BufferGeometry().setFromPoints(pts), mat));
+    const line = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints(pts), mat);
+    gridLines.push(line);
+    globeGroup.add(line);
   }
   for (let lon = -180; lon < 180; lon += 30) {
     const pts = [];
     for (let lat = -90; lat <= 90; lat += 3) {
       pts.push(latLonToVec3(lat, lon, R * 0.999));
     }
-    globeGroup.add(new THREE.Line(
-      new THREE.BufferGeometry().setFromPoints(pts), mat));
+    const line = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints(pts), mat);
+    gridLines.push(line);
+    globeGroup.add(line);
   }
+}
+
+/* ---------- stylized "blue relief" Earth ----------
+   Real, sharp coastlines from NASA topology data, recoloured the way the
+   reference dashboard does it: ice-blue land that brightens with elevation,
+   deep blue sea. Lit gently for roundness - no day/night terminator. */
+const EARTH_TEXTURES = {
+  topo: "https://unpkg.com/three-globe/example/img/earth-topology.png",
+};
+let earthMesh = null;
+let cloudMesh = null;
+let starField = null;
+let textureState = "idle";   // idle | loading | ready | failed
+let globeStyle = "relief";   // what the user wants
+let appliedStyle = "dots";   // what is actually on screen
+
+// remember the last chosen mode across reloads
+try {
+  const saved = window.localStorage.getItem("tt-globe-style");
+  if (saved === "dots" || saved === "relief") globeStyle = saved;
+} catch (e) { /* private mode / storage disabled: keep the default */ }
+
+function buildEarthSurface() {
+  textureState = "loading";
+  const loader = new THREE.TextureLoader();
+  loader.setCrossOrigin("anonymous");
+
+  const onFail = () => {
+    // no textures (offline / CDN blocked): quietly stay on the dot globe
+    textureState = "failed";
+    applyGlobeStyle("dots");
+  };
+
+  const topo = loader.load(EARTH_TEXTURES.topo, () => {
+    textureState = "ready";
+    // defer one frame: on a cached texture this callback can beat initGlobe's
+    // initial applyGlobeStyle(), which would then reset the globe to dots
+    requestAnimationFrame(() => applyGlobeStyle());
+  }, undefined, onFail);
+  // data mask: sample raw values, no colour-space conversion
+  topo.colorSpace = THREE.NoColorSpace;
+  topo.anisotropy = 4;
+
+  earthMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(0.999, 96, 96),
+    new THREE.ShaderMaterial({
+      uniforms: {
+        uTopo: { value: topo },
+        uSunDir: { value: new THREE.Vector3(0.55, 0.30, 0.78).normalize() },
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        varying vec3 vNormalW;
+        varying vec3 vViewDirW;
+        void main() {
+          vUv = uv;
+          vec4 wp = modelMatrix * vec4(position, 1.0);
+          vNormalW = normalize(mat3(modelMatrix) * normal);
+          vViewDirW = normalize(cameraPosition - wp.xyz);
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }`,
+      fragmentShader: `
+        uniform sampler2D uTopo;
+        uniform vec3 uSunDir;
+        varying vec2 vUv;
+        varying vec3 vNormalW;
+        varying vec3 vViewDirW;
+
+        // strict cool slate palette (sRGB values from the design spec)
+        const vec3 cShadow = vec3(0.078, 0.098, 0.122);  // #14191F
+        const vec3 cOcean  = vec3(0.149, 0.196, 0.243);  // #26323E
+        const vec3 cLand   = vec3(0.294, 0.369, 0.443);  // #4B5E71
+        const vec3 cLit    = vec3(0.471, 0.557, 0.624);  // #788E9F
+        const vec3 cRim    = vec3(0.659, 0.753, 0.816);  // #A8C0D0
+
+        void main() {
+          // topology: 0 = ocean, higher = land elevation (0..~0.55 typical)
+          float elev = texture2D(uTopo, vUv).r;
+
+          // crisp coastlines
+          float landMask = smoothstep(0.028, 0.075, elev);
+
+          // base land -> illuminated terrain with elevation
+          vec3 landCol = mix(cLand, cLit, smoothstep(0.08, 0.72, elev));
+          // thin bright coastline band
+          float coast = smoothstep(0.045, 0.09, elev)
+                      * (1.0 - smoothstep(0.09, 0.20, elev));
+          landCol = mix(landCol, cLit, coast * 0.85);
+
+          // deep ocean, faint coastal shelf lifting toward the land tone
+          vec3 seaCol = mix(cOcean, mix(cOcean, cLand, 0.45),
+                            smoothstep(0.004, 0.05, elev));
+
+          vec3 col = mix(seaCol, landCol, landMask);
+
+          vec3 n = normalize(vNormalW);
+          vec3 L = normalize(uSunDir);
+          float lam = dot(n, L);
+
+          // matte directional falloff: the far limb sinks into deep space
+          col = mix(cShadow, col, smoothstep(0.02, 0.50, lam));
+
+          // high-contrast fresnel rim on the sunlit edge
+          float ndv = max(dot(n, normalize(vViewDirW)), 0.0);
+          float fres = pow(1.0 - ndv, 2.4);
+          float litMask = smoothstep(0.05, 0.55, lam);
+          col = mix(col, cRim, fres * litMask * 0.9);
+
+          gl_FragColor = vec4(col, 1.0);
+        }`,
+    }),
+  );
+  earthMesh.visible = false;
+  globeGroup.add(earthMesh);
+}
+
+/* drifting procedural cloud layer (fbm noise - no texture asset) */
+function buildClouds() {
+  cloudMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(1.012, 96, 96),
+    new THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      uniforms: { uTime: { value: 0 } },
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }`,
+      fragmentShader: `
+        varying vec2 vUv;
+        uniform float uTime;
+        float hash(vec2 p) {
+          return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+        }
+        float noise(vec2 p) {
+          vec2 i = floor(p), f = fract(p);
+          vec2 u = f * f * (3.0 - 2.0 * f);
+          return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x),
+                     mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x),
+                     u.y);
+        }
+        float fbm(vec2 p) {
+          float v = 0.0, a = 0.5;
+          for (int i = 0; i < 5; i++) {
+            v += a * noise(p);
+            p = p * 2.1 + vec2(1.7, 0.3);
+            a *= 0.5;
+          }
+          return v;
+        }
+        void main() {
+          vec2 p = vec2(vUv.x * 7.0, vUv.y * 3.6);
+          p.x += uTime * 0.012;
+          float c = fbm(p);
+          // wispy shapes: two noise octaves, thresholded softly
+          float shape = smoothstep(0.52, 0.85, c);
+          // band the clouds toward the tropics and mid-latitudes
+          float latBand = smoothstep(0.02, 0.16, abs(vUv.y - 0.5))
+                        * (1.0 - smoothstep(0.38, 0.5, abs(vUv.y - 0.5)));
+          float a = shape * latBand * 0.62;
+          vec3 col = vec3(0.863, 0.910, 0.941);  // #DCE8F0 cloud highlights
+          gl_FragColor = vec4(col, a);
+        }`,
+    }),
+  );
+  cloudMesh.visible = false;
+  globeGroup.add(cloudMesh);
+}
+
+function buildStarfield() {
+  const COUNT = 1600;
+  const pos = new Float32Array(COUNT * 3);
+  for (let i = 0; i < COUNT; i++) {
+    const r = 16 + Math.random() * 24;
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(2 * Math.random() - 1);
+    pos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+    pos[i * 3 + 1] = r * Math.cos(phi);
+    pos[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+  starField = new THREE.Points(geo, new THREE.PointsMaterial({
+    color: 0x788e9f, size: 0.075, sizeAttenuation: true,
+    transparent: true, opacity: 0.55, depthWrite: false,
+  }));
+  starField.visible = false;
+  scene.add(starField);
+}
+
+/* switch between the blue-relief Earth and the original dot matrix.
+   Call with no argument to (re)apply whatever the user last chose. */
+function applyGlobeStyle(style) {
+  if (style) globeStyle = style;
+  const wantRelief = globeStyle === "relief" && textureState === "ready";
+  appliedStyle = wantRelief ? "relief" : "dots";
+
+  if (landPoints) landPoints.visible = !wantRelief;
+  if (earthMesh) earthMesh.visible = wantRelief;
+  if (cloudMesh) cloudMesh.visible = wantRelief;
+  if (haloMesh) haloMesh.visible = !wantRelief;
+  if (starField) starField.visible = wantRelief;
+  if (Array.isArray(gridLines)) {
+    gridLines.forEach((line) => { line.visible = !wantRelief; });
+  }
+
+  // sync the dropdown
+  const value = $("globe-style-value");
+  if (value) {
+    value.textContent = appliedStyle === "relief" ? "BLUE RELIEF" : "DOT MATRIX";
+  }
+  document.querySelectorAll(".gm-option").forEach((opt) => {
+    const on = opt.dataset.style === appliedStyle;
+    opt.classList.toggle("on", on);
+    opt.setAttribute("aria-selected", on ? "true" : "false");
+    if (opt.dataset.style === "relief") {
+      // no textures (offline / CDN blocked): offer the mode but explain
+      opt.disabled = textureState !== "ready";
+      const desc = opt.querySelector(".gm-desc");
+      if (desc) {
+        desc.textContent = textureState === "ready"
+          ? "textured sphere · blue palette"
+          : "needs the CDN textures — unavailable offline";
+      }
+    }
+  });
+}
+
+function initGlobeModeMenu() {
+  const trigger = $("globe-style-btn");
+  const menu = $("globe-style-menu");
+  const wrap = $("globe-mode");
+  if (!trigger || !menu || !wrap) return;
+
+  const setOpen = (open) => {
+    menu.hidden = !open;
+    wrap.classList.toggle("open", open);
+    trigger.setAttribute("aria-expanded", open ? "true" : "false");
+  };
+
+  trigger.addEventListener("click", (e) => {
+    e.stopPropagation();
+    setOpen(menu.hidden);
+  });
+
+  menu.querySelectorAll(".gm-option").forEach((opt) => {
+    opt.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (opt.disabled) return;
+      applyGlobeStyle(opt.dataset.style);
+      try {
+        window.localStorage.setItem("tt-globe-style", opt.dataset.style);
+      } catch (err) { /* storage unavailable: not fatal */ }
+      setOpen(false);
+    });
+  });
+
+  document.addEventListener("click", () => setOpen(false));
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") setOpen(false);
+  });
+  menu.addEventListener("click", (e) => e.stopPropagation());
 }
 
 function buildAtmosphere() {
@@ -2681,7 +3039,7 @@ function buildAtmosphere() {
     transparent: true,
     side: THREE.BackSide,
     depthWrite: false,
-    uniforms: { uColor: { value: new THREE.Color("#c9ced3") } },
+    uniforms: { uColor: { value: new THREE.Color("#A8C0D0") } },
     vertexShader: `
       varying vec3 vNormal;
       varying vec3 vPos;
@@ -2720,6 +3078,41 @@ function buildRegionMesh() {
   );
   regionMesh.scale.set(1, 1, 1);
   globeGroup.add(regionMesh);
+}
+
+/* A ring drawn ON the sphere surface (constant angular radius around a centre
+   direction). A flat disc only works when you look straight at the region:
+   near the limb the sphere curves away and corner cells spill outside it. */
+function makeSphericalRing(center, angRad, thickness, radius, segments = 96) {
+  const c = center.clone().normalize();
+  const up = Math.abs(c.y) > 0.9
+    ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 1, 0);
+  const u = new THREE.Vector3().crossVectors(up, c).normalize();
+  const v = new THREE.Vector3().crossVectors(c, u).normalize();
+
+  const inner = Math.max(0.001, angRad - thickness);
+  const positions = [];
+  const indices = [];
+
+  for (let i = 0; i <= segments; i++) {
+    const t = (i / segments) * Math.PI * 2;
+    for (const ar of [inner, angRad]) {
+      const dir = c.clone().multiplyScalar(Math.cos(ar))
+        .add(u.clone().multiplyScalar(Math.cos(t) * Math.sin(ar)))
+        .add(v.clone().multiplyScalar(Math.sin(t) * Math.sin(ar)))
+        .normalize();
+      positions.push(dir.x * radius, dir.y * radius, dir.z * radius);
+    }
+  }
+  for (let i = 0; i < segments; i++) {
+    const a = i * 2, b = i * 2 + 1, c2 = (i + 1) * 2, d = (i + 1) * 2 + 1;
+    indices.push(a, c2, b, b, c2, d);
+  }
+
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  g.setIndex(indices);
+  return g;
 }
 
 /* ---------- interactive region markers ---------- */
@@ -2761,10 +3154,12 @@ function renderGlobeRegions(d) {
         ? "#3a3f45"
         : (c.direction === "falling" ? C.fall : C.rise);
 
-      const base = isActive ? 0.019 : 0.008;
-      const size = base + Math.min(isActive ? 0.016 : 0.004,
-        Math.abs(c.slope) * 0.04);
-      const geo = new THREE.SphereGeometry(size, 8, 8);
+      // marked down for the textured globe: the old sizes were tuned for the
+      // dot matrix and read as blobs on top of real terrain
+      const base = isActive ? 0.0105 : 0.005;
+      const size = base + Math.min(isActive ? 0.0085 : 0.0025,
+        Math.abs(c.slope) * 0.02);
+      const geo = new THREE.SphereGeometry(size, 10, 10);
       const mat = new THREE.MeshBasicMaterial({
         color: colour,
         transparent: true,
@@ -2781,20 +3176,25 @@ function renderGlobeRegions(d) {
     });
   });
 
-  // pulsing ring bounding the analyzed region (matches amplified grid spread)
+  // pulsing ring bounding the analyzed region.
+  // The amplified grid reaches to the CORNERS of the box, so the radius must
+  // come from the half-diagonal, and the ring follows the sphere so it keeps
+  // enclosing the cells even when the region sits near the limb.
   const bw = Math.abs(d.grid.bbox[2] - d.grid.bbox[0]) * MAG;
   const bh = Math.abs(d.grid.bbox[3] - d.grid.bbox[1]) * MAG;
-  const angRad = (Math.max(bw, bh) / 2) * Math.PI / 180 * 1.15;
-  const ringGeo = new THREE.RingGeometry(
-    Math.max(0.02, angRad * 0.9), Math.max(0.024, angRad), 64, 1);
+  const angRad = Math.hypot(bw / 2, bh / 2) * Math.PI / 180 * 1.12;
+  const c0 = bboxCenter(d.grid.bbox, 1);
+  const ringGeo = makeSphericalRing(
+    c0, angRad, Math.max(0.006, angRad * 0.08), 1.06);
   const ringMat = new THREE.MeshBasicMaterial({
     color: 0xf0f2f4, side: THREE.DoubleSide, transparent: true,
-    opacity: 0.7, depthWrite: false, depthTest: false,
+    opacity: 0.7, depthWrite: false,
+    // depth-tested: the ring is a curve on the sphere, so it must be hidden
+    // by the planet when the region rotates round the back. Disabling this
+    // made it float across the face as the globe turned.
+    depthTest: true,
   });
-  const c0 = bboxCenter(d.grid.bbox, 1);
   const ring = new THREE.Mesh(ringGeo, ringMat);
-  ring.position.copy(c0.clone().multiplyScalar(1.014));
-  ring.lookAt(c0.clone().multiplyScalar(2));
   ring.renderOrder = 9;
   ring.userData = { pulsing: true };
   globeGroup.add(ring);
@@ -2828,17 +3228,16 @@ function renderGlobeRegions(d) {
 
     const bwB = Math.abs(bboxB[2] - bboxB[0]) * MAG;
     const bhB = Math.abs(bboxB[3] - bboxB[1]) * MAG;
-    const angRadB = (Math.max(bwB, bhB) / 2) * Math.PI / 180 * 1.15;
-    const ringGeoB = new THREE.RingGeometry(
-      Math.max(0.02, angRadB * 0.9), Math.max(0.024, angRadB), 64, 1);
+    // same half-diagonal fix as region A, so contrast mode agrees
+    const angRadB = Math.hypot(bwB / 2, bhB / 2) * Math.PI / 180 * 1.12;
+    const c0B = bboxCenter(bboxB, 1);
+    const ringGeoB = makeSphericalRing(
+      c0B, angRadB, Math.max(0.006, angRadB * 0.08), 1.06);
     const ringMatB = new THREE.MeshBasicMaterial({
       color: 0x00e5ff, side: THREE.DoubleSide, transparent: true,
-      opacity: 0.85, depthWrite: false, depthTest: false,
+      opacity: 0.85, depthWrite: false, depthTest: true,
     });
-    const c0B = bboxCenter(bboxB, 1);
     const ringB = new THREE.Mesh(ringGeoB, ringMatB);
-    ringB.position.copy(c0B.clone().multiplyScalar(1.014));
-    ringB.lookAt(c0B.clone().multiplyScalar(2));
     ringB.renderOrder = 9;
     ringB.userData = { pulsing: true };
     globeGroup.add(ringB);
@@ -2849,7 +3248,11 @@ function renderGlobeRegions(d) {
 function updateGlobeOverlay() {
   const n = state.selected.length;
   const g = $("globe-title");
-  if (n === 1) {
+  if (n === 0) {
+    g.querySelector(".gt-main").textContent = "EARTH";
+    g.querySelector(".gt-sub").textContent =
+      "NO VARIABLE SELECTED · PICK ONE TO BEGIN";
+  } else if (n === 1) {
     const v = state.catalog.variables.find((x) => x.id === state.selected[0]);
     g.querySelector(".gt-main").textContent = v ? v.name.toUpperCase() : "EARTH";
     g.querySelector(".gt-sub").textContent =
@@ -3087,6 +3490,15 @@ function animateGlobe() {
     regionMesh.scale.set(s, s, s);
     regionMesh.visible = false;
   }
+
+  // drift the cloud layer slightly faster than the surface for parallax
+  if (cloudMesh && cloudMesh.visible) {
+    cloudMesh.rotation.y += 0.0004;
+    if (cloudMesh.material.uniforms) {
+      cloudMesh.material.uniforms.uTime.value = performance.now() * 0.001;
+    }
+  }
+
   renderer.render(scene, camera);
 }
 
