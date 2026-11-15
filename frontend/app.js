@@ -1698,12 +1698,13 @@ function drawExpandedChart() {
     minX = Number(s.yearly_timeseries[0].year);
     maxX = Number(s.yearly_timeseries[s.yearly_timeseries.length - 1].year);
   } else {
-    chartPoints = s.region_timeseries.map((v, i) => ({
+    // the server sends monthly_timeseries as [{month, value}], not a flat array
+    chartPoints = s.monthly_timeseries.map((p, i) => ({
       x: i,
-      y: v,
+      y: p.value,
     }));
     minX = 0;
-    maxX = Math.max(0, d.months.length - 1);
+    maxX = Math.max(0, s.monthly_timeseries.length - 1);
   }
 
   if (expandedChart) expandedChart.destroy();
@@ -1784,9 +1785,9 @@ function drawExpandedChart() {
         y: p.complete === false ? null : p.value,
       }));
     } else {
-      chartPointsB = sB.region_timeseries.map((v, i) => ({
+      chartPointsB = (sB.monthly_timeseries || []).map((p, i) => ({
         x: i,
-        y: v,
+        y: p.value,
       }));
     }
 
@@ -1988,8 +1989,8 @@ function exportDataCSV() {
     });
   } else {
     csvContent = `Month_YYYY_MM,Regional_Mean_${s.variable.id}_${s.variable.unit}\n`;
-    d.months.forEach((m, i) => {
-      csvContent += `${m},${s.region_timeseries[i]}\n`;
+    (s.monthly_timeseries || []).forEach((p) => {
+      csvContent += `${p.month},${p.value}\n`;
     });
   }
 
@@ -2016,10 +2017,10 @@ function drawChart() {
 
   const labels = isYear
     ? s.yearly_timeseries.map((p) => p.year)
-    : d.months;
+    : s.monthly_timeseries.map((p) => p.month);
   const values = isYear
     ? s.yearly_timeseries.map((p) => p.value)
-    : s.region_timeseries;
+    : s.monthly_timeseries.map((p) => p.value);
 
   const partialFlags = isYear
     ? s.yearly_timeseries.map((p) => !p.complete)
@@ -2057,7 +2058,7 @@ function drawChart() {
   if (hasCompare && sB) {
     const valsB = isYear
       ? sB.yearly_timeseries.map((p) => p.value)
-      : sB.region_timeseries;
+      : (sB.monthly_timeseries || []).map((p) => p.value);
     const partialFlagsB = isYear
       ? sB.yearly_timeseries.map((p) => !p.complete)
       : [];

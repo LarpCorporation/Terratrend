@@ -187,6 +187,34 @@ class TestFrontendAgainstServer(unittest.TestCase):
         self.assertTrue(relevant, "expected the UI to read payload keys")
 
 
+class TestSeriesFieldReferences(unittest.TestCase):
+    """Series-level fields named in app.js must exist in the series payload.
+
+    This is the check that would have caught `s.region_timeseries` (the server
+    renamed it `monthly_timeseries`), which silently broke the YEAR/MONTH
+    toggle, the observatory monthly view and CSV export.
+    """
+
+    SERIES_FIELDS = [
+        "variable", "overall", "cells", "summary", "yearly_timeseries",
+        "monthly_timeseries", "region_timeseries", "literature", "seasonal",
+    ]
+
+    def test_referenced_series_fields_exist(self):
+        if not APP_JS.exists():
+            self.skipTest("app.js not found")
+        src = APP_JS.read_text(encoding="utf-8")
+        block = analysed_payload()["series"][0]
+        for field in self.SERIES_FIELDS:
+            if f".{field}" not in src:
+                continue
+            self.assertIn(
+                field, block,
+                f"app.js references .{field} but the series block only has "
+                f"{sorted(block)}",
+            )
+
+
 class TestCellSummaryConsistency(unittest.TestCase):
     """The counts must agree with each other and with the cell list."""
 
