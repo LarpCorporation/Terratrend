@@ -2507,14 +2507,17 @@ function buildEarthSurface() {
     new THREE.ShaderMaterial({
       uniforms: {
         uTopo: { value: topo },
-        uSunDir: { value: new THREE.Vector3(0.42, 0.34, 0.84).normalize() },
+        uSunDir: { value: new THREE.Vector3(0.55, 0.30, 0.78).normalize() },
       },
       vertexShader: `
         varying vec2 vUv;
         varying vec3 vNormalW;
+        varying vec3 vViewDirW;
         void main() {
           vUv = uv;
+          vec4 wp = modelMatrix * vec4(position, 1.0);
           vNormalW = normalize(mat3(modelMatrix) * normal);
+          vViewDirW = normalize(cameraPosition - wp.xyz);
           gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
         }`,
       fragmentShader: `
@@ -2522,6 +2525,15 @@ function buildEarthSurface() {
         uniform vec3 uSunDir;
         varying vec2 vUv;
         varying vec3 vNormalW;
+        varying vec3 vViewDirW;
+
+        // strict cool slate palette (sRGB values from the design spec)
+        const vec3 cShadow = vec3(0.078, 0.098, 0.122);  // #14191F
+        const vec3 cOcean  = vec3(0.149, 0.196, 0.243);  // #26323E
+        const vec3 cLand   = vec3(0.294, 0.369, 0.443);  // #4B5E71
+        const vec3 cLit    = vec3(0.471, 0.557, 0.624);  // #788E9F
+        const vec3 cRim    = vec3(0.659, 0.753, 0.816);  // #A8C0D0
+
         void main() {
           // topology: 0 = ocean, higher = land elevation (0..~0.55 typical)
           float elev = texture2D(uTopo, vUv).r;
@@ -2529,30 +2541,31 @@ function buildEarthSurface() {
           // crisp coastlines
           float landMask = smoothstep(0.028, 0.075, elev);
 
-          // ice-blue land, brightening to white at high elevation (ice caps)
-          vec3 landLow  = vec3(0.39, 0.66, 0.84);
-          vec3 landHigh = vec3(0.86, 0.96, 1.00);
-          vec3 landCol = mix(landLow, landHigh, smoothstep(0.08, 0.72, elev));
+          // base land -> illuminated terrain with elevation
+          vec3 landCol = mix(cLand, cLit, smoothstep(0.08, 0.72, elev));
+          // thin bright coastline band
+          float coast = smoothstep(0.045, 0.09, elev)
+                      * (1.0 - smoothstep(0.09, 0.20, elev));
+          landCol = mix(landCol, cLit, coast * 0.85);
 
-          // deeper blue sea, with a lighter coastal shelf from the elevation ramp
-          vec3 seaDeep = vec3(0.020, 0.075, 0.170);
-          vec3 seaShal = vec3(0.055, 0.150, 0.300);
-          vec3 seaCol = mix(seaDeep, seaShal, smoothstep(0.004, 0.05, elev));
+          // deep ocean, faint coastal shelf lifting toward the land tone
+          vec3 seaCol = mix(cOcean, mix(cOcean, cLand, 0.45),
+                            smoothstep(0.004, 0.05, elev));
 
           vec3 col = mix(seaCol, landCol, landMask);
 
-          // directional light with a wider dynamic range, so the sphere reads
-          // more three-dimensional like the reference
           vec3 n = normalize(vNormalW);
           vec3 L = normalize(uSunDir);
-          float lam = 0.48 + 0.62 * max(dot(n, L), 0.0);
-          col *= lam;
+          float lam = dot(n, L);
 
-          // soft specular sheen, stronger over open water
-          vec3 V = vec3(0.0, 0.0, 1.0);
-          vec3 H = normalize(L + V);
-          float spec = pow(max(dot(n, H), 0.0), 42.0);
-          col += vec3(0.25, 0.34, 0.45) * spec * (0.35 + 0.65 * (1.0 - landMask));
+          // matte directional falloff: the far limb sinks into deep space
+          col = mix(cShadow, col, smoothstep(0.02, 0.50, lam));
+
+          // high-contrast fresnel rim on the sunlit edge
+          float ndv = max(dot(n, normalize(vViewDirW)), 0.0);
+          float fres = pow(1.0 - ndv, 2.4);
+          float litMask = smoothstep(0.05, 0.55, lam);
+          col = mix(col, cRim, fres * litMask * 0.9);
 
           gl_FragColor = vec4(col, 1.0);
         }`,
@@ -2608,7 +2621,7 @@ function buildClouds() {
           float latBand = smoothstep(0.02, 0.16, abs(vUv.y - 0.5))
                         * (1.0 - smoothstep(0.38, 0.5, abs(vUv.y - 0.5)));
           float a = shape * latBand * 0.62;
-          vec3 col = vec3(0.88, 0.94, 1.0);
+          vec3 col = vec3(0.863, 0.910, 0.941);  // #DCE8F0 cloud highlights
           gl_FragColor = vec4(col, a);
         }`,
     }),
@@ -2631,8 +2644,8 @@ function buildStarfield() {
   const geo = new THREE.BufferGeometry();
   geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
   starField = new THREE.Points(geo, new THREE.PointsMaterial({
-    color: 0xaebfcc, size: 0.085, sizeAttenuation: true,
-    transparent: true, opacity: 0.8, depthWrite: false,
+    color: 0x788e9f, size: 0.075, sizeAttenuation: true,
+    transparent: true, opacity: 0.55, depthWrite: false,
   }));
   starField.visible = false;
   scene.add(starField);
@@ -2670,7 +2683,7 @@ function buildAtmosphere() {
     transparent: true,
     side: THREE.BackSide,
     depthWrite: false,
-    uniforms: { uColor: { value: new THREE.Color("#c9ced3") } },
+    uniforms: { uColor: { value: new THREE.Color("#A8C0D0") } },
     vertexShader: `
       varying vec3 vNormal;
       varying vec3 vPos;

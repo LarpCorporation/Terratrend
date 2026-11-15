@@ -320,7 +320,7 @@ body {
 .globe-wrap {
   position: relative; flex: 1; min-height: 0;
   border: 1px solid var(--line);
-  background: radial-gradient(circle at 50% 50%, #111315 0%, #040405 74%);
+  background: radial-gradient(circle at 50% 50%, #14191F 0%, #0F1318 78%);
   overflow: hidden;
 }
 #globe { position: absolute; inset: 0; }
