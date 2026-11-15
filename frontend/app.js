@@ -189,13 +189,13 @@ function renderVarList() {
     el.className = "var-item" + (on ? " on" : "") + (unavailable ? " source-unavailable" : "");
     el.dataset.variable = v.id;el.tabIndex=0;el.setAttribute('role','button');el.setAttribute('aria-pressed',String(on));el.setAttribute('aria-disabled',String(unavailable&&!on));
     el.style.setProperty("--vc", v.color);
-    el.title = (v.desc || v.plain || "") + (unavailable ? ' · This measurement needs a source mapping for the selected data source.' : '');
+    el.title = (v.desc || v.plain || "") + (unavailable ? ' · Not available yet from this data source. It will appear here when it is.' : '');
     el.innerHTML = `
       <i class="var-dot"></i>
       <span class="var-text">
         <span class="var-name">${esc(v.name)}</span>
         <span class="var-meta">${esc(v.sphere_code || "ATM")} \u00b7 ${esc(v.unit)}</span>
-        ${unavailable ? '<span class="var-source-note">SOURCE MAPPING NEEDED</span>' : ''}
+        ${unavailable ? '<span class="var-source-note">COMING SOON</span>' : ''}
       </span>`;
     el.addEventListener("click", () => toggleVar(v.id));
     el.addEventListener('keydown', event => {if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleVar(v.id);}});
@@ -3914,19 +3914,51 @@ function wireStartModal() {
   }
 }
 
-function runDemo(key) {
+async function runDemo(key) {
   const demo = DEMOS[key];
   if (!demo) return;
   hideModal($("start-modal"));
   try { window.localStorage.setItem("tt-seen-start", "1"); } catch (_) {}
 
+  // The question cards name curated focus boxes (Central Europe, Sahel,
+  // Arctic Siberia). Those only exist as options once the "focus boxes" layer
+  // is on, so switch it before selecting, otherwise the card promises one
+  // place and the analysis silently uses another.
+  try {
+    if (typeof setGeographicLevel === "function"
+        && typeof investigation !== "undefined"
+        && investigation.level !== "preset") {
+      await setGeographicLevel("preset", "");
+    }
+  } catch (_) { /* fall through: the region select below will show what it can */ }
+
   state.selected = demo.vars.slice();
   state.pendingBbox = null;
   state.preferredVar = demo.vars[0];
 
-  if ($("region")) $("region").value = demo.region;
+  // In the focus-box layer the select's values are namespaced ("focus:europe"),
+  // so match the prefixed form first and fall back to the bare id.
+  const chooseRegion = (select, id) => {
+    if (!select || !id) return;
+    const prefixed = "focus:" + id;
+    const has = Array.from(select.options).some(o => o.value === prefixed);
+    select.value = has ? prefixed : id;
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+  };
+
+  chooseRegion($("region"), demo.region);
   if ($("start")) $("start").value = demo.start;
   if ($("end")) $("end").value = demo.end;
+
+  // A question card promises its own place. An area left over from an earlier
+  // selection would win over the dropdown (currentRegion() prefers it), so the
+  // promise would be broken: "Is my region warming?" would quietly analyse
+  // whatever was selected before.
+  if (typeof investigation !== "undefined" && investigation) {
+    investigation.areas.a = null;
+    investigation.areas.b = null;
+    investigation.resultKey = null;
+  }
 
   // contrast demo turns compare mode on and picks the second region
   if (demo.compare) {
@@ -3935,7 +3967,7 @@ function runDemo(key) {
     if (pill) pill.textContent = "MODE: CONTRAST";
     const grp = $("compare-region-group");
     if (grp) grp.style.display = "";
-    if ($("compare-region")) $("compare-region").value = demo.compare;
+    chooseRegion($("compare-region"), demo.compare);
   }
 
   renderVarList();

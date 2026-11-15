@@ -78,10 +78,23 @@
     const el = id => d.getElementById(id);
     el('data-review-title').textContent = plan.discovery ? 'Discover what is changing.' : plan.relationships ? 'Review the relationship search.' : 'Review this analysis.';
     el('data-review-scope').textContent = `${plan.areas.map(a => a.name).join(' / ')} · ${spec.start}–${spec.end} · ${plan.months} months`;
-    el('data-review-size').textContent = plan.network ? `≈ ${(plan.bytes / 1e6).toLocaleString(undefined, { maximumFractionDigits: 2 })} MB` : '0 MB';
-    el('data-review-files').textContent = plan.regional?`${plan.requests} monthly regional series if uncached · progress checks add traffic`:plan.automatic ? `${plan.requests.toLocaleString()} monthly subsets if uncached` : plan.network?`${plan.requests.toLocaleString()} planned series/metadata requests if uncached · processing checks add traffic`:'Uses existing local scientific data';
+    // Lead with how long it will feel, not with a byte count: a first-time
+    // reader should leave this dialog knowing "a few seconds" or "a minute",
+    // not fearing a download. The size still appears, one line down.
+    const wait = (() => {
+      if (!plan.network) return { size: 'Ready now', files: 'Reads data already saved on this computer.' };
+      if (plan.regional) return { size: 'A few minutes', files: 'NASA does the processing on its servers; only small summary files come back.' };
+      const mins = Math.max(1, Math.round((plan.requests * 0.6) / 60));
+      const mb = Math.round(plan.bytes / 1e6);
+      return {
+        size: mins <= 1 ? 'Under a minute' : `About ${mins} min`,
+        files: `${mb.toLocaleString()} MB from NASA on the first run only · instant every time after`
+      };
+    })();
+    el('data-review-size').textContent = wait.size;
+    el('data-review-files').textContent = wait.files;
     el('data-review-note').textContent = plan.regional?'NASA Giovanni calculates rectangle averages on its servers. This estimate covers small CSV results and an allowance for metadata; progress checks and actual responses can change total transfer. Each response is limited to 2 MB. No native-grid download fallback. This mode uses monthly M2IMNXASM, a different MERRA-2 product from native mode; values need not match. Native-cell maps and monthly area-coverage checks are not supplied.':plan.automatic
-      ? 'Planning estimate for an empty cache, not a hard data cap. It allows for native grid values and file metadata. Compression and existing cached subsets can reduce the transfer; actual service responses can differ. NASA sends selected grid windows, then this computer stores them and calculates the trends.'
+      ? 'NASA sends only the grid squares covering the area you picked. This computer stores them so the same request is instant next time. Nothing is uploaded, and the estimate is not a data cap.'
       : plan.network?'Planning estimate, not a traffic cap. '+plan.routes.map(route=>({
           'nasa-merra2':'NASA returns selected native grid windows; this computer weights them to the polygon.',
           'nasa-hydrology':'Hydrology returns monthly histories for every intersecting 0.25° cell (maximum 512 per area).',

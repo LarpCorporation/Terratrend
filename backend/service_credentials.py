@@ -1,5 +1,4 @@
 """Separate, private TerraTrend service tokens; never expose values in status."""
-import os
 import subprocess
 import threading
 import earthdata_credentials as private
@@ -32,7 +31,7 @@ def load(service):
         value=_secret('lookup',service)
         if value:return value
         try:
-            if path.is_symlink() or private.DIRECTORY.is_symlink() or path.stat().st_uid!=os.getuid() or path.stat().st_mode&0o077:return ''
+            if not private._is_private(path):return ''
             return path.read_text().strip()
         except OSError:return ''
 

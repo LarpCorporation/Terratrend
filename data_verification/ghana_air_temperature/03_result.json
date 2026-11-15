@@ -1,0 +1,10 @@
+{
+  "month": 202308,
+  "dataset": "M2TMNXSLV.5.12.4:MERRA2_400.tavgM_2d_slv_Nx.202308.nc4",
+  "granule_id": "G2769529108-GES_DISC",
+  "units_in_file": "K",
+  "cells_returned": 112,
+  "cells_used_for_ghana": 112,
+  "weighted_mean_kelvin": 298.717863,
+  "weighted_mean_degc": 25.567863
+}

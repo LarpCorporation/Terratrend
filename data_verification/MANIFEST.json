@@ -1,0 +1,132 @@
+{
+  "_note": "Provenance for everything in this folder. Raw files are the unmodified bytes returned by NASA's OPeNDAP service.",
+  "source": {
+    "discovery": "NASA CMR https://cmr.earthdata.nasa.gov/search/granules.json",
+    "data": "NASA GES DISC OPeNDAP https://opendap.earthdata.nasa.gov",
+    "collections": {
+      "M2TMNXSLV": "C1276812859-GES_DISC",
+      "M2TMNXLND": "C1276812856-GES_DISC",
+      "M2TMNXFLX": "C1276812868-GES_DISC"
+    },
+    "version": "merra2-native-v1",
+    "native_grid": "0.625 deg longitude x 0.5 deg latitude"
+  },
+  "series": [
+    {
+      "file": "nino34_surface_temperature_monthly.csv",
+      "description": "NASA MERRA-2 M2TMNXSLV TS over the tropical Pacific box [-170,-5,-120,5], K converted to degC",
+      "region": "tropical_pacific",
+      "variable": "TS",
+      "months_total": 540,
+      "months_with_data": 537
+    },
+    {
+      "file": "ghana_precipitation_monthly.csv",
+      "description": "NASA MERRA-2 M2TMNXFLX PRECTOTCORR over Ghana, converted to mm/day",
+      "region": "ghana_national",
+      "variable": "PRECTOTCORR",
+      "months_total": 540,
+      "months_with_data": 537
+    },
+    {
+      "file": "amazon_precipitation_monthly.csv",
+      "description": "NASA MERRA-2 M2TMNXFLX PRECTOTCORR over the Amazon basin, mm/day",
+      "region": "amazon_basin",
+      "variable": "PRECTOTCORR",
+      "months_total": 312,
+      "months_with_data": 309
+    }
+  ],
+  "raw_subsets": [
+    {
+      "file": "M2TMNXSLV_TS_202308_tropical_pacific_80d134875c4aa453.nc4",
+      "bytes": 30333,
+      "sha256_16": "80d134875c4aa453",
+      "dataset": "M2TMNXSLV",
+      "field": "TS",
+      "variable": "TS",
+      "month": "2023-08",
+      "granule_id": "G2769529108-GES_DISC",
+      "granule_title": "M2TMNXSLV.5.12.4:MERRA2_400.tavgM_2d_slv_Nx.202308.nc4",
+      "opendap_url": "https://opendap.earthdata.nasa.gov/collections/C1276812859-GES_DISC/granules/M2TMNXSLV.5.12.4%253AMERRA2_400.tavgM_2d_slv_Nx.202308.nc4.dap.nc4?dap4.ce=%2FTS%5B0%3A1%3A0%5D%5B180%3A1%3A180%5D%5B56%3A1%3A56%5D%3B%2Flat%5B180%3A1%3A180%5D%3B%2Flon%5B56%3A1%3A56%5D",
+      "cell": {
+        "lon": -145.0,
+        "lat": 0.0,
+        "window": [
+          180,
+          180,
+          56,
+          56
+        ]
+      },
+      "source_units": "K",
+      "conversion": {
+        "factor": 1.0,
+        "offset": -273.15
+      },
+      "value_in_source_units": 300.842957,
+      "value_used_by_app": 27.692957,
+      "note": "Central-Eastern Equatorial Pacific (Nino 3.4), centre cell"
+    },
+    {
+      "file": "M2TMNXFLX_PRECTOTCORR_202308_ghana_national_df15edd91de10e80.nc4",
+      "bytes": 30333,
+      "sha256_16": "df15edd91de10e80",
+      "dataset": "M2TMNXFLX",
+      "field": "PRECTOTCORR",
+      "variable": "PRECTOTCORR",
+      "month": "2023-08",
+      "granule_id": "G2769538671-GES_DISC",
+      "granule_title": "M2TMNXFLX.5.12.4:MERRA2_400.tavgM_2d_flx_Nx.202308.nc4",
+      "opendap_url": "https://opendap.earthdata.nasa.gov/collections/C1276812868-GES_DISC/granules/M2TMNXFLX.5.12.4%253AMERRA2_400.tavgM_2d_flx_Nx.202308.nc4.dap.nc4?dap4.ce=%2FPRECTOTCORR%5B0%3A1%3A0%5D%5B196%3A1%3A196%5D%5B286%3A1%3A286%5D%3B%2Flat%5B196%3A1%3A196%5D%3B%2Flon%5B286%3A1%3A286%5D",
+      "cell": {
+        "lon": -1.0,
+        "lat": 7.9,
+        "window": [
+          196,
+          196,
+          286,
+          286
+        ]
+      },
+      "source_units": "kg m-2 s-1",
+      "conversion": {
+        "factor": 86400.0,
+        "offset": 0.0
+      },
+      "value_in_source_units": 5.8e-05,
+      "value_used_by_app": 4.98895,
+      "note": "Ghana, centre cell"
+    },
+    {
+      "file": "M2TMNXFLX_PRECTOTCORR_202308_amazon_basin_91abf18ef194de81.nc4",
+      "bytes": 30334,
+      "sha256_16": "91abf18ef194de81",
+      "dataset": "M2TMNXFLX",
+      "field": "PRECTOTCORR",
+      "variable": "PRECTOTCORR",
+      "month": "2023-08",
+      "granule_id": "G2769538671-GES_DISC",
+      "granule_title": "M2TMNXFLX.5.12.4:MERRA2_400.tavgM_2d_flx_Nx.202308.nc4",
+      "opendap_url": "https://opendap.earthdata.nasa.gov/collections/C1276812868-GES_DISC/granules/M2TMNXFLX.5.12.4%253AMERRA2_400.tavgM_2d_flx_Nx.202308.nc4.dap.nc4?dap4.ce=%2FPRECTOTCORR%5B0%3A1%3A0%5D%5B172%3A1%3A172%5D%5B188%3A1%3A188%5D%3B%2Flat%5B172%3A1%3A172%5D%3B%2Flon%5B188%3A1%3A188%5D",
+      "cell": {
+        "lon": -62.5,
+        "lat": -4.0,
+        "window": [
+          172,
+          172,
+          188,
+          188
+        ]
+      },
+      "source_units": "kg m-2 s-1",
+      "conversion": {
+        "factor": 86400.0,
+        "offset": 0.0
+      },
+      "value_in_source_units": 2.5e-05,
+      "value_used_by_app": 2.191464,
+      "note": "Amazon Basin, centre cell"
+    }
+  ]
+}

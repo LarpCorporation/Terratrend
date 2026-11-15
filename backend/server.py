@@ -19,6 +19,8 @@ import power_client
 import geography
 import spatial
 import data_sources
+import event_images
+import event_network
 import jobs
 from analysis import (
     analyze_series, seasonal_mk,
@@ -258,6 +260,53 @@ def fetch_region(var_id, region, start, end, nx=5, ny=5):
 
 def region_metadata(region):
     return {k:v for k,v in region.items() if k != "geometry"}
+
+
+PROVIDER_LABELS = {
+    "nasa-merra2": "NASA Earthdata (MERRA-2)",
+    "nasa-giovanni": "NASA Earthdata (Giovanni)",
+    "nasa-hydrology": "NASA Earthdata (Hydrology)",
+    "nasa-appeears": "NASA AppEEARS",
+    "noaa-cdo": "NOAA Climate Data Online",
+}
+
+
+def _provider_configured(variable):
+    """Whether the provider that owns this measurement is connected."""
+    adapter = data_sources.ADAPTERS.get(data_sources.LINKED_ROUTES.get(variable))
+    if adapter is None:
+        return True
+    try:
+        return bool(adapter.status().get("configured"))
+    except Exception:  # noqa: BLE001
+        return True
+
+
+def event_series(region_id, variable, start, end):
+    """One series for the curated event network.
+
+    Runs through exactly the same provider dispatch, native-cell weighting and
+    coverage threshold as an ordinary analysis, so an event number and an
+    Analyze number for the same box cannot disagree.
+
+    An all-empty series is reported as a connection problem when the owning
+    provider is not connected, rather than as "not enough months" -- those are
+    different claims and only one of them is the user's to fix.
+    """
+    reg = resolve_region(region_id)
+    if not reg:
+        raise KeyError(f"Unknown event region: {region_id}")
+    grid = fetch_region(variable, reg, start, end)
+    values = covered_region_series(grid, calendar_months(start, end))
+    if not any(v is not None for v in values):
+        if not _provider_configured(variable):
+            label = PROVIDER_LABELS.get(
+                data_sources.LINKED_ROUTES.get(variable), "NASA Earthdata")
+            raise RuntimeError(f"Connect {label} in Data & Methods to read "
+                               f"{variable} observations.")
+        raise RuntimeError(f"No usable {variable} observations for {region_id} "
+                           f"in {start}-{end}.")
+    return values
 
 
 def run_analysis(variables, region, start, end, nx=5, ny=5, compare_region=None,
@@ -954,14 +1003,15 @@ class Handler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
         sys.stderr.write("%s - %s\n" % (self.address_string(), fmt % args))
 
-    def _send(self, code, body, ctype="application/json; charset=utf-8"):
+    def _send(self, code, body, ctype="application/json; charset=utf-8",
+              cache="no-store"):
         if isinstance(body, str):
             body = body.encode()
         self.send_response(code)
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(body)))
         if self.headers.get("Origin") and self._same_origin():self.send_header("Access-Control-Allow-Origin", self.headers.get("Origin"))
-        self.send_header("Cache-Control", "no-store")
+        self.send_header("Cache-Control", cache)
         self.end_headers()
         self.wfile.write(body)
 
@@ -1044,6 +1094,44 @@ class Handler(BaseHTTPRequestHandler):
                     "automatic_data": True,
                     "availability": {"ok":False,"mode":"Automatic NASA / project cache"},
                 })
+            if path.startswith("/api/event-image/"):
+                # Curated event imagery, served from the local cache so the tab
+                # never depends on a remote CDN while someone is presenting.
+                parts = path[len("/api/event-image/"):].strip("/").split("/")
+                if len(parts) != 2:
+                    return self._json(400, {"error": "event id and image index required"})
+                try:
+                    index = int(parts[1])
+                except ValueError:
+                    return self._json(400, {"error": "image index must be a number"})
+                try:
+                    raw, ctype = event_images.image_bytes(parts[0], index)
+                except KeyError:
+                    return self._json(404, {"error": "no such event image"})
+                except Exception as exc:  # noqa: BLE001
+                    return self._json(
+                        502, {"error": f"Event image could not be fetched: {exc}"})
+                return self._send(200, raw, ctype, cache="public, max-age=604800")
+            if path == "/api/events":
+                return self._json(200, event_network.index())
+            if path.startswith("/api/events/"):
+                event_id = path[len("/api/events/"):].strip("/")
+                if not event_id:
+                    return self._json(400, {"error": "event id required"})
+                # The generic GET default is the legacy project cache; the
+                # catalogue describes live events and must read the automatic
+                # NASA source unless the caller explicitly asks otherwise.
+                event_provider = data_sources.PROVIDER.set(
+                    q.get("provider", ["nasa-merra2"])[0])
+                try:
+                    return self._json(200, event_network.build(
+                        event_id, MAX_YEAR, event_series))
+                except KeyError as exc:
+                    return self._json(404, {"error": str(exc)})
+                except ValueError as exc:
+                    return self._json(400, {"error": str(exc)})
+                finally:
+                    data_sources.PROVIDER.reset(event_provider)
             if path == "/api/satellite-imagery":
                 if data_sources.PROVIDER.get()!="legacy-live":
                     return self._json(400,{"error":"This imagery route has not been enabled under the challenge resource policy. See Data & Methods."})

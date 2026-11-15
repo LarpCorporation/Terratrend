@@ -42,8 +42,14 @@
   --k-line-dim: #19241e;
   --k-footer: #315342;
 
-  --font: "Ubuntu Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --font-ui: "Ubuntu Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  /* Warm, familiar system typography. The previous stack was a monospace face
+     (Ubuntu Mono, falling back to Consolas), which read as a developer terminal
+     rather than something a student would want to sit in front of. These are
+     fonts already on the machine, so nothing is downloaded. */
+  --font: "Segoe UI", "Inter", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --font-ui: "Segoe UI", "Inter", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  /* Numerals in tables and charts stay tabular so columns still line up. */
+  --font-num: ui-monospace, SFMono-Regular, Consolas, "Segoe UI", monospace;
 
   --header-h: 60px;
   --subnav-h: 40px;

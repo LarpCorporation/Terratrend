@@ -6,6 +6,11 @@ const { execFileSync } = require('node:child_process');
 
 const app = fs.readFileSync(require('node:path').join(__dirname, '../frontend/app.js'), 'utf8');
 
+// Windows ships `python`/`py`, not `python3`. TERRATREND_PYTHON lets the suite
+// be pointed at the project virtual environment on any platform.
+const PYTHON = process.env.TERRATREND_PYTHON
+  || (process.platform === 'win32' ? 'python' : 'python3');
+
 function result() {
   return {
     start: 2005, end: 2006, months: ['2005-01', '2005-02'],
@@ -39,9 +44,16 @@ async function exported(data, mode = 'monthly') {
   ctx.exportDataCSV();
   const csv = await blob.text();
   // Parse with the independent standard-library CSV reader, including quoted newlines.
-  const rows = JSON.parse(execFileSync('python3', ['-c',
+  const rows = JSON.parse(execFileSync(PYTHON, ['-c',
     'import csv,io,json,sys; print(json.dumps(list(csv.DictReader(io.StringIO(sys.stdin.read())))))',
-  ], { input: csv, encoding: 'utf8' }));
+  ], {
+    input: csv,
+    encoding: 'utf8',
+    // The headers carry a degree sign ("..._T2M_°C"). Windows pipes stdin in
+    // the locale code page (cp1252), which would mangle those bytes; ask
+    // Python for UTF-8 explicitly.
+    env: { ...process.env, PYTHONIOENCODING: 'utf-8', PYTHONUTF8: '1' },
+  }));
   return { csv, rows };
 }
 

@@ -9,12 +9,32 @@ const oldRenderDataModal = window.TerraLegacy.renderDataModal;
 function currentRegion() {return investigation.areas.a||state.catalog?.regions.find(r=>r.id===$('region')?.value)||null;}
 function currentCompareRegion() {return investigation.areas.b||state.catalog?.regions.find(r=>r.id===$('compare-region')?.value)||null;}
 function investigationKey() {return [currentRegion()?.id,currentCompareRegion()?.id,state.compareMode,state.selected.join(','),state.selected[state.activeVarIdx],$('start')?.value,$('end')?.value,investigation.provider].join('|');}
-function openDrawer(open) {document.body.dataset.drawer=open?'open':'closed';$('drawer-toggle').setAttribute('aria-expanded',String(open));if(open)$('drawer-close').focus();}
+/* What actually defines a scientific request. Deliberately excludes which
+   variable tab you are looking at: switching charts mid-run must not throw the
+   running analysis away (that is what used to happen -- a completed NASA result
+   was silently discarded because the view changed). */
+function requestIdentity() {return [currentRegion()?.id,currentCompareRegion()?.id,state.compareMode,state.selected.join(','),$('start')?.value,$('end')?.value,investigation.provider].join('|');}
+function openDrawer(open) {document.body.dataset.drawer=open?'open':'closed';$('drawer-toggle').setAttribute('aria-expanded',String(open));if(open)$('drawer-close').focus();updateQuickAnalyze();}
+/* The Analyze button lives inside the drawer, so closing the drawer used to
+   take the only visible way to run an analysis off-screen with it. This keeps
+   one always-reachable action on the map whenever a request is ready. */
+function updateQuickAnalyze() {
+  const button = $('quick-analyze');
+  if (!button) return;
+  const ready = !!(investigation.areas?.a && state.selected.length && !$('run')?.disabled);
+  button.hidden = !(ready && document.body.dataset.drawer !== 'open');
+}
 function showInvestigationScreen(screen) {
   investigation.screen=screen;document.body.dataset.screen=screen;
   document.body.dataset.evidence='graphs';
   document.querySelectorAll('[data-analysis-evidence]').forEach(b=>{b.classList.toggle('active',b.dataset.analysisEvidence==='graphs');b.setAttribute('aria-pressed',String(b.dataset.analysisEvidence==='graphs'));});
   $('data-methods-screen').hidden=screen!=='sources';
+  const eventsScreen=$('events-screen');
+  if(eventsScreen){
+    eventsScreen.hidden=screen!=='events';
+    if(screen==='events')window.TerraEvents?.enter?.();
+    else window.TerraEvents?.leave?.();
+  }
   document.querySelectorAll('[data-kview]').forEach(el=>el.classList.toggle('active',el.dataset.kview===(screen==='analysis'?'observatory':screen)));
   if(screen==='compare'&&!state.compareMode)toggleCompareMode();
   if(screen==='map'){closeInterconnectScreen();investigation.map?.resize();}
@@ -43,6 +63,7 @@ function prepareInvestigation(clearMap=true) {
   $('analysis-empty').hidden=false;$('analysis-context').textContent='PREPARED · CHOOSE ANALYZE';
   const readiness=sourceReadiness();$('selection-coverage').textContent=readiness.code==='ready'?(state.selected.length?'Selection prepared. Choose Analyze to calculate its trend.':'Selection prepared. Choose Analyze to discover which supported measurements are changing.'):'Selection saved. '+readiness.message;
   refreshVariableStrip();refreshSelection(false);
+updateQuickAnalyze();
 }
 function clearResults() {oldClearResults();investigation.map?.clearResults();}
 function renderRegionSelect() {
@@ -126,7 +147,7 @@ async function setGeographicLevel(level,scope=null) {
     prepareInvestigation();refreshSelection(false);
     if(level==='region')investigation.map?.focusFeature(state.catalog.regions.find(r=>r.id===investigation.scope));
     const country=state.catalog.regions.find(r=>r.id===investigation.scope);
-    $('coord-readout').textContent=`${data.features.length} ${level==='preset'?'PRESET FOCUS BOXES · NOT OFFICIAL ECOLOGICAL BOUNDARIES':level==='region'?'REGIONS · '+country?.name.toUpperCase()+' · CHANGE COUNTRY ABOVE':'AREAS · NATURAL EARTH 1:50M'}`;
+    $('coord-readout').textContent=`${data.features.length} ${level==='preset'?'PRESET FOCUS BOXES · NOT OFFICIAL ECOLOGICAL BOUNDARIES':level==='region'?'REGIONS · '+country?.name.toUpperCase()+' · CHANGE COUNTRY ABOVE':'AREAS TO EXPLORE'}`;
   }catch(e){if(e.name==='AbortError')return;if(seq===investigation.geographicCall){setStatus('err',esc(e.message));$('coord-readout').textContent='BOUNDARIES UNAVAILABLE';investigation.features=[];investigation.map?.setFeatures([]);setAreaOptions([]);prepareInvestigation();setStatus('err',esc(e.message));openDrawer(true);}}finally{if(seq===investigation.geographicCall){investigation.loadingBoundaries=false;$('boundary-loading').hidden=true;if(investigation.map)investigation.map.pickingDisabled=false;}}
 }
 async function togglePresetRegions(){
@@ -162,7 +183,7 @@ function refreshVariableStrip() {
     const button=document.createElement('button');button.type='button';button.dataset.variable=v.id;button.className=state.selected.includes(v.id)?'active':'';
     button.className=(state.selected.includes(v.id)?'selected ':'')+(state.selected[state.activeVarIdx]===v.id?'active':'');
     const available=variableSourceAvailable(v.id);button.disabled=!available;button.classList.toggle('source-unavailable',!available);
-    button.title=`${v.name} · ${v.id} · ${v.unit}`+(available?'':' · Source mapping needed');button.textContent=v.name;button.setAttribute('aria-pressed',String(state.selected[state.activeVarIdx]===v.id));
+    button.title=`${v.name} · ${v.id} · ${v.unit}`+(available?'':' · Not available yet from this data source');button.textContent=v.name;button.setAttribute('aria-pressed',String(state.selected[state.activeVarIdx]===v.id));
     button.onclick=()=>{
       if(state.selected.includes(v.id)&&state.result){cancelPendingWork();state.activeVarIdx=state.selected.indexOf(v.id);render();refreshVariableStrip();}
       else{if(state.selected.includes(v.id))state.activeVarIdx=state.selected.indexOf(v.id);else{state.selected=[v.id];state.activeVarIdx=0;}prepareInvestigation();renderVarList();}
@@ -186,14 +207,18 @@ function renderGlobeRegions(d) {
 }
 function previewRegionSelection(region) {investigation.map?.setSelections([region?.id,state.compareMode?currentCompareRegion()?.id:null]);}
 function applyRegionSelection(region) {refreshSelection(false);}
-function wireStartModal() { $('start-modal').hidden=true;$('start-close').onclick=()=>$('start-modal').hidden=true; }
+// NOTE: this file used to declare `wireStartModal` as a stub that hid the
+// welcome panel. app.js declares the real one, and because this script loads
+// later the stub silently replaced it -- which is why the "What do you want to
+// investigate?" cards never appeared on a fresh visit. The welcome panel is now
+// owned by onboarding.js; do not redeclare that name here.
 async function initGlobe() {
   try{
     investigation.map=new window.TerraGlobe($('globe'),{onSelect:selectMapFeature,onConnection:showConnectionEvidence,onSelectionPoint:placeSelectionShape,onLasso:previewSelectionLasso,onLassoCount:n=>{$('lasso-point-count').textContent=n+' points';},onSelectionError:message=>selectionToolMessage(message,true),onAutoRotation:active=>{$('mc-rotate').classList.toggle('on',active);$('mc-rotate').setAttribute('aria-pressed',String(active));},onProjection:mode=>{$('proj-readout').textContent=mode==='plane'?'PLANE / MERCATOR':'3D GLOBE';$('mc-style').classList.toggle('on',mode==='plane');}});
   }catch(e){$('globe').innerHTML='<div class="globe-failure">The 3D view needs WebGL. You can still choose areas and analyze them using the Variables drawer.</div>';setStatus('warn','WebGL unavailable; area-list selection remains available.');}
   state.selected=[];renderVarList();refreshVariableStrip();
   $('drawer-toggle').onclick=()=>openDrawer(document.body.dataset.drawer!=='open');$('drawer-close').onclick=()=>openDrawer(false);
-  $('k-scan-cta').onclick=analyze;$('card-analysis').onclick=()=>showInvestigationScreen('analysis');$('card-connections').onclick=()=>openInterconnectScreen({force:true});
+  $('k-scan-cta').onclick=analyze;$('quick-analyze').onclick=analyze;$('card-analysis').onclick=()=>showInvestigationScreen('analysis');$('card-connections').onclick=()=>openInterconnectScreen({force:true});
   $('analysis-back').onclick=$('analysis-empty-map').onclick=$('methods-back').onclick=()=>showInvestigationScreen('map');
   document.querySelectorAll('[data-level]').forEach(b=>b.onclick=()=>setGeographicLevel(b.dataset.level));
   $('geography-presets').onclick=togglePresetRegions;
@@ -348,28 +373,43 @@ function jobSpec(operation) {
   return spec;
 }
 async function runInvestigationJob(spec,title) {
-  const identity=investigationKey(),seq=++investigation.seq;
+  const identity=requestIdentity(),seq=++investigation.seq;
   if(investigation.job){const previous=investigation.job;investigation.job=null;await fetch(`/api/jobs/${previous}/cancel`,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}).catch(()=>{});}
-  if(seq!==investigation.seq||identity!==investigationKey())return null;
+  if(seq!==investigation.seq||identity!==requestIdentity())return null;
   if(!window.TerraDataReview)throw new Error('Reload TerraTrend to load its data-use review.');
   const approved=await window.TerraDataReview.review(spec,state.catalog,sourceVariables()||[]);
-  if(seq!==investigation.seq||identity!==investigationKey())return null;
+  if(seq!==investigation.seq||identity!==requestIdentity())return null;
   if(!approved){setStatus('ok','This request was not started.');return null;}
   setStatus('busy',title);
   $('work-progress').hidden=false;$('work-progress-title').textContent=title;$('work-progress-detail').textContent='Preparing available scientific data';
   const response=await fetch('/api/jobs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(spec)});let job=await response.json();if(!response.ok)throw new Error(job.error||'Could not start analysis');
-  if(seq!==investigation.seq||identity!==investigationKey()){
+  if(seq!==investigation.seq||identity!==requestIdentity()){
     fetch(`/api/jobs/${job.id}/cancel`,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}).catch(()=>{});return null;
   }
   investigation.job=job.id;
+  // A newer request replaced this one: stop quietly, the newer one owns the UI.
+  const superseded=()=>{
+    if(seq===investigation.seq)return false;
+    investigation.job=null;$('work-progress').hidden=true;
+    fetch(`/api/jobs/${job.id}/cancel`,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}).catch(()=>{});
+    return true;
+  };
+  // The selection itself changed: the running result no longer describes what
+  // is on screen, so say so instead of dropping it in silence.
+  const changed=()=>{
+    if(identity===requestIdentity())return false;
+    investigation.job=null;$('work-progress').hidden=true;
+    fetch(`/api/jobs/${job.id}/cancel`,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}).catch(()=>{});
+    throw new Error('Your selection changed while NASA data was loading, so those results were discarded. Choose Analyze again.');
+  };
   while(job.status!=='complete'){
-    if(seq!==investigation.seq||identity!==investigationKey())return null;
+    if(superseded())return null;changed();
     if(job.status==='failed'||job.status==='cancelled')throw new Error(job.error||job.message);
     $('work-progress-detail').textContent=job.message+(job.total?` · ${job.completed}/${job.total}`:'');
     await new Promise(resolve=>setTimeout(resolve,650));
     const poll=await fetch(`/api/jobs/${job.id}`);job=await poll.json();if(!poll.ok)throw new Error(job.error||'Could not read analysis progress');
   }
-  if(seq!==investigation.seq||identity!==investigationKey())return null;
+  if(superseded())return null;changed();
   investigation.job=null;$('work-progress').hidden=true;return job.result;
 }
 async function analyze() {

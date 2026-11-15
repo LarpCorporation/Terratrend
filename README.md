@@ -25,6 +25,18 @@ The startup script uses a project virtual environment and installs missing Pytho
 7. Discovery shows a ranked table of significant increases, significant decreases, nonsignificant results, insufficient observations and source errors. Choose a measurement to open **Analysis** for its graph, statistics, native-cell summaries and CSV export. Open **Compare** and choose two different units for an A/B analysis using the same variables and dates.
 8. Open **Interconnections** to screen local candidate leads and simultaneous associations. In **Linked datasets**, select two or three measurements across sources. Remote screening is off by default and requires the explicit **Include remote areas** option and review. Each result retains its source and quality limits. **Globe / plane** switches the projection while retaining geographic identities.
 
+## Curated events
+
+**Events** is a catalogue of documented Earth-system events — the 1982–83 West African drought, the 2023–24 El Niño, the 2023 Amazon and Southern Africa droughts, the 2012 Arctic sea-ice minimum, and a 2026 Pacific watch item. Each card states what happened, which pathway carried it, and what evidence stands behind it.
+
+Selecting an event frames the globe, draws its pathways, and loads data through the same providers, coverage thresholds and disk cache as an ordinary analysis, so a card's number and an **Analyze** number for the same box cannot disagree.
+
+The screen opens on an empty state: an event is loaded only when one is chosen from the menu, and only one is shown at a time. Named points mark where each pathway begins and ends — hovering one names the place, explains what is happening there, and lists the pathways that start or end at it. Places are described in words ("Equatorial Pacific, between Hawaii and the Galápagos"), never as coordinates. Each event also carries two to five photographs of what happened, drawn from reviewed Wikimedia Commons files; the server caches them under `backend/cache/images/` so a presentation never waits on a remote host, and each picture is shown with its author and licence.
+
+What appears is constrained by what can be sourced. A pathway with no available dataset says **Awaiting source** rather than showing an approximation: the NSIDC sea-ice extent behind the 2012 event is not implemented, so that edge stays open. Where the catalogue's named dataset is unavailable the substitute is labelled — the sea-surface pathways run on MERRA-2 surface skin temperature and are recorded as a proxy for ERSSTv5, never renamed to it. Ghana's 1982–83 event uses MERRA-2 precipitation from 1980, so it carries at most three years of preceding record instead of the catalogue's 1901+ gauge series, and the card says so. The 2026 El Niño is a **watch**, not a verified history: the Pacific driver is observable now, but Ghana's lagged rainfall response has not happened yet, and no forecast is claimed.
+
+Correlations are computed on detrended, seasonally decomposed monthly anomalies. p-values are corrected for effective sample size and for the lag-search family, then Benjamini–Hochberg controlled across every pathway tested; a large correlation alone is never reported as a finding. `python backend/warm_events.py` pre-downloads every event series with the server running, so the tab opens instantly during a demo.
+
 ## Scientific data
 
 The default source is **NASA MERRA-2 · exact boundaries**, using GES DISC datasets available through the challenge’s **Giovanni** resource. Open **Data & Methods**, generate a user token in your [NASA Earthdata profile](https://urs.earthdata.nasa.gov/profile), and connect it there. The app verifies authorization by reading one real temperature cell. Enable **Remember this connection on this computer** to restore the connection after server restarts. The key uses the desktop credential store when available, or an owner-only local configuration file outside the project; it is not saved to browser storage or the repository. **Forget this connection** removes it. NASA can still expire or revoke the token. A server operator can instead provide `EARTHDATA_TOKEN` in the process environment.
@@ -86,6 +98,7 @@ Continents and subcontinents use Natural Earth’s regional country membership. 
 node --test tests/*.test.cjs
 node --check frontend/app.js
 node --check frontend/workflow.js
+node --check frontend/events.js
 node --check frontend/earth-renderer.js
 node --check frontend/selection-tools.js
 node --check frontend/selection-geometry.js

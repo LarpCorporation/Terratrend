@@ -135,6 +135,10 @@
       }));this.world.add(this.glow);
       this.ray=new T.Raycaster();this.pointer=new T.Vector2();
       this.labelLayer=document.createElement('div');this.labelLayer.className='earth-label-layer';host.append(this.labelLayer);
+      // Named markers for the curated event network. Kept in their own layer:
+      // labelLayer is replaced whenever the geographic layer changes.
+      this.nodeLayer=document.createElement('div');this.nodeLayer.className='earth-label-layer earth-node-layer';host.append(this.nodeLayer);
+      this.eventNodes=[];
       this.tooltip=document.createElement('div');this.tooltip.className='earth-tooltip';this.tooltip.hidden=true;host.append(this.tooltip);
       this.stars();this.grid();this.bind();new ResizeObserver(()=>this.resize()).observe(host);this.resize();
       this.loadBase().catch(e=>{this.host.dataset.baseError=e.message;});
@@ -290,6 +294,9 @@
     }
     focusFeature(feature) {
       if(!feature)return;const p=feature.properties||feature,b=p.bbox;
+      // A non-finite box propagates NaN into the camera and blanks the entire
+      // canvas, so an unusable box keeps the current view instead.
+      if(!Array.isArray(b)||b.length!==4||!b.every(v=>typeof v==='number'&&Number.isFinite(v)))return;
       const centre=centerOf(p);
       if(this.targetBlend===0){
         this.world.rotation.set(centre[1]*RAD,-centre[0]*RAD,0);
@@ -316,6 +323,57 @@
           const planePacket=new T.Mesh(new T.SphereGeometry(.006,6,6),new T.MeshBasicMaterial({color:0xe5fff4}));this.planeArcs.add(planePacket);this.packets.push({mesh:planePacket,curve,t:0,plane:true});
         }
       }
+    }
+    /* Named points for one curated event. Each marker shows where a pathway
+       starts or ends; hovering it explains, in plain language, what is
+       happening at that place. */
+    setEventNodes(nodes, bounds) {
+      this.eventNodes=(nodes||[]).filter(n=>typeof n.lat==='number'&&typeof n.lon==='number');
+      // The Events screen keeps the globe visible between two panels. A label
+      // whose dot sits under a panel is unreadable, so labels are kept inside
+      // the visible stage while their dots stay at the true location.
+      this.eventBounds=(bounds&&bounds.right>bounds.left)?bounds:null;
+      this.nodeLayer.replaceChildren();
+      this.tooltip.hidden=true;
+      for(const n of this.eventNodes){
+        const el=document.createElement('button');
+        el.type='button';
+        el.className='ev-node ev-node-'+(n.layer||'land');
+        el.setAttribute('aria-label',n.name+' — '+(n.description||''));
+        const dot=document.createElement('span');dot.className='ev-node-dot';el.append(dot);
+        const name=document.createElement('span');name.className='ev-node-name';name.textContent=n.name;el.append(name);
+        el.addEventListener('pointerenter',e=>this.showNodeTip(e,n));
+        el.addEventListener('pointermove',e=>this.showNodeTip(e,n));
+        el.addEventListener('pointerleave',()=>{this.tooltip.hidden=true;});
+        el.addEventListener('focus',()=>this.showNodeTip(null,n));
+        el.addEventListener('blur',()=>{this.tooltip.hidden=true;});
+        el.addEventListener('click',e=>{e.stopPropagation();this.options.onEventNode?.(n);});
+        this.nodeLayer.append(el);n.el=el;
+      }
+    }
+    showNodeTip(event,n) {
+      const tip=this.tooltip;
+      tip.hidden=false;tip.classList.add('ev-node-tip');tip.replaceChildren();
+      const head=document.createElement('strong');head.textContent=n.name;
+      const where=document.createElement('em');
+      where.textContent=[n.layer,n.where].filter(Boolean).join(' · ');
+      const body=document.createElement('span');body.textContent=n.description||'';
+      tip.append(head,where,body);
+      const routes=n.pathways||[];
+      if(routes.length){
+        const list=document.createElement('span');list.className='ev-node-routes';
+        for(const route of routes){
+          const line=document.createElement('span');
+          line.textContent=route.role+': '+route.label;
+          list.append(line);
+        }
+        tip.append(list);
+      }
+      const b=this.host.getBoundingClientRect();
+      const x=event?event.clientX-b.left:b.width/2;
+      const y=event?event.clientY-b.top:120;
+      tip.style.left=Math.max(10,Math.min(b.width-310,x+18))+'px';
+      tip.style.top=Math.max(10,Math.min(b.height-150,y-30))+'px';
     }
     pick(event) {
       if(this.pickingDisabled)return null;
@@ -391,6 +449,27 @@
         n.label.hidden=!visible||Math.abs(v.x)>1||Math.abs(v.y)>1;n.label.style.transform=`translate(${(v.x+1)*this.host.clientWidth/2}px,${(1-v.y)*this.host.clientHeight/2}px) translate(-50%,-50%)`;
       }
       for(const p of this.packets){p.t=(time*.00015)%1;const point=p.curve.getPoint(p.t);if(p.plane){p.mesh.position.set(...flat(Math.atan2(point.x,point.z)/RAD,Math.asin(point.y/point.length())/RAD,1.018));p.mesh.scale.setScalar(Math.min(1,this.zoom*.7));}else p.mesh.position.copy(point);}
+      for(const n of this.eventNodes){
+        if(!n.el)continue;
+        const xyz=this.blend>.5?flat(n.lon,n.lat,1.012):ll(n.lon,n.lat,1.012);
+        const v=new T.Vector3(...xyz).applyMatrix4(this.world.matrixWorld);
+        const front=this.blend>.5||v.z>.12;
+        v.project(this.camera);
+        const w=this.host.clientWidth, h=this.host.clientHeight;
+        let x=(v.x+1)*w/2, y=(1-v.y)*h/2;
+        const on=front&&Math.abs(v.x)<=1&&Math.abs(v.y)<=1;
+        n.el.hidden=!on;
+        if(!on)continue;
+        // Keep the whole caption inside the visible stage; only the caption
+        // moves, the dot keeps its true position. The label is centred on the
+        // dot, so half of its measured width is what can overflow a panel.
+        if(this.eventBounds){
+          const half=(n.el.offsetWidth||120)/2+10;
+          const left=this.eventBounds.left+half, right=this.eventBounds.right-half;
+          if(right>left)x=Math.max(left,Math.min(right,x));
+        }
+        n.el.style.transform=`translate(${x}px,${y}px) translate(-50%,-50%)`;
+      }
       this.renderer.render(this.scene,this.camera);
     }
   }

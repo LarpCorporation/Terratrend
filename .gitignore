@@ -33,3 +33,6 @@ _land.geojson
 *.MOV
 sessions/
 backend/literature.py.disabled
+
+# ---- local tooling artifacts ----
+.dsh-vision-router/

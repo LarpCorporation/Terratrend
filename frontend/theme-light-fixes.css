@@ -1,0 +1,166 @@
+/* Light-theme contrast repairs.
+
+   theme-light.css recolours rules that declare literal colours, but a handful
+   of chrome elements set their colour with `!important` (or paint on an image
+   layer), which a later non-important rule cannot beat. These are hand-written,
+   scoped fixes for exactly those elements -- colours only, no layout. */
+
+html[data-theme="light"] .k-nav-link,
+html[data-theme="light"] .k-start {
+  color: #2c4a3a !important;
+}
+
+html[data-theme="light"] .k-nav-link.active {
+  color: #14351f !important;
+}
+
+html[data-theme="light"] .k-start {
+  border-color: #6aa985 !important;
+  background: #e8f4ec !important;
+  color: #17512f !important;
+}
+
+html[data-theme="light"] .readout .rl,
+html[data-theme="light"] .readout .rv,
+html[data-theme="light"] .status,
+html[data-theme="light"] .status span {
+  color: #33503f !important;
+}
+
+html[data-theme="light"] .readout.live .rv {
+  color: #1c6b3c !important;
+}
+
+html[data-theme="light"] .k-cta {
+  background: #1f7a46 !important;
+  color: #ffffff !important;
+  border-color: #1f7a46 !important;
+}
+
+/* Sub-navigation: level buttons and scope select. */
+html[data-theme="light"] .geography-levels button,
+html[data-theme="light"] .toolbar-button,
+html[data-theme="light"] #drawer-toggle {
+  color: #33503f !important;
+}
+html[data-theme="light"] .geography-levels button[aria-pressed="true"],
+html[data-theme="light"] .toolbar-button[aria-pressed="true"] {
+  color: #123a22 !important;
+  border-color: #6aa985 !important;
+}
+
+/* Variable drawer and its rows. */
+html[data-theme="light"] .var-name,
+html[data-theme="light"] .var-meta,
+html[data-theme="light"] .drawer-title {
+  color: #1d3b2b !important;
+}
+html[data-theme="light"] .var-meta {
+  color: #55705f !important;
+}
+html[data-theme="light"] .var-item.source-unavailable .var-name,
+html[data-theme="light"] .var-item.source-unavailable .var-meta,
+html[data-theme="light"] .var-source-note {
+  color: #7d8f84 !important;
+}
+
+/* Map chrome sitting on the dark globe keeps light text. */
+html[data-theme="light"] .coord-bar,
+html[data-theme="light"] #proj-readout,
+html[data-theme="light"] #coord-readout {
+  color: #4a6355 !important;
+}
+
+/* Bottom variable strip. */
+html[data-theme="light"] .active-variable-strip button {
+  color: #33503f !important;
+}
+html[data-theme="light"] .active-variable-strip button.active {
+  color: #0f3b23 !important;
+}
+html[data-theme="light"] .map-color-key span {
+  color: #46604f !important;
+}
+
+/* Panels and cards: soften the drop shadows that were designed for black. */
+html[data-theme="light"] .panel,
+html[data-theme="light"] .k-region-card,
+html[data-theme="light"] .selection-workbench,
+html[data-theme="light"] .selection-dock-tools {
+  box-shadow: 0 6px 20px rgba(23, 45, 32, 0.12) !important;
+}
+
+/* Numbers, counts and slot letters need darker variants on a pale surface. */
+html[data-theme="light"] .krc-stat b,
+html[data-theme="light"] .krc-value,
+html[data-theme="light"] .var-count,
+html[data-theme="light"] #drawer-toggle span,
+html[data-theme="light"] .krc-meta {
+  color: #14512e !important;
+}
+
+html[data-theme="light"] #scope-label,
+html[data-theme="light"] #scope-label span,
+html[data-theme="light"] .scope-control span {
+  color: #4d6558 !important;
+}
+
+html[data-theme="light"] .slot-a .slot-letter,
+html[data-theme="light"] .drawer-area-pick.slot-a,
+html[data-theme="light"] .area-picker.slot-a .slot-letter {
+  color: #17569b !important;
+}
+
+html[data-theme="light"] .slot-b .slot-letter,
+html[data-theme="light"] .drawer-area-pick.slot-b,
+html[data-theme="light"] .area-picker.slot-b .slot-letter {
+  color: #8a5c05 !important;
+}
+
+html[data-theme="light"] .sphere-tab {
+  color: #3a5b47 !important;
+}
+html[data-theme="light"] .sphere-tab.active,
+html[data-theme="light"] .sphere-tab[aria-pressed="true"] {
+  color: #0f3b23 !important;
+  border-color: #6aa985 !important;
+}
+
+/* A/B slot markers in the selection dock. */
+html[data-theme="light"] .dock-targets button {
+  color: #42594c !important;
+  border-color: #a9c1b1 !important;
+}
+html[data-theme="light"] .dock-targets button[data-selection-slot="a"].active {
+  color: #17569b !important;
+  border-color: #17569b !important;
+}
+html[data-theme="light"] .dock-targets button[data-selection-slot="b"].active {
+  color: #8a5c05 !important;
+  border-color: #8a5c05 !important;
+}
+
+/* A light scrim behind dialogs keeps the page visible but quiets it. */
+html[data-theme="light"] .modal-backdrop {
+  background: rgba(22, 41, 30, 0.34) !important;
+}
+html[data-theme="light"] .modal-window {
+  box-shadow: 0 18px 60px rgba(15, 32, 23, 0.28) !important;
+  border-color: #c3d6c9 !important;
+}
+
+/* The globe viewport stays dark in light mode, so map labels must stay light.
+   Without this the light theme darkens them and they vanish into the planet. */
+html[data-theme="light"] .earth-label-layer span {
+  color: #eaf4ec !important;
+  text-shadow: 0 1px 4px #04120a, 0 0 8px #051509 !important;
+}
+html[data-theme="light"] .earth-node-layer .ev-node-name {
+  color: #ecf7ef !important;
+}
+html[data-theme="light"] .earth-tooltip {
+  background: #0f2118f2 !important;
+  border-color: #6f9d84 !important;
+  color: #dcf0e3 !important;
+}
+html[data-theme="light"] .earth-tooltip strong { color: #ffffff !important; }

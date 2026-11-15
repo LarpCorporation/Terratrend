@@ -1,0 +1,1296 @@
+{
+  "schema_version": "1.1.0-3d-globe",
+  "metadata": {
+    "title": "Earth Events Explorer & Environmental Influence Network",
+    "pathway_disclaimer": "Animated 3D arcs represent scientifically documented environmental influence pathways (teleconnections and cross-layer cascades), NOT literal wind trajectories, ocean currents, or moisture transport paths.",
+    "statistical_disclaimer": "Statistical correlations and lag relationships measure association and timing, not standalone proof of physical causation. P-values should be interpreted alongside effective sample size (autocorrelation) and multi-driver confounders.",
+    "layers": ["ocean", "atmosphere", "land", "cryosphere"],
+    "confidence_tiers": ["Strong", "Moderate", "Tentative", "Insufficient"],
+    "globe_visual_config": {
+      "theme": "dark_cyber_earth",
+      "layer_colors": {
+        "ocean": "#00E5FF",
+        "atmosphere": "#A855F7",
+        "land": "#F59E0B",
+        "cryosphere": "#E0F2FE"
+      },
+      "confidence_arc_styles": {
+        "Strong": { "stroke_width": 1.6, "dash_length": 0.45, "dash_gap": 0.2, "opacity": 0.95 },
+        "Moderate": { "stroke_width": 1.0, "dash_length": 0.3, "dash_gap": 0.25, "opacity": 0.78 },
+        "Tentative": { "stroke_width": 0.65, "dash_length": 0.15, "dash_gap": 0.35, "opacity": 0.55 }
+      },
+      "pulse_meaning": "Arc pulse direction shows direction of influence (Source -> Target). Pulse speed visually differentiates faster local responses vs. multi-month teleconnections—not physical wind speed."
+    }
+  },
+  "nodes": [
+    {
+      "id": "nino34_pacific",
+      "name": "Central–Eastern Equatorial Pacific (Niño 3.4)",
+      "layer": "ocean",
+      "node_type": "ocean_basin",
+      "lat": 0.0,
+      "lon": -145.0,
+      "altitude": 0.015,
+      "color": "#00E5FF",
+      "pulse_ring": { "enabled": true, "max_radius": 6.0, "propagation_speed": 2.0 },
+      "camera_focus": { "lat": 0.0, "lon": -145.0, "altitude": 2.1 },
+      "bbox": { "lat_min": -5.0, "lat_max": 5.0, "lon_min": -170.0, "lon_max": -120.0 },
+      "description": "Primary ENSO monitoring region where sea surface temperature anomalies trigger global atmospheric teleconnections."
+    },
+    {
+      "id": "tropical_walker_atmo",
+      "name": "Tropical Walker & Hadley Circulation",
+      "layer": "atmosphere",
+      "node_type": "atmospheric_circulation",
+      "lat": 3.0,
+      "lon": -90.0,
+      "altitude": 0.06,
+      "color": "#A855F7",
+      "pulse_ring": { "enabled": true, "max_radius": 4.0, "propagation_speed": 1.5 },
+      "camera_focus": { "lat": 3.0, "lon": -90.0, "altitude": 2.2 },
+      "bbox": null,
+      "description": "Large-scale east–west and north–south tropical air circulation linking Pacific Ocean heating to distant rainfall shifts."
+    },
+    {
+      "id": "gulf_of_guinea",
+      "name": "Gulf of Guinea & Tropical Atlantic",
+      "layer": "ocean",
+      "node_type": "ocean_basin",
+      "lat": 1.5,
+      "lon": 0.0,
+      "altitude": 0.015,
+      "color": "#00E5FF",
+      "pulse_ring": { "enabled": true, "max_radius": 4.5, "propagation_speed": 1.8 },
+      "camera_focus": { "lat": 4.0, "lon": 0.0, "altitude": 1.6 },
+      "bbox": { "lat_min": -2.0, "lat_max": 5.0, "lon_min": -10.0, "lon_max": 10.0 },
+      "description": "Key regional moisture and SST driver for the West African Monsoon and coastal/inland Ghana rainfall."
+    },
+    {
+      "id": "tropical_north_atlantic",
+      "name": "Tropical North Atlantic",
+      "layer": "ocean",
+      "node_type": "ocean_basin",
+      "lat": 15.0,
+      "lon": -38.0,
+      "altitude": 0.015,
+      "color": "#00E5FF",
+      "pulse_ring": { "enabled": true, "max_radius": 5.0, "propagation_speed": 1.8 },
+      "camera_focus": { "lat": 12.0, "lon": -42.0, "altitude": 1.9 },
+      "bbox": { "lat_min": 5.0, "lat_max": 25.0, "lon_min": -60.0, "lon_max": -15.0 },
+      "description": "Warm anomalies here pull the Atlantic rain belt (ITCZ) northward, drying northern South America and altering Atlantic wind patterns."
+    },
+    {
+      "id": "ghana_west_africa",
+      "name": "Ghana & West African Monsoon Zone",
+      "layer": "land",
+      "node_type": "regional_land_system",
+      "lat": 7.9,
+      "lon": -1.0,
+      "altitude": 0.02,
+      "color": "#F59E0B",
+      "pulse_ring": { "enabled": true, "max_radius": 4.0, "propagation_speed": 1.6 },
+      "camera_focus": { "lat": 7.5, "lon": -1.0, "altitude": 1.45 },
+      "bbox": { "lat_min": 4.7, "lat_max": 11.2, "lon_min": -3.3, "lon_max": 1.2 },
+      "description": "West African country whose bimodal/unimodal rainfall and soil moisture respond to both Atlantic and Pacific ocean variability."
+    },
+    {
+      "id": "amazon_basin",
+      "name": "Amazon Rainforest Basin",
+      "layer": "land",
+      "node_type": "ecosystem_land_system",
+      "lat": -5.0,
+      "lon": -62.5,
+      "altitude": 0.02,
+      "color": "#10B981",
+      "pulse_ring": { "enabled": true, "max_radius": 5.5, "propagation_speed": 1.6 },
+      "camera_focus": { "lat": -5.0, "lon": -60.0, "altitude": 1.75 },
+      "bbox": { "lat_min": -15.0, "lat_max": 5.0, "lon_min": -75.0, "lon_max": -50.0 },
+      "description": "World's largest tropical rainforest; highly sensitive to simultaneous Pacific El Niño and North Atlantic warming."
+    },
+    {
+      "id": "southern_africa",
+      "name": "Southern Africa",
+      "layer": "land",
+      "node_type": "regional_land_system",
+      "lat": -21.0,
+      "lon": 24.0,
+      "altitude": 0.02,
+      "color": "#F59E0B",
+      "pulse_ring": { "enabled": true, "max_radius": 5.0, "propagation_speed": 1.6 },
+      "camera_focus": { "lat": -20.0, "lon": 24.0, "altitude": 1.7 },
+      "bbox": { "lat_min": -30.0, "lat_max": -12.0, "lon_min": 12.0, "lon_max": 36.0 },
+      "description": "Semi-arid to sub-humid region that frequently experiences suppressed summer rainy seasons during strong El Niño events."
+    },
+    {
+      "id": "arctic_cryosphere",
+      "name": "Arctic Sea Ice & Polar Ocean",
+      "layer": "cryosphere",
+      "node_type": "cryosphere_system",
+      "lat": 79.0,
+      "lon": 0.0,
+      "altitude": 0.025,
+      "color": "#E0F2FE",
+      "pulse_ring": { "enabled": true, "max_radius": 6.0, "propagation_speed": 1.4 },
+      "camera_focus": { "lat": 78.0, "lon": 15.0, "altitude": 1.8 },
+      "bbox": { "lat_min": 68.0, "lat_max": 88.0, "lon_min": -180.0, "lon_max": 180.0 },
+      "description": "Polar ocean and sea-ice cover experiencing rapid warming and ice-albedo amplification."
+    },
+    {
+      "id": "arctic_atmosphere",
+      "name": "Arctic Atmosphere & Summer Cyclones",
+      "layer": "atmosphere",
+      "node_type": "atmospheric_process",
+      "lat": 74.0,
+      "lon": 145.0,
+      "altitude": 0.06,
+      "color": "#A855F7",
+      "pulse_ring": { "enabled": true, "max_radius": 4.0, "propagation_speed": 2.2 },
+      "camera_focus": { "lat": 78.0, "lon": 110.0, "altitude": 1.85 },
+      "bbox": null,
+      "description": "Polar lower-troposphere heat and intense summer storms (such as the August 2012 Great Arctic Cyclone) that break up thin ice."
+    }
+  ],
+  "events": [
+    {
+      "id": "el_nino_2023_2024",
+      "title": "2023–2024 El Niño",
+      "category": "ENSO / Ocean-Atmosphere Teleconnection",
+      "period": "2023-05 to 2024-05",
+      "status": "historical_verified",
+      "layers_involved": ["ocean", "atmosphere", "land"],
+      "primary_node_id": "nino34_pacific",
+      "affected_node_ids": ["tropical_walker_atmo", "tropical_north_atlantic", "amazon_basin", "southern_africa"],
+      "camera_target": { "lat": -5.0, "lon": -95.0, "altitude": 2.35 },
+      "footprint_style": { "cap_color": "rgba(0, 229, 255, 0.18)", "stroke_color": "#00E5FF", "altitude": 0.01 },
+      "summary": "A strong El Niño developed rapidly in mid-2023 and peaked in late 2023, reorganizing tropical rainfall and reinforcing record global warmth alongside background ocean warming.",
+      "footprint_geojson": {
+        "type": "Feature",
+        "properties": { "name": "Niño 3.4 Core Region" },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [[[-170.0, -5.0], [-120.0, -5.0], [-120.0, 5.0], [-170.0, 5.0], [-170.0, -5.0]]]
+        }
+      },
+      "key_variables": [
+        {
+          "variable": "Sea Surface Temperature (Niño 3.4)",
+          "dataset": "NOAA ERSSTv5 / OISST",
+          "coverage": "1854–present",
+          "baseline": "1991–2020",
+          "anomaly_method": "z_score_calendar_month",
+          "data_slot": "nino34_sst"
+        },
+        {
+          "variable": "Regional Rainfall Response",
+          "dataset": "NASA GPM IMERG / MERRA-2",
+          "coverage": "2000–present (IMERG) / 1980–present (MERRA-2)",
+          "baseline": "2001–2020",
+          "anomaly_method": "percentile_calendar_month",
+          "data_slot": "amazon_rain"
+        }
+      ],
+      "connection_ids": [
+        "edge_elnino23_amazon",
+        "edge_elnino23_southernafrica",
+        "edge_elnino23_natlantic"
+      ],
+      "composite_analogs": {
+        "events_compared": ["1982–1983", "1997–1998", "2015–2016", "2023–2024"],
+        "sample_size_n": 4,
+        "note": "Four super/strong El Niños is a small sample; regional rainfall impacts vary significantly depending on concurrent Atlantic and Indian Ocean temperatures."
+      },
+      "limitations": [
+        "2023–2024 occurred on top of exceptional global marine warming outside the tropical Pacific, making it hard to separate El Niño's exact share from long-term ocean warming."
+      ]
+    },
+    {
+      "id": "west_africa_ghana_1982_83",
+      "title": "West African Rainfall Variability & Ghana 1982–1983 Drought",
+      "category": "Multi-Driver Regional Drought",
+      "period": "1982-01 to 1983-12 (within 1970s–1980s dry epoch)",
+      "status": "historical_verified",
+      "layers_involved": ["ocean", "atmosphere", "land"],
+      "primary_node_id": "ghana_west_africa",
+      "affected_node_ids": ["nino34_pacific", "gulf_of_guinea", "tropical_walker_atmo"],
+      "camera_target": { "lat": 6.0, "lon": -25.0, "altitude": 2.15 },
+      "footprint_style": { "cap_color": "rgba(245, 158, 11, 0.25)", "stroke_color": "#F59E0B", "altitude": 0.012 },
+      "summary": "Ghana suffered catastrophic drought, wildfires, and low Volta hydropower levels in 1982–1983. Rather than a single cause, this event reflects the intersection of the 1982–1983 El Niño, Tropical Atlantic / Gulf of Guinea SST patterns, and multi-decadal West African drying.",
+      "footprint_geojson": {
+        "type": "Feature",
+        "properties": { "name": "Ghana Investigation Bounding Box" },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [[[-3.3, 4.7], [1.2, 4.7], [1.2, 11.2], [-3.3, 11.2], [-3.3, 4.7]]]
+        }
+      },
+      "key_variables": [
+        {
+          "variable": "Historical Precipitation (Independent)",
+          "dataset": "GPCC / CRU TS (or independent historical gauge/gridded rainfall)",
+          "coverage": "1901–present",
+          "baseline": "1951–1980",
+          "anomaly_method": "percentile_calendar_month",
+          "data_slot": "ghana_rain_hist"
+        },
+        {
+          "variable": "Soil Moisture & Evapotranspiration",
+          "dataset": "NASA GLDAS-2.0 (Open-loop land model driven by Princeton forcing; NO data assimilation)",
+          "coverage": "1948–2014",
+          "baseline": "1951–1980",
+          "anomaly_method": "percentile_calendar_month",
+          "data_slot": "ghana_soil_gldas20"
+        },
+        {
+          "variable": "Atmospheric Circulation & Winds",
+          "dataset": "NASA MERRA-2 (Reanalysis; 1981–2010 baseline includes 1982–83 drought)",
+          "coverage": "1980–present",
+          "baseline": "1981–2010 (caveated)",
+          "anomaly_method": "z_score_calendar_month",
+          "data_slot": "ghana_atmo_merra2"
+        },
+        {
+          "variable": "Pacific & Gulf of Guinea SST",
+          "dataset": "NOAA ERSSTv5",
+          "coverage": "1854–present",
+          "baseline": "1951–1980",
+          "anomaly_method": "z_score_calendar_month",
+          "data_slot": "gulf_guinea_sst"
+        }
+      ],
+      "connection_ids": [
+        "edge_pacific_ghana_1982",
+        "edge_gulf_guinea_ghana",
+        "edge_ghana_rain_soil"
+      ],
+      "composite_analogs": {
+        "events_compared": ["1982–1983", "1997–1998", "2015–2016", "2023–2024"],
+        "sample_size_n": 4,
+        "note": "West Africa does NOT respond identically to every El Niño—comparing 1982–83 with 1997–98 and 2015–16 shows why Atlantic SSTs must be checked alongside Pacific El Niño."
+      },
+      "limitations": [
+        "MODIS (2000+), AIRS (2002+), and GPM (2014+ / IMERG 2000+) did NOT observe 1982–1983 and are strictly excluded.",
+        "GLDAS-2.0 is an open-loop simulation (not assimilated observations); its input forcing precipitation cannot be used as independent validation for rainfall.",
+        "MERRA-2 begins in 1980, so it cannot provide a clean pre-1982 baseline; 1981–2010 includes the drought itself."
+      ]
+    },
+    {
+      "id": "amazon_drought_2023",
+      "title": "Amazon Drought (2023)",
+      "category": "Extreme Tropical Drought",
+      "period": "2023-06 to 2023-11",
+      "status": "historical_verified",
+      "layers_involved": ["ocean", "atmosphere", "land"],
+      "primary_node_id": "amazon_basin",
+      "affected_node_ids": ["nino34_pacific", "tropical_north_atlantic"],
+      "camera_target": { "lat": -2.0, "lon": -62.0, "altitude": 2.0 },
+      "footprint_style": { "cap_color": "rgba(16, 185, 129, 0.22)", "stroke_color": "#10B981", "altitude": 0.012 },
+      "summary": "Historic river lows and intense heat struck the Amazon in 2023, driven by a double ocean punch: sinking air from the 2023–2024 El Niño combined with extreme Tropical North Atlantic warming.",
+      "footprint_geojson": {
+        "type": "Feature",
+        "properties": { "name": "Amazon Basin Focus Area" },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [[[-75.0, -15.0], [-50.0, -15.0], [-50.0, 5.0], [-75.0, 5.0], [-75.0, -15.0]]]
+        }
+      },
+      "key_variables": [
+        {
+          "variable": "Rainfall Anomaly",
+          "dataset": "NASA GPM IMERG / MERRA-2",
+          "coverage": "2000–present",
+          "baseline": "2001–2020",
+          "anomaly_method": "percentile_calendar_month",
+          "data_slot": "amazon_rain"
+        },
+        {
+          "variable": "Land Surface Temp & Vegetation (NDVI)",
+          "dataset": "NASA MODIS (via AppEEARS / Giovanni)",
+          "coverage": "2000–present",
+          "baseline": "2001–2020",
+          "anomaly_method": "z_score_calendar_month",
+          "data_slot": "amazon_ndvi"
+        }
+      ],
+      "connection_ids": [
+        "edge_elnino23_amazon",
+        "edge_natlantic_amazon_2023",
+        "edge_amazon_rain_forest"
+      ],
+      "composite_analogs": {
+        "events_compared": ["2005 (Atlantic-driven)", "2010 (El Niño + Atlantic)", "2015–16", "2023"],
+        "sample_size_n": 4,
+        "note": "2005 proved the Amazon can suffer severe drought from Tropical North Atlantic warming even without an El Niño; 2023 had both."
+      },
+      "limitations": [
+        "Deforestation and local land-use changes also alter regional moisture recycling alongside ocean drivers."
+      ]
+    },
+    {
+      "id": "southern_africa_drought_2023_2024",
+      "title": "Southern African Drought (2023–2024)",
+      "category": "Teleconnection-Linked Agricultural Drought",
+      "period": "2023-11 to 2024-04",
+      "status": "historical_verified",
+      "layers_involved": ["ocean", "atmosphere", "land"],
+      "primary_node_id": "southern_africa",
+      "affected_node_ids": ["nino34_pacific", "tropical_walker_atmo"],
+      "camera_target": { "lat": -18.0, "lon": 18.0, "altitude": 2.1 },
+      "footprint_style": { "cap_color": "rgba(245, 158, 11, 0.24)", "stroke_color": "#F59E0B", "altitude": 0.012 },
+      "summary": "Critical mid-summer rainfall failure across Zambia, Zimbabwe, Malawi, and neighboring countries during the 2023–2024 El Niño peak.",
+      "footprint_geojson": {
+        "type": "Feature",
+        "properties": { "name": "Southern Africa Focus Area" },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [[[12.0, -30.0], [36.0, -30.0], [36.0, -12.0], [12.0, -12.0], [12.0, -30.0]]]
+        }
+      },
+      "key_variables": [
+        {
+          "variable": "Summer Wet-Season Rainfall",
+          "dataset": "NASA GPM IMERG / MERRA-2",
+          "coverage": "2000–present",
+          "baseline": "2001–2020",
+          "anomaly_method": "percentile_calendar_month",
+          "data_slot": "safrica_rain"
+        },
+        {
+          "variable": "Root-Zone Soil Moisture",
+          "dataset": "NASA GLDAS-2.1 (2000–present)",
+          "coverage": "2000–present",
+          "baseline": "2001–2020",
+          "anomaly_method": "percentile_calendar_month",
+          "data_slot": "safrica_soil"
+        }
+      ],
+      "connection_ids": [
+        "edge_elnino23_southernafrica",
+        "edge_safrica_rain_soil"
+      ],
+      "composite_analogs": {
+        "events_compared": ["1982–1983", "1991–1992", "2015–2016", "2023–2024"],
+        "sample_size_n": 4,
+        "note": "Southern Africa's wet-season (DJF/JFM) drying during strong El Niño is one of Africa's most consistent teleconnections, though Indian Ocean temperatures modulate exact intensity."
+      },
+      "limitations": [
+        "Regional drought severity varies sharply across sub-basins; box averages smooth over local storm extremes."
+      ]
+    },
+    {
+      "id": "arctic_sea_ice_minimum_2012",
+      "title": "Arctic Sea Ice Minimum (2012)",
+      "category": "Cryosphere Regime Change",
+      "period": "2012-06 to 2012-09",
+      "status": "historical_verified",
+      "layers_involved": ["cryosphere", "ocean", "atmosphere"],
+      "primary_node_id": "arctic_cryosphere",
+      "affected_node_ids": ["arctic_atmosphere"],
+      "camera_target": { "lat": 78.0, "lon": 40.0, "altitude": 1.9 },
+      "footprint_style": { "cap_color": "rgba(224, 242, 254, 0.22)", "stroke_color": "#E0F2FE", "altitude": 0.012 },
+      "summary": "Arctic sea ice shrank to its lowest satellite-era extent in September 2012, driven by decades of polar warming and thinner ice amplified by an intense August 2012 Arctic cyclone and ice-albedo feedback.",
+      "footprint_geojson": {
+        "type": "Feature",
+        "properties": { "name": "Arctic Basin Focus Region" },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [[[-180.0, 68.0], [180.0, 68.0], [180.0, 88.0], [-180.0, 88.0], [-180.0, 68.0]]]
+        }
+      },
+      "key_variables": [
+        {
+          "variable": "Arctic Air Temperature (2m / 850hPa)",
+          "dataset": "NASA MERRA-2",
+          "coverage": "1980–present",
+          "baseline": "1981–2010",
+          "anomaly_method": "z_score_calendar_month",
+          "data_slot": "arctic_temp"
+        },
+        {
+          "variable": "September Sea Ice Extent",
+          "dataset": "NSIDC Sea Ice Index (Passive Microwave Satellites)",
+          "coverage": "1979–present",
+          "baseline": "1981–2010",
+          "anomaly_method": "z_score_calendar_month",
+          "data_slot": "arctic_ice_extent"
+        }
+      ],
+      "connection_ids": [
+        "edge_arctic_albedo_feedback",
+        "edge_arctic_cyclone_2012"
+      ],
+      "composite_analogs": {
+        "events_compared": ["2007", "2012", "2020"],
+        "sample_size_n": 3,
+        "note": "Both 2007 and 2012 combined long-term ice thinning with unusual summer wind/storm patterns."
+      },
+      "limitations": [
+        "Single-year weather (the August 2012 cyclone) triggered the extreme record, but only became possible because decades of warming had already thinned multi-year ice."
+      ]
+    },
+    {
+      "id": "developing_el_nino_2026_2027",
+      "title": "Developing El Niño Watch (2026–2027)",
+      "category": "Ongoing Monitoring / Forecast Watch",
+      "period": "2026-present (Ongoing)",
+      "status": "ongoing_developing",
+      "layers_involved": ["ocean", "atmosphere", "land"],
+      "primary_node_id": "nino34_pacific",
+      "affected_node_ids": ["tropical_walker_atmo", "ghana_west_africa", "amazon_basin", "southern_africa"],
+      "camera_target": { "lat": 2.0, "lon": -60.0, "altitude": 2.4 },
+      "footprint_style": { "cap_color": "rgba(239, 68, 68, 0.22)", "stroke_color": "#EF4444", "altitude": 0.014 },
+      "summary": "Live monitoring card comparing recent 2026 Equatorial Pacific Ocean temperature evolution against historical El Niño analogs (1982–83, 1997–98, 2015–16, 2023–24) to track emerging teleconnection risks.",
+      "footprint_geojson": {
+        "type": "Feature",
+        "properties": { "name": "Niño 3.4 Live Monitoring Box" },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [[[-170.0, -5.0], [-120.0, -5.0], [-120.0, 5.0], [-170.0, 5.0], [-170.0, -5.0]]]
+        }
+      },
+      "key_variables": [
+        {
+          "variable": "Latest 2026 Niño 3.4 SST Anomaly",
+          "dataset": "NOAA ERSSTv5 / OISST (2026 monthly updates)",
+          "coverage": "1854–2026",
+          "baseline": "1991–2020",
+          "anomaly_method": "z_score_calendar_month",
+          "data_slot": "nino34_sst_2026"
+        }
+      ],
+      "connection_ids": [
+        "edge_2026_elnino_analog_watch"
+      ],
+      "composite_analogs": {
+        "events_compared": ["1982–1983", "1997–1998", "2015–2016", "2023–2024"],
+        "sample_size_n": 4,
+        "note": "Because 2026–2027 is still unfolding, downstream regional impacts cannot yet be confirmed as completed trends—only monitored against historical pathways."
+      },
+      "limitations": [
+        "Ongoing event: peer-reviewed post-event studies do not exist yet, and monthly satellite/reanalysis files may lag real-time conditions by 1–2 months.",
+        "Atlantic and Indian Ocean states during 2026–2027 can amplify or cancel typical El Niño impacts in West Africa."
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_elnino23_amazon",
+      "event_ids": ["el_nino_2023_2024", "amazon_drought_2023"],
+      "source_node": "nino34_pacific",
+      "target_node": "amazon_basin",
+      "source_layer": "ocean",
+      "target_layer": "land",
+      "direction": "directed",
+      "label": "Pacific El Niño → Amazon Drying",
+      "arc_3d": {
+        "render_mode": "interregional_arc",
+        "start_lat": 0.0,
+        "start_lon": -145.0,
+        "end_lat": -5.0,
+        "end_lon": -62.5,
+        "hops": [
+          { "lat": 0.0, "lon": -145.0, "layer": "ocean" },
+          { "lat": 3.0, "lon": -90.0, "layer": "atmosphere" },
+          { "lat": -5.0, "lon": -62.5, "layer": "land" }
+        ],
+        "max_altitude": 0.28,
+        "color_gradient": ["#00E5FF", "#10B981"],
+        "stroke_width": 1.6,
+        "dash_length": 0.45,
+        "dash_gap": 0.2,
+        "dash_animate_ms": 2400
+      },
+      "inspector": {
+        "q1_why_it_exists": "Unusually warm waters in the central/eastern Equatorial Pacific shift where giant thunderstorms form, reorganizing tropical air circulation so sinking, dry air dominates over northern and central Amazonia.",
+        "q2_what_happened_in_between": [
+          { "step": 1, "layer": "ocean", "process": "Central/Eastern Pacific SST rises sharply above normal (El Niño onset)." },
+          { "step": 2, "layer": "atmosphere", "process": "Deep atmospheric convection shifts eastward toward the central Pacific." },
+          { "step": 3, "layer": "atmosphere", "process": "The Walker Circulation alters, causing compensating downward (sinking) air over northern South America." },
+          { "step": 4, "layer": "land", "process": "Cloud cover and rainfall drop over the Amazon Basin while surface temperatures climb." }
+        ],
+        "q3_what_evidence_supports_it": {
+          "datasets": [
+            { "name": "NOAA ERSSTv5", "type": "reconstructed_sst", "years": "1854–present" },
+            { "name": "NASA GPM IMERG / MERRA-2", "type": "satellite_merged / reanalysis", "years": "2000–present / 1980–present" }
+          ],
+          "references": [
+            "Ropelewski & Halpert (1987), Monthly Weather Review — Global ENSO precipitation patterns",
+            "Trenberth (1997), BAMS — Definition and dynamics of El Niño",
+            "WMO State of the Global Climate 2023 — Amazon drought & El Niño context"
+          ],
+          "statistical_verification": {
+            "slot_id": "stat_nino34_vs_amazon_rain",
+            "x_slot": "nino34_sst",
+            "y_slot": "amazon_rain",
+            "method": "detrended_spearman_lagged",
+            "lag_months_expected": 1,
+            "status": "awaiting_csv_ingest",
+            "r_value": null,
+            "p_value_neff": null,
+            "lag_months_observed": null,
+            "autocorrelation_note": "Monthly SST has high persistence; significance must be evaluated using effective sample size (N_eff) or seasonal means.",
+            "chart_series": null
+          }
+        },
+        "q4_how_certain_are_we": {
+          "confidence_tier": "Strong",
+          "four_pillars": {
+            "physical_mechanism": "Strong — Walker Circulation displacement over South America is textbook tropical meteorology.",
+            "observational_evidence": "Strong — Severe negative rainfall anomalies observed across Amazonia during 2023–24 El Niño.",
+            "statistical_evidence": "Strong — Consistent negative link in seasonal regressions, strengthened when Tropical North Atlantic is included.",
+            "published_research": "Strong — Decades of peer-reviewed ENSO–Amazon studies."
+          },
+          "limitations_and_confounders": "El Niño alone did not act in isolation in 2023; extreme Tropical North Atlantic warming simultaneously pushed rain belts north."
+        }
+      }
+    },
+    {
+      "id": "edge_natlantic_amazon_2023",
+      "event_ids": ["amazon_drought_2023"],
+      "source_node": "tropical_north_atlantic",
+      "target_node": "amazon_basin",
+      "source_layer": "ocean",
+      "target_layer": "land",
+      "direction": "directed",
+      "label": "North Atlantic Warming → Amazon Moisture Deficit",
+      "arc_3d": {
+        "render_mode": "interregional_arc",
+        "start_lat": 15.0,
+        "start_lon": -38.0,
+        "end_lat": -5.0,
+        "end_lon": -62.5,
+        "hops": [
+          { "lat": 15.0, "lon": -38.0, "layer": "ocean" },
+          { "lat": -5.0, "lon": -62.5, "layer": "land" }
+        ],
+        "max_altitude": 0.16,
+        "color_gradient": ["#00E5FF", "#10B981"],
+        "stroke_width": 1.6,
+        "dash_length": 0.45,
+        "dash_gap": 0.2,
+        "dash_animate_ms": 2000
+      },
+      "inspector": {
+        "q1_why_it_exists": "When the Tropical North Atlantic warms faster than the South Atlantic, it pulls the Intertropical Convergence Zone (ITCZ) rain belt northward, starving the central and southern Amazon of Atlantic moisture.",
+        "q2_what_happened_in_between": [
+          { "step": 1, "layer": "ocean", "process": "Tropical North Atlantic SST climbs to record highs." },
+          { "step": 2, "layer": "atmosphere", "process": "North–south pressure gradient shifts the ITCZ rain band northward." },
+          { "step": 3, "layer": "land", "process": "Reduced moisture inflow deepens dry-season rainfall deficits across western/southern Amazonia." }
+        ],
+        "q3_what_evidence_supports_it": {
+          "datasets": [
+            { "name": "NOAA ERSSTv5", "type": "reconstructed_sst", "years": "1854–present" },
+            { "name": "NASA GPM IMERG", "type": "satellite_merged", "years": "2000–present" }
+          ],
+          "references": [
+            "Marengo et al. (2008/2011), Journal of Climate / GRL — Atlantic-driven Amazon droughts (2005, 2010)"
+          ],
+          "statistical_verification": {
+            "slot_id": "stat_natlantic_vs_amazon_rain",
+            "x_slot": "natlantic_sst",
+            "y_slot": "amazon_rain",
+            "method": "detrended_partial_spearman",
+            "lag_months_expected": 1,
+            "status": "awaiting_csv_ingest",
+            "r_value": null,
+            "p_value_neff": null,
+            "lag_months_observed": null,
+            "autocorrelation_note": "Evaluated with partial correlation controlling for Niño 3.4 SST.",
+            "chart_series": null
+          }
+        },
+        "q4_how_certain_are_we": {
+          "confidence_tier": "Strong",
+          "four_pillars": {
+            "physical_mechanism": "Strong — Meridional SST gradient directly governs ITCZ position.",
+            "observational_evidence": "Strong — Seen clearly in 2005 (no El Niño), 2010, and 2023.",
+            "statistical_evidence": "Moderate–Strong — Robust during dry-season months.",
+            "published_research": "Strong — Well-established dual-ocean driver of Amazon droughts."
+          },
+          "limitations_and_confounders": "Separating Atlantic vs. Pacific shares requires partial correlation because El Niño itself helps warm the Tropical North Atlantic."
+        }
+      }
+    },
+    {
+      "id": "edge_amazon_rain_forest",
+      "event_ids": ["amazon_drought_2023"],
+      "source_node": "amazon_basin",
+      "target_node": "amazon_basin",
+      "source_layer": "land",
+      "target_layer": "land",
+      "direction": "directed",
+      "label": "Rainfall Deficit & Heat → Canopy & Soil Stress",
+      "arc_3d": {
+        "render_mode": "local_vertical_cascade",
+        "start_lat": -4.0,
+        "start_lon": -56.0,
+        "end_lat": -6.0,
+        "end_lon": -68.0,
+        "hops": [
+          { "lat": -4.0, "lon": -56.0, "layer": "land" },
+          { "lat": -6.0, "lon": -68.0, "layer": "land" }
+        ],
+        "max_altitude": 0.08,
+        "color_gradient": ["#10B981", "#F59E0B"],
+        "stroke_width": 1.4,
+        "dash_length": 0.4,
+        "dash_gap": 0.2,
+        "dash_animate_ms": 1500
+      },
+      "inspector": {
+        "q1_why_it_exists": "When rainfall drops and temperatures spike simultaneously, trees draw down deep soil moisture and close leaf pores, leading to vegetation stress, dieback, and heightened wildfire risk.",
+        "q2_what_happened_in_between": [
+          { "step": 1, "layer": "atmosphere", "process": "Low cloud cover lets extra sunlight heat the forest surface." },
+          { "step": 2, "layer": "land", "process": "Soil moisture depletes over 1–3 consecutive dry months." },
+          { "step": 3, "layer": "land", "process": "Vegetation greenness (NDVI) drops and river levels hit historic lows." }
+        ],
+        "q3_what_evidence_supports_it": {
+          "datasets": [
+            { "name": "NASA GPM IMERG", "type": "satellite_merged", "years": "2000–present" },
+            { "name": "NASA MODIS (NDVI / LST)", "type": "satellite_observation", "years": "2000–present" }
+          ],
+          "references": [
+            "NASA Earth Observatory — 2023 Amazon Drought & River Lows"
+          ],
+          "statistical_verification": {
+            "slot_id": "stat_amazon_rain_vs_ndvi",
+            "x_slot": "amazon_rain",
+            "y_slot": "amazon_ndvi",
+            "method": "detrended_spearman_lagged",
+            "lag_months_expected": 1,
+            "status": "awaiting_csv_ingest",
+            "r_value": null,
+            "p_value_neff": null,
+            "lag_months_observed": null,
+            "autocorrelation_note": "Lagged land response typically peaks 1–2 months after precipitation deficit.",
+            "chart_series": null
+          }
+        },
+        "q4_how_certain_are_we": {
+          "confidence_tier": "Strong",
+          "four_pillars": {
+            "physical_mechanism": "Strong — Basic plant-water balance physics.",
+            "observational_evidence": "Strong — MODIS observed surface warming and vegetation stress in 2023.",
+            "statistical_evidence": "Moderate — Optical NDVI can be obscured by heavy smoke/clouds.",
+            "published_research": "Strong — Widely documented across 2005, 2010, and 2023 droughts."
+          },
+          "limitations_and_confounders": "MODIS optical measurements require cloud/smoke screening."
+        }
+      }
+    },
+    {
+      "id": "edge_elnino23_southernafrica",
+      "event_ids": ["el_nino_2023_2024", "southern_africa_drought_2023_2024"],
+      "source_node": "nino34_pacific",
+      "target_node": "southern_africa",
+      "source_layer": "ocean",
+      "target_layer": "land",
+      "direction": "directed",
+      "label": "Pacific El Niño → Southern Africa Dry Season Shift",
+      "arc_3d": {
+        "render_mode": "interregional_arc",
+        "start_lat": 0.0,
+        "start_lon": -145.0,
+        "end_lat": -21.0,
+        "end_lon": 24.0,
+        "hops": [
+          { "lat": 0.0, "lon": -145.0, "layer": "ocean" },
+          { "lat": 3.0, "lon": -90.0, "layer": "atmosphere" },
+          { "lat": -21.0, "lon": 24.0, "layer": "land" }
+        ],
+        "max_altitude": 0.42,
+        "color_gradient": ["#00E5FF", "#F59E0B"],
+        "stroke_width": 1.6,
+        "dash_length": 0.45,
+        "dash_gap": 0.2,
+        "dash_animate_ms": 2800
+      },
+      "inspector": {
+        "q1_why_it_exists": "During El Niño, atmospheric wave trains and shifted Walker circulation reinforce high pressure and sinking air over southern Africa during its main December–March rainy season.",
+        "q2_what_happened_in_between": [
+          { "step": 1, "layer": "ocean", "process": "Equatorial Pacific warms strongly through late 2023." },
+          { "step": 2, "layer": "atmosphere", "process": "Rossby wave patterns strengthen subtropical high-pressure ridges over southern Africa." },
+          { "step": 3, "layer": "atmosphere", "process": "Moist air from the Indian Ocean is deflected away from inland southern Africa." },
+          { "step": 4, "layer": "land", "process": "Mid-summer rains fail in Feb–Mar 2024, collapsing crop-season soil moisture." }
+        ],
+        "q3_what_evidence_supports_it": {
+          "datasets": [
+            { "name": "NOAA ERSSTv5", "type": "reconstructed_sst", "years": "1854–present" },
+            { "name": "NASA GPM IMERG / MERRA-2", "type": "satellite_merged / reanalysis", "years": "2000–present / 1980–present" }
+          ],
+          "references": [
+            "Ropelewski & Halpert (1987), Monthly Weather Review",
+            "Reason et al. / FEWS NET & WMO Southern Africa 2023–2024 El Niño advisories"
+          ],
+          "statistical_verification": {
+            "slot_id": "stat_nino34_vs_safrica_rain",
+            "x_slot": "nino34_sst",
+            "y_slot": "safrica_rain",
+            "method": "detrended_spearman_lagged",
+            "lag_months_expected": 2,
+            "status": "awaiting_csv_ingest",
+            "r_value": null,
+            "p_value_neff": null,
+            "lag_months_observed": null,
+            "autocorrelation_note": "Strongest when evaluated on DJF/JFM austral summer rainy season averages.",
+            "chart_series": null
+          }
+        },
+        "q4_how_certain_are_we": {
+          "confidence_tier": "Strong",
+          "four_pillars": {
+            "physical_mechanism": "Strong — Tropical–extratropical Rossby wave pathway is well understood.",
+            "observational_evidence": "Strong — Severe Jan–Mar 2024 dry anomaly observed across Zambia/Zimbabwe/Malawi.",
+            "statistical_evidence": "Strong — Consistent across 1982–83, 1991–92, 2015–16, and 2023–24.",
+            "published_research": "Strong — One of the most reliable ENSO teleconnections globally."
+          },
+          "limitations_and_confounders": "Subtropical Indian Ocean SST anomalies can either soften or worsen the El Niño drying."
+        }
+      }
+    },
+    {
+      "id": "edge_safrica_rain_soil",
+      "event_ids": ["southern_africa_drought_2023_2024"],
+      "source_node": "southern_africa",
+      "target_node": "southern_africa",
+      "source_layer": "land",
+      "target_layer": "land",
+      "direction": "directed",
+      "label": "Summer Rain Failure → Soil Moisture Collapse",
+      "arc_3d": {
+        "render_mode": "local_vertical_cascade",
+        "start_lat": -16.5,
+        "start_lon": 29.0,
+        "end_lat": -23.0,
+        "end_lon": 20.0,
+        "hops": [
+          { "lat": -16.5, "lon": 29.0, "layer": "land" },
+          { "lat": -23.0, "lon": 20.0, "layer": "land" }
+        ],
+        "max_altitude": 0.08,
+        "color_gradient": ["#F59E0B", "#EF4444"],
+        "stroke_width": 1.4,
+        "dash_length": 0.4,
+        "dash_gap": 0.2,
+        "dash_animate_ms": 1500
+      },
+      "inspector": {
+        "q1_why_it_exists": "Missing mid-summer rain combined with high tropical summer heat rapidly evaporates surface moisture, starving crops during critical flowering stages.",
+        "q2_what_happened_in_between": [
+          { "step": 1, "layer": "atmosphere", "process": "Critical January–February rainfall drops sharply below normal." },
+          { "step": 2, "layer": "atmosphere", "process": "Clear skies raise daytime temperatures and evaporative demand." },
+          { "step": 3, "layer": "land", "process": "Root-zone soil moisture drops to extreme deficit percentiles within weeks." }
+        ],
+        "q3_what_evidence_supports_it": {
+          "datasets": [
+            { "name": "NASA GPM IMERG", "type": "satellite_merged", "years": "2000–present" },
+            { "name": "NASA GLDAS-2.1", "type": "land_surface_model", "years": "2000–present" }
+          ],
+          "references": [
+            "Rodell et al. (2004), BAMS — GLDAS hydrological modeling"
+          ],
+          "statistical_verification": {
+            "slot_id": "stat_safrica_rain_vs_soil",
+            "x_slot": "safrica_rain",
+            "y_slot": "safrica_soil",
+            "method": "detrended_spearman_lagged",
+            "lag_months_expected": 1,
+            "status": "awaiting_csv_ingest",
+            "r_value": null,
+            "p_value_neff": null,
+            "lag_months_observed": null,
+            "autocorrelation_note": "Note that GLDAS-2.1 uses precipitation inputs to model soil moisture, so verify rainfall independently.",
+            "chart_series": null
+          }
+        },
+        "q4_how_certain_are_we": {
+          "confidence_tier": "Strong",
+          "four_pillars": {
+            "physical_mechanism": "Strong — Direct water balance response.",
+            "observational_evidence": "Strong — Confirmed by satellite precipitation and agricultural impacts.",
+            "statistical_evidence": "Moderate — GLDAS soil moisture is model-derived rather than direct ground probes.",
+            "published_research": "Strong — Standard drought propagation chain."
+          },
+          "limitations_and_confounders": "GLDAS-2.1 is a land-surface model simulation, not direct continent-wide soil sensors."
+        }
+      }
+    },
+    {
+      "id": "edge_elnino23_natlantic",
+      "event_ids": ["el_nino_2023_2024"],
+      "source_node": "nino34_pacific",
+      "target_node": "tropical_north_atlantic",
+      "source_layer": "ocean",
+      "target_layer": "ocean",
+      "direction": "directed",
+      "label": "Pacific El Niño → Atlantic Warming ('Atmospheric Bridge')",
+      "arc_3d": {
+        "render_mode": "interregional_arc",
+        "start_lat": 0.0,
+        "start_lon": -145.0,
+        "end_lat": 15.0,
+        "end_lon": -38.0,
+        "hops": [
+          { "lat": 0.0, "lon": -145.0, "layer": "ocean" },
+          { "lat": 3.0, "lon": -90.0, "layer": "atmosphere" },
+          { "lat": 15.0, "lon": -38.0, "layer": "ocean" }
+        ],
+        "max_altitude": 0.34,
+        "color_gradient": ["#00E5FF", "#A855F7"],
+        "stroke_width": 1.6,
+        "dash_length": 0.45,
+        "dash_gap": 0.2,
+        "dash_animate_ms": 2900
+      },
+      "inspector": {
+        "q1_why_it_exists": "El Niño warms the global tropical upper atmosphere, weakening Atlantic trade winds so less ocean heat evaporates—causing the Tropical North Atlantic to warm 2–5 months later.",
+        "q2_what_happened_in_between": [
+          { "step": 1, "layer": "ocean", "process": "Pacific El Niño releases huge amounts of heat into the tropical atmosphere." },
+          { "step": 2, "layer": "atmosphere", "process": "An atmospheric wave ('bridge') weakens trade winds over the Tropical North Atlantic." },
+          { "step": 3, "layer": "ocean", "process": "Weaker winds reduce evaporative cooling, warming Tropical North Atlantic surface waters." }
+        ],
+        "q3_what_evidence_supports_it": {
+          "datasets": [
+            { "name": "NOAA ERSSTv5", "type": "reconstructed_sst", "years": "1854–present" },
+            { "name": "NASA MERRA-2 (Trade Winds)", "type": "reanalysis", "years": "1980–present" }
+          ],
+          "references": [
+            "Klein, Soden & Lau (1999), Journal of Climate — Remote sea surface temperature variations during ENSO"
+          ],
+          "statistical_verification": {
+            "slot_id": "stat_nino34_vs_natlantic_sst",
+            "x_slot": "nino34_sst",
+            "y_slot": "natlantic_sst",
+            "method": "detrended_pearson_lagged",
+            "lag_months_expected": 3,
+            "status": "awaiting_csv_ingest",
+            "r_value": null,
+            "p_value_neff": null,
+            "lag_months_observed": null,
+            "autocorrelation_note": "Both series are strongly autocorrelated; use N_eff correction.",
+            "chart_series": null
+          }
+        },
+        "q4_how_certain_are_we": {
+          "confidence_tier": "Strong",
+          "four_pillars": {
+            "physical_mechanism": "Strong — Classic ENSO atmospheric bridge mechanism.",
+            "observational_evidence": "Moderate–Strong — In 2023, the Atlantic was already unusually warm BEFORE El Niño peaked.",
+            "statistical_evidence": "Strong — Reliable 2–5 month lag in historical records.",
+            "published_research": "Strong — Foundational ocean-teleconnection literature."
+          },
+          "limitations_and_confounders": "In 2023, North Atlantic warmth began unusually early alongside global warming and aerosol/wind shifts, so El Niño amplified an already warm ocean."
+        }
+      }
+    },
+    {
+      "id": "edge_pacific_ghana_1982",
+      "event_ids": ["west_africa_ghana_1982_83"],
+      "source_node": "nino34_pacific",
+      "target_node": "ghana_west_africa",
+      "source_layer": "ocean",
+      "target_layer": "land",
+      "direction": "directed",
+      "label": "1982–83 El Niño → West Africa / Ghana Drying Influence",
+      "arc_3d": {
+        "render_mode": "interregional_arc",
+        "start_lat": 0.0,
+        "start_lon": -145.0,
+        "end_lat": 7.9,
+        "end_lon": -1.0,
+        "hops": [
+          { "lat": 0.0, "lon": -145.0, "layer": "ocean" },
+          { "lat": 3.0, "lon": -90.0, "layer": "atmosphere" },
+          { "lat": 7.9, "lon": -1.0, "layer": "land" }
+        ],
+        "max_altitude": 0.4,
+        "color_gradient": ["#00E5FF", "#F59E0B"],
+        "stroke_width": 1.0,
+        "dash_length": 0.3,
+        "dash_gap": 0.25,
+        "dash_animate_ms": 2800
+      },
+      "inspector": {
+        "q1_why_it_exists": "Strong El Niño warming shifts tropical convection into the central Pacific, promoting descending air and weaker upward monsoon motion across parts of West Africa.",
+        "q2_what_happened_in_between": [
+          { "step": 1, "layer": "ocean", "process": "The 1982–1983 El Niño reached extreme Pacific SST anomalies (> +2°C)." },
+          { "step": 2, "layer": "atmosphere", "process": "East–west Walker Circulation shifted, increasing atmospheric stability/subsidence over West Africa." },
+          { "step": 3, "layer": "land", "process": "West African monsoon rainfall weakened, coinciding with severe 1982–1983 drought in Ghana." }
+        ],
+        "q3_what_evidence_supports_it": {
+          "datasets": [
+            { "name": "NOAA ERSSTv5", "type": "reconstructed_sst", "years": "1854–present" },
+            { "name": "Independent Historical Rainfall (GPCC / CRU)", "type": "gauge_gridded_observation", "years": "1901–present" },
+            { "name": "NASA MERRA-2 (Circulation)", "type": "reanalysis", "years": "1980–present" }
+          ],
+          "references": [
+            "Nicholson (2013), Reviews of Geophysics — The West African Sahel: A review of recent studies on rainfall variability",
+            "Janicot et al. (1996/2001) — ENSO and West African monsoon variability"
+          ],
+          "statistical_verification": {
+            "slot_id": "stat_nino34_vs_ghana_rain",
+            "x_slot": "nino34_sst",
+            "y_slot": "ghana_rain_hist",
+            "method": "detrended_partial_spearman",
+            "lag_months_expected": 2,
+            "status": "awaiting_csv_ingest",
+            "r_value": null,
+            "p_value_neff": null,
+            "lag_months_observed": null,
+            "autocorrelation_note": "Evaluated with partial correlation controlling for Gulf of Guinea SST; June–Sept rainy season focus recommended.",
+            "chart_series": null
+          }
+        },
+        "q4_how_certain_are_we": {
+          "confidence_tier": "Moderate",
+          "four_pillars": {
+            "physical_mechanism": "Strong — Atmospheric subsidence during El Niño weakens West African convection.",
+            "observational_evidence": "Strong for 1982–83 coincidence — Major El Niño and severe Ghana drought occurred together.",
+            "statistical_evidence": "Moderate — Relationship across all years is weaker and non-uniform compared to Southern Africa.",
+            "published_research": "Strong — Literature emphasizes El Niño as ONE contributing factor alongside Atlantic SSTs."
+          },
+          "limitations_and_confounders": "CRITICAL CAVEAT: El Niño did NOT cause Ghana's 1982–83 drought alone. It occurred inside a multi-decade Sahel/West African dry period and alongside Tropical Atlantic SST anomalies."
+        }
+      }
+    },
+    {
+      "id": "edge_gulf_guinea_ghana",
+      "event_ids": ["west_africa_ghana_1982_83"],
+      "source_node": "gulf_of_guinea",
+      "target_node": "ghana_west_africa",
+      "source_layer": "ocean",
+      "target_layer": "land",
+      "direction": "directed",
+      "label": "Gulf of Guinea / Atlantic SST → Ghana Monsoon Rainfall",
+      "arc_3d": {
+        "render_mode": "interregional_arc",
+        "start_lat": 1.5,
+        "start_lon": 0.0,
+        "end_lat": 7.9,
+        "end_lon": -1.0,
+        "hops": [
+          { "lat": 1.5, "lon": 0.0, "layer": "ocean" },
+          { "lat": 7.9, "lon": -1.0, "layer": "land" }
+        ],
+        "max_altitude": 0.09,
+        "color_gradient": ["#00E5FF", "#F59E0B"],
+        "stroke_width": 1.6,
+        "dash_length": 0.45,
+        "dash_gap": 0.2,
+        "dash_animate_ms": 1700
+      },
+      "inspector": {
+        "q1_why_it_exists": "The Gulf of Guinea is the main direct moisture source for Ghana. Changes in Atlantic sea surface temperatures shift the land–ocean temperature contrast and guide how far inland monsoon rains travel.",
+        "q2_what_happened_in_between": [
+          { "step": 1, "layer": "ocean", "process": "North–South Tropical Atlantic / Gulf of Guinea SST gradients shift." },
+          { "step": 2, "layer": "atmosphere", "process": "Southwesterly monsoon winds carry either more or less moisture inland from the Gulf of Guinea." },
+          { "step": 3, "layer": "land", "process": "Coastal vs. northern Ghana rainfall shifts (e.g., coastal warming vs. inland monsoon jump anomalies)." }
+        ],
+        "q3_what_evidence_supports_it": {
+          "datasets": [
+            { "name": "NOAA ERSSTv5", "type": "reconstructed_sst", "years": "1854–present" },
+            { "name": "Independent Historical Rainfall (GPCC / CRU)", "type": "gauge_gridded_observation", "years": "1901–present" },
+            { "name": "NASA MERRA-2 (Low-level Winds)", "type": "reanalysis", "years": "1980–present" }
+          ],
+          "references": [
+            "Nicholson (2013), Reviews of Geophysics",
+            "Gu & Adler (2004), Journal of Climate — Seasonal evolution and variability of the West African Monsoon"
+          ],
+          "statistical_verification": {
+            "slot_id": "stat_gulf_guinea_vs_ghana_rain",
+            "x_slot": "gulf_guinea_sst",
+            "y_slot": "ghana_rain_hist",
+            "method": "detrended_partial_pearson",
+            "lag_months_expected": 1,
+            "status": "awaiting_csv_ingest",
+            "r_value": null,
+            "p_value_neff": null,
+            "lag_months_observed": null,
+            "autocorrelation_note": "Evaluated with partial correlation controlling for Niño 3.4 SST.",
+            "chart_series": null
+          }
+        },
+        "q4_how_certain_are_we": {
+          "confidence_tier": "Strong",
+          "four_pillars": {
+            "physical_mechanism": "Strong — Regional land–sea thermal gradient directly drives West African monsoon winds.",
+            "observational_evidence": "Strong — Multi-decadal Atlantic SST shifts closely track 1970s–1980s West African drying.",
+            "statistical_evidence": "Moderate–Strong — Varies between Ghana's southern coast and northern savanna.",
+            "published_research": "Strong — Widely recognized as a primary regional driver of West African rainfall."
+          },
+          "limitations_and_confounders": "Southern Ghana (bimodal coast) and northern Ghana (unimodal savanna) respond differently to Gulf of Guinea warming."
+        }
+      }
+    },
+    {
+      "id": "edge_ghana_rain_soil",
+      "event_ids": ["west_africa_ghana_1982_83"],
+      "source_node": "ghana_west_africa",
+      "target_node": "ghana_west_africa",
+      "source_layer": "land",
+      "target_layer": "land",
+      "direction": "directed",
+      "label": "1982–83 Rainfall Deficit → Soil Moisture & Evapotranspiration Stress",
+      "arc_3d": {
+        "render_mode": "local_vertical_cascade",
+        "start_lat": 5.8,
+        "start_lon": -1.5,
+        "end_lat": 9.8,
+        "end_lon": -0.8,
+        "hops": [
+          { "lat": 5.8, "lon": -1.5, "layer": "land" },
+          { "lat": 9.8, "lon": -0.8, "layer": "land" }
+        ],
+        "max_altitude": 0.06,
+        "color_gradient": ["#F59E0B", "#EF4444"],
+        "stroke_width": 1.5,
+        "dash_length": 0.4,
+        "dash_gap": 0.2,
+        "dash_animate_ms": 1400
+      },
+      "inspector": {
+        "q1_why_it_exists": "Consecutive weak rainy seasons in 1982 and 1983 drained root-zone soil moisture and lowered evapotranspiration, turning dry vegetation into fuel for widespread 1983 bushfires.",
+        "q2_what_happened_in_between": [
+          { "step": 1, "layer": "atmosphere", "process": "1982 and 1983 rainy seasons fall into severe historical drought percentiles." },
+          { "step": 2, "layer": "land", "process": "Soil moisture drops over subsequent months (modeled in GLDAS-2.0)." },
+          { "step": 3, "layer": "land", "process": "Evapotranspiration drops and vegetation stress peaks during the 1983 dry Harmattan season." }
+        ],
+        "q3_what_evidence_supports_it": {
+          "datasets": [
+            { "name": "Independent Historical Rainfall (GPCC / CRU)", "type": "gauge_gridded_observation", "years": "1901–present" },
+            { "name": "NASA GLDAS-2.0 (Soil Moisture & ET)", "type": "open_loop_model", "years": "1948–2014" }
+          ],
+          "references": [
+            "Rodell et al. (2004), BAMS — GLDAS",
+            "Sheffield et al. (2006) — Princeton meteorological forcing underlying GLDAS-2.0"
+          ],
+          "statistical_verification": {
+            "slot_id": "stat_ghana_rain_vs_soil_1982",
+            "x_slot": "ghana_rain_hist",
+            "y_slot": "ghana_soil_gldas20",
+            "method": "detrended_spearman_lagged",
+            "lag_months_expected": 1,
+            "status": "awaiting_csv_ingest",
+            "r_value": null,
+            "p_value_neff": null,
+            "lag_months_observed": null,
+            "autocorrelation_note": "GLDAS-2.0 is an open-loop simulation (no assimilation), so independent rainfall is compared against GLDAS-2.0 soil moisture.",
+            "chart_series": null
+          }
+        },
+        "q4_how_certain_are_we": {
+          "confidence_tier": "Strong",
+          "four_pillars": {
+            "physical_mechanism": "Strong — Soil water deficit follows sustained meteorological drought.",
+            "observational_evidence": "Strong — Historical Ghana hydrological records (e.g., Akosombo/Volta lows) confirm severe 1983 drought.",
+            "statistical_evidence": "Moderate — GLDAS-2.0 outputs depend on Princeton forcing quality in 1980s West Africa.",
+            "published_research": "Strong — Well-documented socio-environmental crisis in Ghana."
+          },
+          "limitations_and_confounders": "GLDAS-2.0 stops in 2014 and is an open-loop land model; do not stitch directly to GLDAS-2.1 without bias adjustment."
+        }
+      }
+    },
+    {
+      "id": "edge_arctic_albedo_feedback",
+      "event_ids": ["arctic_sea_ice_minimum_2012"],
+      "source_node": "arctic_cryosphere",
+      "target_node": "arctic_cryosphere",
+      "source_layer": "cryosphere",
+      "target_layer": "ocean",
+      "direction": "directed",
+      "label": "Ice Melt → Dark Ocean Absorption (Ice-Albedo Feedback)",
+      "arc_3d": {
+        "render_mode": "local_vertical_cascade",
+        "start_lat": 76.0,
+        "start_lon": -150.0,
+        "end_lat": 82.0,
+        "end_lon": 30.0,
+        "hops": [
+          { "lat": 76.0, "lon": -150.0, "layer": "cryosphere" },
+          { "lat": 82.0, "lon": 30.0, "layer": "ocean" }
+        ],
+        "max_altitude": 0.14,
+        "color_gradient": ["#E0F2FE", "#00E5FF"],
+        "stroke_width": 1.6,
+        "dash_length": 0.45,
+        "dash_gap": 0.2,
+        "dash_animate_ms": 2100
+      },
+      "inspector": {
+        "q1_why_it_exists": "Bright white sea ice reflects most sunlight back to space, while dark open ocean water absorbs it—so melting ice heats the Arctic Ocean, which melts even more ice in a reinforcing loop.",
+        "q2_what_happened_in_between": [
+          { "step": 1, "layer": "atmosphere", "process": "Long-term Arctic warming thins thick multi-year sea ice." },
+          { "step": 2, "layer": "cryosphere", "process": "Spring/summer melt exposes dark open Arctic Ocean earlier in the year." },
+          { "step": 3, "layer": "ocean", "process": "Open water absorbs extra solar heat, delaying autumn freeze-up and thinning next year's ice." }
+        ],
+        "q3_what_evidence_supports_it": {
+          "datasets": [
+            { "name": "NSIDC Sea Ice Index", "type": "satellite_observation", "years": "1979–present" },
+            { "name": "NASA MERRA-2 (Arctic Air Temp)", "type": "reanalysis", "years": "1980–present" }
+          ],
+          "references": [
+            "Parkinson & Comiso (2013), Geophysical Research Letters — On the 2012 record low Arctic sea ice cover"
+          ],
+          "statistical_verification": {
+            "slot_id": "stat_arctic_temp_vs_ice",
+            "x_slot": "arctic_temp",
+            "y_slot": "arctic_ice_extent",
+            "method": "pearson_with_trend",
+            "lag_months_expected": 1,
+            "status": "awaiting_csv_ingest",
+            "r_value": null,
+            "p_value_neff": null,
+            "lag_months_observed": null,
+            "autocorrelation_note": "Both series show strong multi-decade secular trends; test both raw trend and detrended summer anomalies.",
+            "chart_series": null
+          }
+        },
+        "q4_how_certain_are_we": {
+          "confidence_tier": "Strong",
+          "four_pillars": {
+            "physical_mechanism": "Strong — Ice-albedo feedback is a cornerstone of polar climate physics.",
+            "observational_evidence": "Strong — Continuous satellite passive-microwave record since 1979.",
+            "statistical_evidence": "Strong — Clear long-term downward September ice trend.",
+            "published_research": "Strong — Extensive consensus on Arctic amplification."
+          },
+          "limitations_and_confounders": "Year-to-year minimums also depend heavily on summer wind patterns and storms."
+        }
+      }
+    },
+    {
+      "id": "edge_arctic_cyclone_2012",
+      "event_ids": ["arctic_sea_ice_minimum_2012"],
+      "source_node": "arctic_atmosphere",
+      "target_node": "arctic_cryosphere",
+      "source_layer": "atmosphere",
+      "target_layer": "cryosphere",
+      "direction": "directed",
+      "label": "August 2012 Arctic Cyclone → Rapid Ice Breakup",
+      "arc_3d": {
+        "render_mode": "interregional_arc",
+        "start_lat": 74.0,
+        "start_lon": 145.0,
+        "end_lat": 79.0,
+        "end_lon": 0.0,
+        "hops": [
+          { "lat": 74.0, "lon": 145.0, "layer": "atmosphere" },
+          { "lat": 79.0, "lon": 0.0, "layer": "cryosphere" }
+        ],
+        "max_altitude": 0.16,
+        "color_gradient": ["#A855F7", "#E0F2FE"],
+        "stroke_width": 1.6,
+        "dash_length": 0.45,
+        "dash_gap": 0.2,
+        "dash_animate_ms": 1800
+      },
+      "inspector": {
+        "q1_why_it_exists": "An unusually intense summer cyclone in August 2012 fractured thinned sea ice, churned warm deeper water upward, and accelerated the drop to the September 2012 record low.",
+        "q2_what_happened_in_between": [
+          { "step": 1, "layer": "atmosphere", "process": "An intense Arctic cyclone formed over Siberia and moved across the central Arctic Ocean in early August 2012." },
+          { "step": 2, "layer": "cryosphere", "process": "Strong winds broke up thin, weakened ice floes and mixed warmer ocean water up from below." },
+          { "step": 3, "layer": "cryosphere", "process": "Fragmented ice melted rapidly, setting the satellite-era record minimum in September 2012." }
+        ],
+        "q3_what_evidence_supports_it": {
+          "datasets": [
+            { "name": "NSIDC Daily/Monthly Sea Ice Extent", "type": "satellite_observation", "years": "1979–present" },
+            { "name": "NASA MERRA-2 (Sea-Level Pressure / Winds)", "type": "reanalysis", "years": "1980–present" }
+          ],
+          "references": [
+            "Simmonds & Rudeva (2012), GRL — The great Arctic cyclone of August 2012",
+            "Parkinson & Comiso (2013), GRL"
+          ],
+          "statistical_verification": {
+            "slot_id": "stat_arctic_2012_event",
+            "x_slot": "arctic_temp",
+            "y_slot": "arctic_ice_extent",
+            "method": "single_event_anomaly_check",
+            "lag_months_expected": 1,
+            "status": "awaiting_csv_ingest",
+            "r_value": null,
+            "p_value_neff": null,
+            "lag_months_observed": null,
+            "autocorrelation_note": "Single extreme weather trigger riding on top of a multi-decade thinning trend.",
+            "chart_series": null
+          }
+        },
+        "q4_how_certain_are_we": {
+          "confidence_tier": "Strong",
+          "four_pillars": {
+            "physical_mechanism": "Strong — Mechanical ice breakup and ocean mixing accelerate summer melt.",
+            "observational_evidence": "Strong — Satellite imagery captured rapid August 2012 ice loss.",
+            "statistical_evidence": "Moderate — Single-storm case study rather than a recurring monthly driver.",
+            "published_research": "Strong — Specifically studied in multiple GRL papers."
+          },
+          "limitations_and_confounders": "Without long-term thinning beforehand, a similar storm in the 1980s would not have produced the same record low."
+        }
+      }
+    },
+    {
+      "id": "edge_2026_elnino_analog_watch",
+      "event_ids": ["developing_el_nino_2026_2027"],
+      "source_node": "nino34_pacific",
+      "target_node": "ghana_west_africa",
+      "source_layer": "ocean",
+      "target_layer": "land",
+      "direction": "directed",
+      "label": "2026–2027 Developing El Niño → Historical Analog Watch",
+      "arc_3d": {
+        "render_mode": "interregional_arc",
+        "start_lat": 0.0,
+        "start_lon": -145.0,
+        "end_lat": 7.9,
+        "end_lon": -1.0,
+        "hops": [
+          { "lat": 0.0, "lon": -145.0, "layer": "ocean" },
+          { "lat": 3.0, "lon": -90.0, "layer": "atmosphere" },
+          { "lat": 7.9, "lon": -1.0, "layer": "land" }
+        ],
+        "max_altitude": 0.4,
+        "color_gradient": ["#EF4444", "#F59E0B"],
+        "stroke_width": 0.65,
+        "dash_length": 0.15,
+        "dash_gap": 0.35,
+        "dash_animate_ms": 3400
+      },
+      "inspector": {
+        "q1_why_it_exists": "As Equatorial Pacific SSTs warm in 2026, historical El Niño physics tell us to monitor Walker Circulation shifts and potential downstream rainfall risks—while checking whether Atlantic/regional oceans amplify or counter them.",
+        "q2_what_happened_in_between": [
+          { "step": 1, "layer": "ocean", "process": "Monitor current 2026 monthly Niño 3.4 SST trajectory against past El Niño onset curves." },
+          { "step": 2, "layer": "atmosphere", "process": "Watch for sustained tropical convection shifts (coupling between ocean and atmosphere)." },
+          { "step": 3, "layer": "land", "process": "Compare emerging regional anomalies in West Africa, Amazonia, and Southern Africa against analog events." }
+        ],
+        "q3_what_evidence_supports_it": {
+          "datasets": [
+            { "name": "NOAA ERSSTv5 / OISST (2026 updates)", "type": "reconstructed_sst", "years": "1854–2026" },
+            { "name": "NASA MERRA-2 / GPM IMERG (latest 2026 months)", "type": "reanalysis / satellite_merged", "years": "through 2026" }
+          ],
+          "references": [
+            "Historical ENSO Analog Framework: 1982–83, 1997–98, 2015–16, 2023–24"
+          ],
+          "statistical_verification": {
+            "slot_id": "stat_2026_nino34_analog",
+            "x_slot": "nino34_sst_2026",
+            "y_slot": "ghana_rain_recent",
+            "method": "ongoing_analog_comparison",
+            "lag_months_expected": 2,
+            "status": "awaiting_csv_ingest",
+            "r_value": null,
+            "p_value_neff": null,
+            "lag_months_observed": null,
+            "autocorrelation_note": "Event is still unfolding; no final 2026–2027 event-wide causal claims should be made yet.",
+            "chart_series": null
+          }
+        },
+        "q4_how_certain_are_we": {
+          "confidence_tier": "Tentative",
+          "four_pillars": {
+            "physical_mechanism": "Strong (general ENSO physics) — Potential teleconnection pathways are physically known.",
+            "observational_evidence": "Tentative — Ongoing 2026 data is incomplete and subject to seasonal evolution.",
+            "statistical_evidence": "Tentative — Historical analog sample size is small (N=4 major events) and regional outcomes vary.",
+            "published_research": "Insufficient for 2026–27 specifically — Peer-reviewed studies on the 2026–2027 event do not yet exist."
+          },
+          "limitations_and_confounders": "This card is strictly a live monitoring watch, NOT a confirmed impact verdict. Downstream impacts depend heavily on 2026 Atlantic and Indian Ocean conditions."
+        }
+      }
+    }
+  ]
+}

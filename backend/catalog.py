@@ -173,6 +173,31 @@ REGIONS = [
     {"id": "southern_ocean", "name": "Southern Ocean (Drake)",
      "bbox": [-65.0, -60.0, -55.0, -55.0],
      "desc": "Antarctic circumpolar current / sea-ice boundary", "surface": "ocean"},
+
+    # ---- event-network study regions -------------------------------------
+    # Boxes behind the curated Earth-events catalogue. These are analysis
+    # footprints for documented events, not official political or ecosystem
+    # boundaries.
+    {"id": "ghana_national", "name": "Ghana (National)",
+     "bbox": [-3.3, 4.7, 1.2, 11.2],
+     "desc": "Whole-country footprint used by the drought event records",
+     "surface": "land"},
+    {"id": "amazon_basin", "name": "Amazon Basin",
+     "bbox": [-75.0, -15.0, -50.0, 5.0],
+     "desc": "Full Amazon basin footprint, wider than the Amazon East box",
+     "surface": "land"},
+    {"id": "southern_africa", "name": "Southern Africa",
+     "bbox": [12.0, -30.0, 36.0, -12.0],
+     "desc": "Semi-arid to sub-humid region with El Niño-sensitive summers",
+     "surface": "land"},
+    {"id": "gulf_of_guinea", "name": "Gulf of Guinea",
+     "bbox": [-10.0, -2.0, 10.0, 5.0],
+     "desc": "Regional SST driver of the West African monsoon",
+     "surface": "ocean"},
+    {"id": "tropical_north_atlantic", "name": "Tropical North Atlantic",
+     "bbox": [-60.0, 5.0, -15.0, 25.0],
+     "desc": "Warm-pool region that shifts the Atlantic ITCZ northward",
+     "surface": "ocean"},
 ]
 
 # ---------------------------------------------------------------------------

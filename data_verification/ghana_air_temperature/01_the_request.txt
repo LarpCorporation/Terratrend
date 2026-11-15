@@ -1,0 +1,23 @@
+The exact request TerraTrend sends for Ghana air temperature
+================================================================
+
+Dataset      : M2TMNXSLV.5.12.4:MERRA2_400.tavgM_2d_slv_Nx.202308.nc4
+Collection   : M2TMNXSLV 5.12.4  (G2769529108-GES_DISC)
+Field        : T2M  (2-metre air temperature)
+Month        : 202308
+Grid         : 0.625 deg longitude x 0.5 deg latitude
+Window       : rows 189..202 (latitude), columns 283..290 (longitude)
+
+URL
+---
+https://opendap.earthdata.nasa.gov/collections/C1276812859-GES_DISC/granules/M2TMNXSLV.5.12.4%253AMERRA2_400.tavgM_2d_slv_Nx.202308.nc4.dap.nc4?dap4.ce=%2FT2M%5B0%3A1%3A0%5D%5B189%3A1%3A202%5D%5B283%3A1%3A290%5D%3B%2Flat%5B189%3A1%3A202%5D%3B%2Flon%5B283%3A1%3A290%5D
+
+What this returns
+-----------------
+A small NetCDF file containing only that window: 14 latitudes x 8 longitudes
+of T2M, in K. Nothing global is downloaded, and nothing is averaged.
+The file next to this one is the response body, unmodified.
+
+The grid rectangle is a bounding box around Ghana. Only
+112 of the 112 returned cells actually touch Ghana; the app ignores the
+rest. Both sets are listed in 02_raw_grid_2023-08.csv, marked used=yes/no.

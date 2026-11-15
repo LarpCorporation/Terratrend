@@ -26,9 +26,9 @@
   --flat: #6a717a;
   --nodata: #353940;
 
-  --font: "SF Mono", "JetBrains Mono", "Cascadia Mono", Consolas,
-          ui-monospace, monospace;
-  --font-ui: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font: "Segoe UI", "Inter", system-ui, -apple-system, "Helvetica Neue", Arial,
+          sans-serif;
+  --font-ui: "Segoe UI", Inter, system-ui, -apple-system, sans-serif;
 }
 
 * { box-sizing: border-box; }
