@@ -208,6 +208,9 @@ To make NASA Earth science universally accessible without diluting scientific in
 - **Student (High School & Undergraduate)**: Introduces foundational concepts of rate per decade, hypothesis testing, and the difference between weather variability and climate trends.
 - **Researcher (Graduate & Professional)**: Full disclosure of statistical metrics: Kendall's $\tau$, tie-corrected $\operatorname{Var}(S)$, AR(1) inflation factors, degrees of freedom, and two-way Granger causality $F$-test probabilities.
 
+![TerraTrend Curated Climate Events & Guided Walkthroughs](screenshot-events.png)
+*Figure 1: TerraTrend Interactive Climate Events Interface guiding users through grounded Earth-system stories with verifiable evidence pathways.*
+
 ### 6.3 Privacy-First & Air-Gapped Key Security
 
 - **Zero Cloud Leakage**: User API keys (NASA Earthdata tokens, Groq API keys) are stored locally in the user's browser or operating system credential store.

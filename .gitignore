@@ -34,6 +34,7 @@ _check.py
 _check2.py
 _gen_globe.py
 _land.geojson
+brag-output/
 
 # ---- large local media / session dumps (not part of the deliverable) ----
 *.MOV

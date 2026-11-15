@@ -94,13 +94,18 @@ When investigating climate and environmental datasets, standard analytical tools
 
 | Planetary 3D Cybermap Cockpit | Regional Trend Analysis & Time Series |
 |:---:|:---:|
-| ![TerraTrend 3D Cybermap](docs/screenshot-cybermap.png) | ![Europe Air Temperature Trend](docs/screenshot-europe.png) |
-| *Photorealistic 3D globe with draggable investigation panels, telemetry dials, and glowing trend vectors.* | *Annual time series with robust Theil–Sen slope line, confidence intervals, and dual-method diagnostics.* |
+| ![TerraTrend 3D Cybermap](docs/screenshot-cybermap.png) | ![Regional Trend Analysis & Time Series](docs/screenshot-analysis.png) |
+| *Photorealistic 3D Earth with movable investigation panel, telemetry HUD, scope selector (Continent/Subcontinent/Country/Region/Presets), and rectangular selection speed optimization tips.* | *Annual time series with robust Theil–Sen slope line, 95% confidence interval ribbon, Mann–Kendall significance diagnostics, and verified plain-language verdict.* |
 
-| Multi-Variable Regional Comparison | Spatial Anomaly Patterns |
+| Multi-Variable Regional Comparison | Earth System Teleconnections & Coupling |
 |:---:|:---:|
-| ![Sahel Analysis](docs/screenshot-sahel.png) | ![Photoreal Earth View](docs/screenshot-globe.png) |
-| *Contrasting multiple climatic variables simultaneously across sovereign and ecological boundaries.* | *High-resolution planetary relief showing day/night terminator and global coordinate raycasting.* |
+| ![Multi-Variable Regional Comparison](docs/screenshot-compare.png) | ![Earth System Teleconnections & Coupling](docs/screenshot-interconnect.png) |
+| *Side-by-side regional contrast ("Two places. One question.") comparing multiple climatic variables simultaneously with slope deltas and co-trend correlations.* | *Empirical teleconnection network screening showing correlation strength, optimal temporal lag, Granger causality direction, and 3D raycasting.* |
+
+| Curated Climate Events & Guided Walkthroughs | 3D Earth System Teleconnection Arcs |
+|:---:|:---:|
+| ![Curated Climate Events & Guided Walkthroughs](docs/screenshot-events.png) | ![3D Earth System Teleconnection Arcs](docs/screenshot-globe.png) |
+| *Interactive exploration of documented global climate episodes (2023–2024 El Niño, Amazon drying, West African drought) with step-by-step guided lessons.* | *High-resolution planetary relief displaying day/night terminator, glowing empirical teleconnection arcs, and global coordinate raycasting.* |
 
 ---
 

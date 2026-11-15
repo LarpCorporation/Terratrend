@@ -318,6 +318,9 @@ TerraTrend compares the outcomes of the non-parametric Mann-Kendall test and the
 | **False** | **True** | `DISAGREES (OLS Only)` | **Leverage Inflation**: One or two extreme leverage points at endpoints artificially tilt the OLS slope without persistent ordering. |
 | **False** | **False** | `AGREES (Null)` | **Invariant Stationary**: No statistically detectable directional signal exists. |
 
+![TerraTrend Statistical Analysis Screen: Annual Time-Series, Theil–Sen Robust Median Slope, Confidence Intervals, and Mann–Kendall Diagnostics](screenshot-analysis.png)
+*Figure 1: TerraTrend Analysis Interface displaying annual aggregated observations, Theil–Sen robust slope line, 95% non-parametric confidence intervals, dual-method diagnostic matrix, and verified plain-language verdict.*
+
 ---
 
 ## 7. Spatial Aggregation & Geometric Weighting
@@ -405,6 +408,9 @@ flowchart TD
     DIR -- No --> V3["SIGNIFICANTLY DIFFERENT RATES<br/>Both trending same direction at different speeds"]
     D -- No --> V4["NO SIGNIFICANT DIFFERENCE<br/>Contrasting trajectories within natural noise bounds"]
 ```
+
+![TerraTrend Regional Contrast Analysis: Area A vs Area B Multi-Variable Comparison](screenshot-compare.png)
+*Figure 2: Paired Regional Contrast Interface ("Two places. One question.") contrasting simultaneous climatic variables across distinct regions with slope deltas, co-trend correlation, and paired difference significance.*
 
 ---
 
@@ -518,6 +524,9 @@ To disentangle multiple simultaneous drivers, TerraTrend fits a multivariate lag
 $$Y_t = \sum_{k=1}^3 \phi_k Y_{t-k} + \sum_{d=1}^D \theta_d X^{(d)}_{t - \tau_d} + \epsilon_t$$
 
 Each driver candidate $X^{(d)}$ is tested conditionally by calculating the partial $F$-test upon its exclusion, followed by Benjamini–Hochberg correction across the candidate set.
+
+![TerraTrend Earth System Interconnectivity & Teleconnections Engine](screenshot-interconnect.png)
+*Figure 3: Interconnectivity Engine discovering local couplings and teleconnections across regions with optimal lag search, directional Granger lead tests, and FDR multiple-comparison corrections.*
 
 ---
 
