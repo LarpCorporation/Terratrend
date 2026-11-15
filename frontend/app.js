@@ -2884,7 +2884,11 @@ function renderGlobeRegions(d) {
     c0, angRad, Math.max(0.006, angRad * 0.08), 1.06);
   const ringMat = new THREE.MeshBasicMaterial({
     color: 0xf0f2f4, side: THREE.DoubleSide, transparent: true,
-    opacity: 0.7, depthWrite: false, depthTest: false,
+    opacity: 0.7, depthWrite: false,
+    // depth-tested: the ring is a curve on the sphere, so it must be hidden
+    // by the planet when the region rotates round the back. Disabling this
+    // made it float across the face as the globe turned.
+    depthTest: true,
   });
   const ring = new THREE.Mesh(ringGeo, ringMat);
   ring.renderOrder = 9;
@@ -2927,7 +2931,7 @@ function renderGlobeRegions(d) {
       c0B, angRadB, Math.max(0.006, angRadB * 0.08), 1.06);
     const ringMatB = new THREE.MeshBasicMaterial({
       color: 0x00e5ff, side: THREE.DoubleSide, transparent: true,
-      opacity: 0.85, depthWrite: false, depthTest: false,
+      opacity: 0.85, depthWrite: false, depthTest: true,
     });
     const ringB = new THREE.Mesh(ringGeoB, ringMatB);
     ringB.renderOrder = 9;
